@@ -1,0 +1,12 @@
+{
+  "checked_local_date": "2026-10-15",
+  "vendors": [
+    {"name": "Mika-Tech", "url": "https://mika-tech.com.pl/", "laser_bed_mm": [1600, 1000], "published_spacing_mm": 15},
+    {"name": "Wytnij", "url": "https://wytnij.com/materialy/sklejka", "stock_formats_mm": [[1250, 2500], [1500, 3000]], "laser_max_thickness_mm": 4, "laser_bed_mm": null},
+    {"name": "Mr Bert CNC", "url": "https://www.mrbertcnc.pl/faq", "laser_bed_mm": null}
+  ],
+  "retail_a3_3mm": [
+    {"name": "Sklejka HDF", "url": "https://sklejka-hdf.pl/produkt/sklejka-brzozowa-a3-420x297-mm-3mm/", "size_mm": [297, 420], "price_pln": [4.20, 5.57]},
+    {"name": "Sklejka do lasera", "url": "https://sklejkadolasera.com.pl/produkt/sklejka-brzozowa-3mm-a3-420x297-jakosc-1-1-okladzina-05mm-0125-m2/", "size_mm": [297, 420], "price_pln": [6.88, 6.88]}
+  ]
+}

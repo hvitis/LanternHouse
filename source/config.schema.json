@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "config.schema.json",
+  "title": "Moomin House design parameters",
+  "description": "source/config.json drives every part, placement, cut sheet and book page. Lengths are millimetres, angles degrees. Check a config with: python source/config_check.py",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["height", "base_diameter", "plinth", "partition", "figures", "stairs", "tower_diameter", "roof_diameter", "floor_pitch", "wall_height", "thickness", "moving_clearance", "nest_spacing", "laser", "stock_margin", "starter_diameter", "wall_hinge", "door_hinge", "doors", "veranda", "stock", "colors", "magnets", "wall_catch", "wall_stop", "thickness_tolerance"],
+  "$defs": {
+    "mm": {"type": "number", "exclusiveMinimum": 0},
+    "mm0": {"type": "number", "minimum": 0},
+    "facet": {"type": "string", "pattern": "^W(0[1-9]|1[0-2])$", "description": "A wall facet position, W01-W12. W01 faces -75 degrees, then +30 degrees per facet."},
+    "size": {"type": "array", "items": {"$ref": "#/$defs/mm"}, "minItems": 2, "maxItems": 2, "description": "[width, height] in mm"},
+    "hinge": {
+      "type": "object",
+      "properties": {
+        "height": {"$ref": "#/$defs/mm", "description": "Leaf height along the hinge axis"},
+        "open_width": {"$ref": "#/$defs/mm", "description": "Both leaves opened flat"},
+        "leaf_thickness": {"$ref": "#/$defs/mm"},
+        "barrel_radius": {"$ref": "#/$defs/mm"},
+        "axis_offset": {"$ref": "#/$defs/mm0", "description": "Hinge axis outside the tower's corner radius"},
+        "hole_x": {"$ref": "#/$defs/mm", "description": "Screw-hole distance from the hinge axis"},
+        "hole_y": {"type": "array", "items": {"$ref": "#/$defs/mm"}, "minItems": 1, "description": "Screw-hole positions up the leaf, from its bottom edge"},
+        "centers": {"type": "array", "items": {"$ref": "#/$defs/mm"}, "minItems": 2, "description": "Hinge centres: wall hinges up from the ground-floor top, door hinges up from the bottom of the door"},
+        "pilot_diameter": {"$ref": "#/$defs/mm"},
+        "pilot_depth": {"$ref": "#/$defs/mm"},
+        "packing_thickness": {"$ref": "#/$defs/mm", "description": "Rigid shim under each wall-hinge leaf"}
+      },
+      "required": ["height", "open_width", "leaf_thickness", "barrel_radius", "hole_x", "hole_y", "centers", "pilot_diameter", "pilot_depth"],
+      "additionalProperties": false
+    },
+    "stock_sheet": {
+      "type": "object",
+      "properties": {
+        "primary": {"$ref": "#/$defs/size", "description": "The sheet size used first"},
+        "count": {"type": "integer", "minimum": 1, "description": "How many primary sheets may be used before extra boards"},
+        "existing": {"type": "boolean", "description": "The primary sheets are already owned (marked 'existing' in the stock list)"},
+        "extra": {"type": "array", "items": {"$ref": "#/$defs/size"}, "description": "Board sizes to buy for parts that do not fit the primary sheets; the smallest that fits is chosen"}
+      },
+      "required": ["primary", "count"],
+      "additionalProperties": false
+    },
+    "stock_set": {
+      "type": "object",
+      "description": "Plywood available per thickness. Keys are thicknesses in mm: 8, 6, 4 or 3.",
+      "propertyNames": {"enum": ["8", "6", "4", "3"]},
+      "additionalProperties": {"$ref": "#/$defs/stock_sheet"}
+    },
+    "color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"}
+  },
+  "properties": {
+    "$schema": {"type": "string"},
+    "title": {"type": "string", "description": "Project title"},
+    "height": {"$ref": "#/$defs/mm", "description": "Finished height including the finial. The roof takes up any change above the walls."},
+    "base_diameter": {"$ref": "#/$defs/mm", "description": "Round grey base under everything"},
+    "plinth": {
+      "type": "object",
+      "description": "Stone plinth between the base and the ground floor, with the hidden drawer",
+      "properties": {
+        "height": {"$ref": "#/$defs/mm", "description": "From the top of the base to the top of the ground floor"},
+        "apothem": {"$ref": "#/$defs/mm", "description": "Centre to the outside of a plinth panel (half the across-flats width)"},
+        "panel": {"$ref": "#/$defs/mm", "description": "Stone panel thickness"},
+        "drawer": {
+          "type": "object",
+          "properties": {
+            "direction": {"type": "number", "description": "Direction the drawer slides out, degrees in plan (180 = to the left)"},
+            "half_width": {"$ref": "#/$defs/mm"},
+            "height": {"$ref": "#/$defs/mm"},
+            "back": {"type": "number", "description": "Position of the drawer back along the slide direction"},
+            "travel": {"$ref": "#/$defs/mm", "description": "How far the drawer pulls out (checked clear)"}
+          },
+          "required": ["direction", "half_width", "height", "back", "travel"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["height", "apothem", "panel", "drawer"],
+      "additionalProperties": false
+    },
+    "partition": {
+      "type": "object",
+      "description": "One room divider per storey along the house axis",
+      "properties": {
+        "x": {"type": "number", "description": "Divider plane, x in plan"},
+        "door_y": {"type": "number", "description": "Doorway start, y in plan"},
+        "door_width": {"$ref": "#/$defs/mm"},
+        "door_height": {"$ref": "#/$defs/mm"},
+        "front_gap": {"$ref": "#/$defs/mm0", "description": "Clearance between the divider's front edge and the closing walls"}
+      },
+      "required": ["x", "door_y", "door_width", "door_height", "front_gap"],
+      "additionalProperties": false
+    },
+    "figures": {
+      "type": "object",
+      "description": "Thermo-clay figures",
+      "properties": {
+        "levels": {"type": "array", "items": {"enum": ["pappa", "mamma", "troll"]}, "maxItems": 4, "uniqueItems": true, "description": "Which figure stands on each storey, ground floor first (the attic is the fourth)"},
+        "turn": {"type": "number", "description": "Degrees each figure turns toward the middle of the house"},
+        "heights": {"type": "object", "description": "Finished height of each figure, feet to top of head or hat, mm", "properties": {"troll": {"$ref": "#/$defs/mm"}, "mamma": {"$ref": "#/$defs/mm"}, "pappa": {"$ref": "#/$defs/mm"}}, "required": ["troll", "mamma", "pappa"], "additionalProperties": false},
+        "door_clearance": {"$ref": "#/$defs/size", "description": "[width, height] every figure must have to spare in every doorway, mm"},
+        "clay": {
+          "type": "object",
+          "properties": {
+            "density": {"type": "number", "exclusiveMinimum": 0, "description": "g/cm3; weigh a block of your own clay"},
+            "block": {"type": "number", "exclusiveMinimum": 0, "description": "Grams per clay block in the shop"},
+            "allowance": {"type": "number", "minimum": 0, "maximum": 1, "description": "Extra fraction for handling, e.g. 0.1 = 10 %"},
+            "foil_wall": {"$ref": "#/$defs/mm", "description": "Clay thickness over a foil core"}
+          },
+          "required": ["density", "block", "allowance", "foil_wall"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["levels", "turn", "heights", "door_clearance", "clay"],
+      "additionalProperties": false
+    },
+    "stairs": {
+      "type": "object",
+      "description": "The veranda side stair",
+      "properties": {
+        "width": {"$ref": "#/$defs/mm"},
+        "risers": {"type": "integer", "minimum": 1},
+        "tread": {"$ref": "#/$defs/mm"}
+      },
+      "required": ["width", "risers", "tread"],
+      "additionalProperties": false
+    },
+    "tower_diameter": {"$ref": "#/$defs/mm", "description": "Across the vertices of the 12-sided tower"},
+    "roof_diameter": {"$ref": "#/$defs/mm", "description": "Roof eave diameter; must exceed the tower diameter"},
+    "floor_pitch": {"$ref": "#/$defs/mm", "description": "Floor-to-floor height"},
+    "wall_height": {"$ref": "#/$defs/mm", "description": "Height of the wall shells"},
+    "thickness": {
+      "type": "object",
+      "description": "Plywood thickness per role",
+      "properties": {
+        "structure": {"$ref": "#/$defs/mm"},
+        "base": {"$ref": "#/$defs/mm"},
+        "wall": {"$ref": "#/$defs/mm"},
+        "furniture": {"$ref": "#/$defs/mm"},
+        "detail": {"$ref": "#/$defs/mm"}
+      },
+      "required": ["structure", "base", "wall", "furniture", "detail"],
+      "additionalProperties": false
+    },
+    "moving_clearance": {"$ref": "#/$defs/mm0", "description": "Gap kept around moving parts"},
+    "nest_spacing": {"$ref": "#/$defs/mm0", "description": "Minimum gap between parts on a jigsaw sheet"},
+    "laser": {
+      "type": "object",
+      "description": "Sheets of this thickness are laid out for a laser cutter",
+      "properties": {
+        "thickness": {"$ref": "#/$defs/mm"},
+        "spacing": {"$ref": "#/$defs/mm0"},
+        "margin": {"$ref": "#/$defs/mm0"},
+        "a4_window": {"type": "array", "items": {"type": "number"}, "minItems": 4, "maxItems": 4, "description": "Usable area on an A4 laser sheet: [x0, y0, x1, y1]"}
+      },
+      "required": ["thickness", "spacing", "margin", "a4_window"],
+      "additionalProperties": false
+    },
+    "stock_margin": {"$ref": "#/$defs/mm0", "description": "Unused border at every sheet edge"},
+    "starter_diameter": {"$ref": "#/$defs/mm", "description": "Jigsaw starter hole drilled in the waste of each opening"},
+    "wall_hinge": {"$ref": "#/$defs/hinge", "description": "Hinges of the two opening wall shells. Measure your real hinges."},
+    "door_hinge": {"$ref": "#/$defs/hinge", "description": "Hinges of the two entrance doors"},
+    "magnets": {
+      "type": "object",
+      "description": "Neodymium disc magnets (axially magnetised) and the plain steel discs they hold, for the wall catches and stops",
+      "properties": {
+        "magnet": {"$ref": "#/$defs/size", "description": "[diameter, thickness] of each magnet"},
+        "pocket": {"$ref": "#/$defs/size", "description": "[diameter, depth] of the blind hole a magnet is bedded in, 0.5 mm deeper than the magnet"},
+        "disc": {"$ref": "#/$defs/size", "description": "[diameter, thickness] of each steel counter disc"},
+        "disc_pocket": {"$ref": "#/$defs/size", "description": "[diameter, depth] of the recess a steel disc is bedded in"}
+      },
+      "required": ["magnet", "pocket", "disc", "disc_pocket"],
+      "additionalProperties": false
+    },
+    "wall_catch": {
+      "type": "object",
+      "description": "Solid-wood block inside each opening shell, just under the attic floor: a magnet in F02 holds the shell shut",
+      "properties": {
+        "block": {"type": "array", "items": {"$ref": "#/$defs/mm"}, "minItems": 3, "maxItems": 3, "description": "[length along the wall, depth into the room, thickness] in mm"},
+        "x": {"$ref": "#/$defs/mm0", "description": "Distance from the front closing seam to the block"},
+        "gap": {"$ref": "#/$defs/mm0", "description": "Air gap between the block top and the attic floor"}
+      },
+      "required": ["block", "x", "gap"],
+      "additionalProperties": false
+    },
+    "wall_stop": {
+      "type": "object",
+      "description": "Garden post on the base that stops each opening shell and holds it open with a magnet",
+      "properties": {
+        "angle": {"type": "number", "exclusiveMinimum": 0, "maximum": 170, "description": "Opening angle where a shell meets its post, degrees; also the open angle of the renders, the viewer and the wall-swing check"},
+        "post": {"$ref": "#/$defs/mm", "description": "Square post section"},
+        "top": {"$ref": "#/$defs/mm", "description": "Post top above the ground-floor top"},
+        "contact_x": {"$ref": "#/$defs/mm0", "description": "Contact point on the hinge facet, from its end away from the hinge"},
+        "gap": {"$ref": "#/$defs/mm0", "description": "Gap between the opened shell and the post face"}
+      },
+      "required": ["angle", "post", "top", "contact_x", "gap"],
+      "additionalProperties": false
+    },
+    "thickness_tolerance": {
+      "type": "object",
+      "description": "Measured-thickness band per nominal plywood thickness for source/thickness_check.py: [minus, plus] mm",
+      "additionalProperties": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}
+    },
+    "doors": {
+      "type": "object",
+      "properties": {
+        "main": {"$ref": "#/$defs/facet", "description": "Facet with the main entrance"},
+        "veranda": {"$ref": "#/$defs/facet", "description": "Facet with the veranda door; must be the veranda's facet"}
+      },
+      "required": ["main", "veranda"],
+      "additionalProperties": false
+    },
+    "veranda": {
+      "type": "object",
+      "properties": {
+        "facet": {"$ref": "#/$defs/facet", "description": "The fixed wall facet the veranda stands against"},
+        "width": {"$ref": "#/$defs/mm", "description": "Deck width along the wall"},
+        "depth": {"$ref": "#/$defs/mm", "description": "Deck depth away from the wall"},
+        "wall_gap": {"$ref": "#/$defs/mm0"},
+        "column_height": {"$ref": "#/$defs/mm"},
+        "pitch": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 90, "description": "Hipped roof pitch, degrees"},
+        "overhang": {"$ref": "#/$defs/mm0"},
+        "front_column_x": {"type": "number"},
+        "rear_column_x": {"type": "number"},
+        "chair": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2, "description": "Veranda chair position on the deck"},
+        "permanent": {"type": "boolean", "description": "The veranda is glued on permanently (the only option the model builds)"}
+      },
+      "required": ["facet", "width", "depth", "wall_gap", "column_height", "pitch", "overhang", "front_column_x", "rear_column_x", "chair"],
+      "additionalProperties": false
+    },
+    "stock": {
+      "type": "object",
+      "properties": {
+        "main": {"$ref": "#/$defs/stock_set", "description": "Plywood for the house"},
+        "optional": {"$ref": "#/$defs/stock_set", "description": "Plywood for the optional furniture, never shared with the house"}
+      },
+      "required": ["main", "optional"],
+      "additionalProperties": false
+    },
+    "supplier": {
+      "type": "object",
+      "description": "Document-only supplier defaults. Null tolerances await supplier confirmation; CAD thickness stress-test allowances are not manufacturing tolerances.",
+      "additionalProperties": false,
+      "required": ["revision", "material", "include_optional", "engraving", "cutting_tolerance_mm", "thickness_tolerance_mm"],
+      "properties": {
+        "revision": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$"},
+        "material": {"const": "birch_plywood_raw"},
+        "include_optional": {"type": "boolean"},
+        "engraving": {"const": "none"},
+        "maximum_sheet_mm": {"$ref": "#/$defs/size", "description": "Published Mika-Tech laser envelope; other suppliers must confirm their own capacity. Sheets may be rotated."},
+        "stock_sizes_mm": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/size"}, "description": "Required one-piece blank formats, available as retail 3 mm plywood. Supplier stock availability remains subject to confirmation."},
+        "cutting_tolerance_mm": {"type": ["number", "null"], "exclusiveMinimum": 0},
+        "thickness_tolerance_mm": {"type": ["number", "null"], "exclusiveMinimum": 0}
+      }
+    },
+    "colors": {
+      "type": "object",
+      "description": "Palette used by the CAD, renders, viewer and book. The model refers to these names.",
+      "required": ["gray", "stone", "blue", "red", "cream", "wood", "green", "sage", "rose", "ochre", "ink"],
+      "additionalProperties": {"$ref": "#/$defs/color"}
+    }
+  }
+}

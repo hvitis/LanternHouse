@@ -1,0 +1,10 @@
+{
+  "name": "houseofmoomin-viewer-checks",
+  "private": true,
+  "scripts": {
+    "test:viewer": "node tests/viewer-smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}
