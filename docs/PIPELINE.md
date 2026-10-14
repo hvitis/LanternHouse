@@ -185,7 +185,7 @@ The solid-kernel checks (overlaps, wall swing, door sweep, drawer, roof lift, PD
 ## Continuous integration and publishing
 
 `.github/workflows/ci.yml` runs the config check, Python tests and static viewer browser checks on pushes to `main` and pull requests.
-The browser checks load the export under `/houseofmoomin/`, block external requests and check WebGL pixels and controls at desktop and mobile sizes.
+The browser checks load the export under `/moominshouse/`, block external requests and check WebGL pixels and controls at desktop and mobile sizes.
 On `main`, the workflow then uploads the export and deploys it to GitHub Pages.
 See [PUBLISHING.md](PUBLISHING.md) for local checks and repository setup.
 Before the first deployment, select **Settings → Pages → Build and deployment → Source: GitHub Actions**.

@@ -11,8 +11,8 @@
 Domek to niebieska wieża o wysokości 894 mm, z czerwonym spiczastym dachem, trzema kondygnacjami i poddaszem. Dwanaście płaskich ścian można wyciąć wyrzynarką, a cienkie elementy — laserem. Przednie ściany otwierają się na zawiasach. Dach jest zdejmowany, weranda stoi na stałe z boku, a kamienny cokół kryje szufladę. Na trzech kondygnacjach mieszkają trzy Muminki z modeliny termoutwardzalnej.
 
 <p align="center">
-  <b><a href="https://hvitis.github.io/houseofmoomin/">Otwórz model 3D w przeglądarce</a></b> &nbsp;·&nbsp;
-  <b><a href="https://github.com/hvitis/houseofmoomin/releases/latest">Pobierz książkę budowy (PDF)</a></b>
+  <b><a href="https://hvitis.github.io/moominshouse/">Otwórz model 3D w przeglądarce</a></b> &nbsp;·&nbsp;
+  <b><a href="https://github.com/hvitis/moominshouse/releases/latest">Pobierz książkę budowy (PDF)</a></b>
 </p>
 
 > To nieoficjalny, niekomercyjny projekt fanowski. Nie jest powiązany z Moomin Characters Oy ani producentami komercyjnych zestawów domku Muminków. Żaden z tych podmiotów go nie zatwierdził. Zobacz [znaki towarowe i licencję](#znaki-towarowe-i-licencja).
@@ -41,11 +41,11 @@ Domek to niebieska wieża o wysokości 894 mm, z czerwonym spiczastym dachem, tr
 
 ## Wypróbuj przeglądarkę 3D — bez FreeCAD
 
-Najłatwiej otworzyć [przeglądarkę online](https://hvitis.github.io/houseofmoomin/). GitHub przebudowuje ją po każdym wysłaniu zmian na gałąź `main`. Do uruchomienia lokalnego lub podglądu własnej konfiguracji potrzebujesz Pythona 3.12 lub nowszego oraz Git.
+Najłatwiej otworzyć [przeglądarkę online](https://hvitis.github.io/moominshouse/). GitHub przebudowuje ją po każdym wysłaniu zmian na gałąź `main`. Do uruchomienia lokalnego lub podglądu własnej konfiguracji potrzebujesz Pythona 3.12 lub nowszego oraz Git.
 
 ```sh
-git clone https://github.com/hvitis/houseofmoomin.git
-cd houseofmoomin
+git clone https://github.com/hvitis/moominshouse.git
+cd moominshouse
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python source/serve.py --open
@@ -70,7 +70,7 @@ Po zmianie `source/config.json` uruchom `serve.py --rebuild`, aby odświeżyć m
 
 Pliki PDF, CAD i rozkroje **nie znajdują się w repozytorium**. Zajmują łącznie około 100 MB i powstają z kodu źródłowego.
 
-**Jeśli chcesz tylko zbudować domek,** pobierz dokumenty PDF i zestaw z [najnowszego wydania](https://github.com/hvitis/houseofmoomin/releases/latest). Samodzielnie generuj pliki, gdy zmieniasz projekt.
+**Jeśli chcesz tylko zbudować domek,** pobierz dokumenty PDF i zestaw z [najnowszego wydania](https://github.com/hvitis/moominshouse/releases/latest). Samodzielnie generuj pliki, gdy zmieniasz projekt.
 
 **1. Zainstaluj FreeCAD 1.1 lub nowszy.** Etapy CAD używają Pythona dostarczanego z FreeCAD. Udostępnia on jądro OpenCASCADE, numpy i shapely.
 

@@ -8,7 +8,7 @@ import {chromium} from 'playwright';
 
 const root = fileURLToPath(new URL('../_site/', import.meta.url));
 const screenshots = fileURLToPath(new URL('../output/viewer-smoke/', import.meta.url));
-const prefix = '/houseofmoomin/';
+const prefix = '/moominshouse/';
 const model = JSON.parse(await readFile(resolve(root, 'data/parts.json'), 'utf8'));
 const mime = {'.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.txt': 'text/plain'};
 const server = createServer(async (req, res) => {

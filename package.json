@@ -1,5 +1,5 @@
 {
-  "name": "houseofmoomin-viewer-checks",
+  "name": "moominshouse-viewer-checks",
   "private": true,
   "scripts": {
     "test:viewer": "node tests/viewer-smoke.mjs"

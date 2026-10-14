@@ -11,8 +11,8 @@
 The house is a round blue tower, 894 mm tall, with a red spire roof, three floors and an attic. Its twelve flat facets can be cut with a jigsaw, and the thin parts with a laser cutter. The front walls swing open on real hinges, the roof lifts off, a permanent veranda stands on the side, and a drawer is hidden in the stone plinth. Three thermo-clay Moomins live on the three floors.
 
 <p align="center">
-  <b><a href="https://hvitis.github.io/houseofmoomin/">Open the 3D model in your browser</a></b> &nbsp;·&nbsp;
-  <b><a href="https://github.com/hvitis/houseofmoomin/releases/latest">Download the building book (PDF)</a></b>
+  <b><a href="https://hvitis.github.io/moominshouse/">Open the 3D model in your browser</a></b> &nbsp;·&nbsp;
+  <b><a href="https://github.com/hvitis/moominshouse/releases/latest">Download the building book (PDF)</a></b>
 </p>
 
 > This is an unofficial, non-commercial fan project. It is not affiliated with or endorsed by Moomin Characters Oy or by the makers of any commercial Moomin house kit. See [Trademarks](#trademarks-and-licence).
@@ -41,11 +41,11 @@ The house is a round blue tower, 894 mm tall, with a red spire roof, three floor
 
 ## Try it: the 3D viewer (no FreeCAD needed)
 
-The quickest way is the [online viewer](https://hvitis.github.io/houseofmoomin/). It is rebuilt from `main` on every push. To run it locally, or to see your own config changes, you need Python 3.12+ and git.
+The quickest way is the [online viewer](https://hvitis.github.io/moominshouse/). It is rebuilt from `main` on every push. To run it locally, or to see your own config changes, you need Python 3.12+ and git.
 
 ```sh
-git clone https://github.com/hvitis/houseofmoomin.git
-cd houseofmoomin
+git clone https://github.com/hvitis/moominshouse.git
+cd moominshouse
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python source/serve.py --open
@@ -70,7 +70,7 @@ After you edit `source/config.json`, run `serve.py --rebuild` to see the change.
 
 The PDFs, CAD files and cut sheets are **not in this repository**. Together they are about 100 MB, and they are rebuilt from source.
 
-**If you only want to build the house,** download the PDFs and the build kit from the [latest release](https://github.com/hvitis/houseofmoomin/releases/latest). Generate the files yourself only if you change the design.
+**If you only want to build the house,** download the PDFs and the build kit from the [latest release](https://github.com/hvitis/moominshouse/releases/latest). Generate the files yourself only if you change the design.
 
 **1. Install FreeCAD 1.1 or later.** The CAD stages run in FreeCAD's bundled Python, which supplies the OpenCASCADE kernel, numpy and shapely.
 

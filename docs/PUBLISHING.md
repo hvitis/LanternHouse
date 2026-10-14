@@ -39,7 +39,7 @@ Without Make, run `python source/config_check.py`, `python -m pytest` and `pytho
 Opening `index.html` directly from the filesystem does not support the module and model requests. Use an HTTP server.
 
 The `_site/` folder contains HTML, JavaScript, local three.js files, license files and `data/parts.json`.
-Every asset URL is relative, so the site works at `/` and at `/houseofmoomin/`.
+Every asset URL is relative, so the site works at `/` and at `/moominshouse/`.
 The export builds the model from the source. It does not use the existing `output/parts.json`.
 The export replaces `_site/`. Outside the repository, it replaces only folders that contain its export marker.
 
@@ -55,7 +55,7 @@ npm run test:viewer
 ```
 
 On Linux, use `npx playwright install --with-deps chromium` to install the browser and its system dependencies.
-The checks serve `_site/` under `/houseofmoomin/` and block external requests.
+The checks serve `_site/` under `/moominshouse/` and block external requests.
 They check the model request, local JavaScript modules, rendered WebGL pixels and the opening controls at desktop and mobile sizes.
 They also check the visible error message when the model file is missing.
 Screenshots appear in `output/viewer-smoke/` and stay outside Git.
@@ -91,11 +91,11 @@ Screenshots appear in `output/viewer-smoke/` and stay outside Git.
    git commit -m "Prepare Moomin House source and static 3D viewer"
    ```
 
-5. Create an empty public repository named `houseofmoomin` on GitHub.
+5. Create an empty public repository named `moominshouse` on GitHub.
 6. Connect the remote:
 
    ```sh
-   git remote add origin https://github.com/hvitis/houseofmoomin.git
+   git remote add origin https://github.com/hvitis/moominshouse.git
    ```
 
 7. In GitHub, select **Settings → Pages → Build and deployment → Source → GitHub Actions**.
@@ -106,7 +106,7 @@ Screenshots appear in `output/viewer-smoke/` and stay outside Git.
    ```
 
 9. Wait for the **CI** workflow to finish in **Actions**.
-10. Open <https://hvitis.github.io/houseofmoomin/>.
+10. Open <https://hvitis.github.io/moominshouse/>.
 
 If you use another owner or repository name, change the remote and the links in both README files.
 The static asset URLs need no change.

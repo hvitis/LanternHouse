@@ -23,7 +23,7 @@ All geometry is generated from `source/` (`model.py`, `architecture.py`), so eve
 
 ## 1. Prerequisites (do first)
 
-1. **Put the project under git.** `houseofmoomin/` is *not* a git repository, despite what the harness reports. Run `git init`, then commit `source/`, `README.md`, `assets/`, `original/` and the current `output/` as the baseline. That gives a diffable record of `parts.json`, `nesting.json` and the reports for every phase.
+1. **Put the project under git.** `moominshouse/` is *not* a git repository, despite what the harness reports. Run `git init`, then commit `source/`, `README.md`, `assets/`, `original/` and the current `output/` as the baseline. That gives a diffable record of `parts.json`, `nesting.json` and the reports for every phase.
 2. **Install FreeCAD 1.1.x.** It is absent from this Mac, but `cad-validation.json` shows the last build ran on FreeCAD 1.1.4. Install with `brew install --cask freecad`, then use the runtime at `/Applications/FreeCAD.app/Contents/Resources/bin/python`.
 3. **Baseline rebuild.** `rebuild.py` must reproduce today's `release-validation.json` (all_pass) before any change, so the toolchain is proven.
 
