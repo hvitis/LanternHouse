@@ -8,7 +8,7 @@
   <img src="docs/images/cover.jpg" width="380" alt="Okładka książki: okrągła niebieska wieża z czerwonym stożkowym dachem i małą werandą na letniej łące">
 </p>
 
-Domek to niebieska wieża o wysokości 894 mm, z czerwonym spiczastym dachem, trzema kondygnacjami i poddaszem. Dwanaście płaskich ścian można wyciąć wyrzynarką, a cienkie elementy — laserem. Przednie ściany otwierają się na zawiasach. Dach jest zdejmowany, weranda stoi na stałe z boku, a kamienny cokół kryje szufladę. Na trzech kondygnacjach mieszkają trzy Muminki z modeliny termoutwardzalnej.
+Domek to niebieska wieża o wysokości 838.4 mm, z czerwonym spiczastym dachem, trzema kondygnacjami i poddaszem. Wszystkie części ze sklejki mieszczą się na A3 (297 × 420 mm). Można je obrabiać CNC lub wycinać ręcznie z szablonów A4. Przednie ściany otwierają się na zawiasach. Dach jest zdejmowany, weranda stoi na stałe z boku, a kamienny cokół kryje szufladę. Na trzech kondygnacjach mieszkają trzy Muminki z modeliny termoutwardzalnej.
 
 <p align="center">
   <b><a href="https://hvitis.github.io/moominshouse/">Otwórz model 3D w przeglądarce</a></b> &nbsp;·&nbsp;
@@ -33,11 +33,11 @@ Domek to niebieska wieża o wysokości 894 mm, z czerwonym spiczastym dachem, tr
 ## Możliwości
 
 - **Dokumentacja do wykonania domku.** Każda część ma grubość sklejki, obrys, otwory i otwory startowe dla wyrzynarki. Rozkrój uwzględnia rzeczywiste wymiary arkuszy. Książka zawiera szablony 1:1 podzielone na strony, kwadrat kalibracyjny, szablony kontroli zawiasów, listę okuć i instrukcję montażu.
-- **Ruchome elementy.** Dwie przednie części ściany otwierają się do 100°. Magnesy w słupkach ogrodowych utrzymują je w tej pozycji. Zaczepy magnetyczne pod podłogą poddasza utrzymują ściany zamknięte. Dwoje drzwi otwiera się na zewnątrz. Dach można zdjąć po zwolnieniu dwóch obrotowych zaczepów. Szuflada wysuwa się z cokołu na 220 mm. Każda kondygnacja ma dwa pokoje.
+- **Ruchome elementy.** Dwie przednie części ściany otwierają się do 100°. Magnesy w słupkach ogrodowych utrzymują je w tej pozycji. Zaczepy magnetyczne pod podłogą poddasza utrzymują ściany zamknięte. Dwoje drzwi otwiera się na zewnątrz. Dach można zdjąć po zwolnieniu dwóch obrotowych zaczepów. Szuflada wysuwa się z cokołu na 205.3 mm. Każda kondygnacja ma dwa pokoje.
 - **Jedna konfiguracja steruje całością.** Wysokość, podstawa, cokół, szuflada, drzwi, położenie i wymiary werandy, otwory zawiasów, arkusze sklejki i kolory znajdują się w `source/config.json`.
 - **Automatyczne kontrole.** Każda kompilacja sprawdza przenikanie brył, ruch ścian co 5° aż do ogranicznika 100° i ruch obu drzwi. Sprawdza też szufladę, podnoszenie dachu, prześwity okien, przejście każdej figurki w pozycji stojącej przez każde drzwi, odstępy rozkroju, otwory startowe, liczbę części i okuć oraz skalę PDF. Osobna kontrola odtwarza domek dla najcieńszej i najgrubszej zmierzonej sklejki. Niepowodzenie dowolnej kontroli zatrzymuje kompilację.
 - **Figurki z modeliny.** Tatuś Muminka, Mamusia Muminka i Muminek powstają z łączonych brył opisanych polem odległości. Model oblicza objętość figurki, gramaturę każdego koloru i oszczędność przy zastosowaniu rdzenia z folii aluminiowej.
-- **Wiele formatów wyjściowych.** Edytowalny dokument FreeCAD, bryły STEP (domek zamknięty, otwarty, rozstrzelony i każda część osobno), profile DXF, rozkroje SVG, pliki do lasera SVG i DXF, dokumenty PDF oraz listy zakupów CSV.
+- **Wiele formatów wyjściowych.** Edytowalny dokument FreeCAD, bryły STEP (domek zamknięty, otwarty, rozstrzelony i każda część osobno), profile DXF, rozkroje SVG, pliki operacji CNC SVG i DXF, dokumenty PDF oraz listy zakupów CSV.
 
 ## Wypróbuj przeglądarkę 3D — bez FreeCAD
 
@@ -101,16 +101,18 @@ Pełna kompilacja trwa około dwóch minut, a kontrola grubości — około minu
 
 | Ścieżka | Zawartość |
 | --- | --- |
-| `output/pdf/` | Osiem dokumentów PDF: pełna książka, instrukcja, szablony do wycinania, zwymiarowane części, dekoracje (paleta, okładziny kamienne, pasy gontów), rodzina z modeliny, ręczne szablony części 3 mm i załącznik dla wykonawcy. Strony warsztatowe mają format A4, a arkusze produkcyjne także A3. |
+| `output/pdf/` | Dziewięć dokumentów PDF: pełna książka, instrukcja, szablony do wycinania, zwymiarowane części, dekoracje (paleta, okładziny kamienne, pasy gontów), rodzina z modeliny, ręczne szablony części 3 mm i załącznik dla wykonawcy. Strony warsztatowe mają format A4, a arkusze produkcyjne także A3. |
 | `output/cad/` | `MoominHouse.FCStd` (edytowalny dokument), zespoły STEP (zamknięty, otwarty, rozstrzelony) i `parts/*.step` |
-| `output/dxf/` | DXF dla każdego profilu, rozkroje w pełnej skali (`*-layout.svg`) i pliki do lasera dla arkuszy 3 mm (`*-laser.svg`, `*-laser.dxf`) |
+| `output/dxf/` | DXF dla każdego profilu, rozkroje w pełnej skali (`*-layout.svg`) i pliki operacji CNC dla wszystkich grubości (`*-cnc-*.svg`, `*-cnc-*.dxf`) |
 | `output/previews/` | Rendery na podstawie CAD i rendery figurek |
 | `output/reports/` | `release-validation.json` (wszystkie kontrole), `cad-validation.json`, `thickness-tolerance.json`, `parts.csv`, `hardware.csv`, `stock.csv` |
 | `output/Moomin-House-Build-Kit.zip` | Wszystkie powyższe pliki wraz ze źródłami w jednej paczce |
 
 Przed drukowaniem przeczytaj [przewodnik budowy](docs/BUILD-GUIDE.md). Szablony 1:1 drukuj w skali 100% i sprawdź ich wymiary.
 
-Do zlecenia wycinania części domku ze sklejki 3 mm wyślij `Moomin-House-Supplier.pdf`. Zawiera polską specyfikację, spis części i mapy odniesienia, a następnie czyste strony produkcyjne A3/A4. Każdy panel dachu mieści się w całości na A3. Dokument nie obejmuje mebli. Pełna książka ma klikalny spis treści i ten sam załącznik na końcu. Do przyklejania papierowych szablonów A4 użyj `Moomin-House-3mm-Hand-Templates.pdf`. Tekstury znajdują się w PDF z dekoracjami. Uzgodnij z wykonawcą tolerancje i szerokość cięcia. Aby wygenerować załącznik po angielsku, dodaj `--lang en` do `source/rebuild.py`.
+Do obróbki CNC przekaż `Moomin-House-Supplier.pdf` oraz pliki operacji CSV, DXF i SVG. Strony produkcyjne A3 są pogrupowane według grubości 3, 4, 6 i 8 mm oraz operacji. Zawierają czyste kontury bez tła i opisów. Osobne mapy wskazują części, strony obróbki i głębokości. Pełna książka pozostaje wyłącznie w formacie A4. Duże pojedyncze części mają szablony na dwóch stronach A4 z zakładką. Plik `Moomin-House-3mm-Hand-Templates.pdf` obejmuje tylko cienkie części. Dodaj `--lang en` do `source/rebuild.py`, aby wygenerować opisy dla wykonawcy po angielsku.
+
+Stałe ściany mają 420 mm i zachowują fabryczne krawędzie końcowe arkusza. Ruchome ściany mają 418 mm. Cztery ciągłe słupki P01 o długości 402 mm przechodzą przez otwory obu stropów F01. Wszystkie płyty stropowe mają grubość 6 mm. Pod ich prostymi łączeniami są podpory ze sklejki 4 mm, szerokie na 4 mm. Podstawa składa się z czterech ćwiartek, a pierścień dachu z dwóch połówek. Mapy montażowe wskazują położenie podpór. Przed montażem wykonaj próbkę klejonego łączenia stropu. Uzgodnij z firmą frezy, mocowanie, obróbkę przy krawędzi i tolerancje.
 
 ## Zmień projekt
 

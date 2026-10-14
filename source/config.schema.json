@@ -5,7 +5,7 @@
   "description": "source/config.json drives every part, placement, cut sheet and book page. Lengths are millimetres, angles degrees. Check a config with: python source/config_check.py",
   "type": "object",
   "additionalProperties": false,
-  "required": ["height", "base_diameter", "plinth", "partition", "figures", "stairs", "tower_diameter", "roof_diameter", "floor_pitch", "wall_height", "thickness", "moving_clearance", "nest_spacing", "laser", "stock_margin", "starter_diameter", "wall_hinge", "door_hinge", "doors", "veranda", "stock", "colors", "magnets", "wall_catch", "wall_stop", "thickness_tolerance"],
+  "required": ["height", "base_diameter", "plinth", "partition", "figures", "stairs", "tower_diameter", "roof_diameter", "floor_pitch", "wall_height", "thickness", "moving_clearance", "nest_spacing", "laser", "stock_margin", "starter_diameter", "wall_hinge", "door_hinge", "doors", "veranda", "stock", "colors", "magnets", "wall_catch", "wall_stop", "thickness_tolerance", "fabrication"],
   "$defs": {
     "mm": {"type": "number", "exclusiveMinimum": 0},
     "mm0": {"type": "number", "minimum": 0},
@@ -131,13 +131,14 @@
       "type": "object",
       "description": "Plywood thickness per role",
       "properties": {
+        "floor": {"$ref": "#/$defs/mm", "description": "Ground, intermediate and attic floor plywood thickness"},
         "structure": {"$ref": "#/$defs/mm"},
         "base": {"$ref": "#/$defs/mm"},
         "wall": {"$ref": "#/$defs/mm"},
         "furniture": {"$ref": "#/$defs/mm"},
         "detail": {"$ref": "#/$defs/mm"}
       },
-      "required": ["structure", "base", "wall", "furniture", "detail"],
+      "required": ["structure", "base", "wall", "furniture", "detail", "floor"],
       "additionalProperties": false
     },
     "moving_clearance": {"$ref": "#/$defs/mm0", "description": "Gap kept around moving parts"},
@@ -251,6 +252,7 @@
         "thickness_tolerance_mm": {"type": ["number", "null"], "exclusiveMinimum": 0}
       }
     },
+    "fabrication": {"type": "object", "additionalProperties": false, "required": ["sheet_mm", "pillar_clearance", "pillar_end_margin", "floor_support", "base_support", "base_lift", "seam_y", "base_seam_y"], "properties": {"sheet_mm": {"$ref": "#/$defs/size"}, "pillar_clearance": {"$ref": "#/$defs/mm0"}, "pillar_end_margin": {"$ref": "#/$defs/mm0"}, "floor_support": {"$ref": "#/$defs/size"}, "base_support": {"$ref": "#/$defs/size"}, "base_lift": {"$ref": "#/$defs/mm0"}, "seam_y": {"type": "number"}, "base_seam_y": {"type": "number"}}},
     "colors": {
       "type": "object",
       "description": "Palette used by the CAD, renders, viewer and book. The model refers to these names.",

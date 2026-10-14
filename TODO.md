@@ -18,7 +18,7 @@ Already done:
    - With both walls open, press down on a shell's free edge and check that the house does not tip.
    - Pull each magnet with pliers after the epoxy has cured. None may move (EN 71-1 asks that magnets cannot come loose).
 2. - [ ] **Lift the opening shells 1 mm off F00.** The moving walls stand on F00 with no gap, so their bottom edges rub the plinth top and its paint on every swing; the thickness check counts this as touching. Either hang the shells 1 mm higher (hinge centres and the walls' 2 mm roof clearance allow it) or glue thin felt glides under them.
-3. - [ ] **Laser bed and 3 mm stock.** The 387 mm roof panels are on A3 laser sheets (three A3 and one A4). Check that the laser service takes A3 (420 × 297), or split the roof sheets. Without a laser, the roof panels need a larger primary 3 mm sheet, or a sheet of their own.
+3. - [ ] **A3 CNC supplier confirmation.** Confirm 3 /4 /6 /8 mm stock, cutters, hold-down, boundary cuts, drilling, pocket depths and corner relief. Fixed 420 mm walls retain factory end edges. Use the separate supplier PDF and operation files.
 4. - [ ] **Clay density.** The clay estimate assumes 1.7 g/cm³. Weigh a block of the clay you buy, and set `figures.clay.density` if it differs.
 5. - [ ] **Drawer stop.** Decide whether the drawer should be removable (as now) or stop at about 200 mm. A stop needs a cleat that can be fitted after the drawer is in.
 

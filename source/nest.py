@@ -13,12 +13,15 @@ ROOT=Path(__file__).resolve().parents[1]
 def new_sheet(t,sw,sh,rules):
     """Empty sheet. Parts go inside its window (x0, y0, x1, y1); free space is tracked on a grid of `cell` mm."""
     window=rules['window'](sw,sh);cell=rules['cell']
-    return {'thickness':t,'width':sw,'height':sh,'window':list(window),'spacing':rules['spacing'],'cell':cell,'laser':rules['laser'],'items':[],'placed':[],'buffer':None,
+    return {'thickness':t,'width':sw,'height':sh,'window':list(window),'spacing':rules['spacing'],'cell':cell,'laser':rules['laser'],'cnc':rules.get('cnc',False),'items':[],'placed':[],'buffer':None,
             'occupied':np.zeros((math.floor((window[3]-window[1])/cell),math.floor((window[2]-window[0])/cell)),dtype=bool)}
 
 def sheet_rules(cfg,t):
     """Jigsaw sheets keep wide lanes and edges. Laser sheets (3 mm) pack tightly; an A4 laser sheet keeps its parts
     inside the printable window of one A4 page, so its 1:1 template prints on a single page."""
+    if 'fabrication' in cfg:
+        m=cfg['stock_margin']
+        return {'laser':False,'cnc':True,'spacing':cfg['nest_spacing'],'cell':1,'window':lambda w,h:(m,0,w-m,h)}
     laser=cfg['laser']
     if t==laser['thickness']:
         m=laser['margin'];a4=laser['a4_window']
@@ -27,6 +30,8 @@ def sheet_rules(cfg,t):
 
 def try_place(pid,poly,s):
     # Roof triangles nest head-to-tail; everything else is placed by its bounding box on the free-space grid.
+    if s.get('cnc'):
+        s['end_margin']=(420-poly.bounds[3])/2 if pid.startswith('W') and poly.bounds[3]>400 else 5 if pid=='P01' else 10
     return place(poly,s) if pid in ('R01','R06') else grid_place(poly,s)
 
 def nest_set(data,selected,prefix,stock):
@@ -81,17 +86,21 @@ def validate(sheets):
 
 def main():
     data=json.loads((ROOT/'output/parts.json').read_text());cfg=data['config']
-    for pattern in ('PLY*-layout.svg','FUR*-layout.svg','PLY*-laser.*','FUR*-laser.*'):
+    for pattern in ('PLY*-layout.svg','FUR*-layout.svg','PLY*-laser.*','FUR*-laser.*','PLY*-cnc-*'):
         for old in (ROOT/'output/dxf').glob(pattern):old.unlink()
     # Optional furniture never shares a sheet with the house, so it can be skipped entirely.
     sheets=nest_set(data,lambda p:not p.get('render_only') and not p.get('optional'),'PLY',cfg['stock']['main'])
     optional=[]
     laser=cfg['laser']
-    result={'spacing_mm':cfg['nest_spacing'],'margin_mm':cfg['stock_margin'],'laser':laser,'sheets':sheets,'optional_sheets':optional,'validation':validate(sheets+optional),'existing_6mm_sheets':sum(s['existing_stock'] for s in sheets),'extra_6mm_sheets':sum(s['thickness']==6 and not s['existing_stock'] for s in sheets),'policy':f'No nesting inside enclosed openings. Jigsaw sheets keep {cfg["nest_spacing"]:g} mm between contours and {cfg["stock_margin"]:g} mm at the edges. All {laser["thickness"]:g} mm parts are laser sheets: A4 (A3 for parts longer than A4) with {laser["spacing"]:g} mm between contours. Furniture and miniature accessories are for the 3D view only and use no cutting stock.'}
+    result={'spacing_mm':cfg['nest_spacing'],'margin_mm':cfg['stock_margin'],'laser':laser,'sheets':sheets,'optional_sheets':optional,'validation':validate(sheets+optional),'existing_6mm_sheets':sum(s['existing_stock'] for s in sheets),'extra_6mm_sheets':sum(s['thickness']==6 and not s['existing_stock'] for s in sheets),'policy':'A3 plywood only, grouped by thickness. 12 mm nominal lanes, 10 mm edges; continuous pillars use 5 mm end margins. Fixed walls retain the full 420 mm blank length. Confirm cutter and hold-down requirements with the supplier. No nesting inside openings; furniture is view-only.'}
     (ROOT/'output/nesting.json').write_text(json.dumps(result,indent=2))
     for s in sheets+optional:
         svg(s,data)
         if s['laser']:laser_files(s,data)
+        if s.get('cnc'):
+            import cnc
+            s['operations']=cnc.export(data,s,ROOT/'output/dxf')
+    (ROOT/'output/nesting.json').write_text(json.dumps(result,indent=2))
     print('Sheets:',{t:sum(s['thickness']==t for s in sheets) for t in (8,6,4,3)},'optional:',{t:sum(s['thickness']==t for s in optional) for t in (4,3)},flush=True)
 
 def grid_place(poly,s):
@@ -100,11 +109,15 @@ def grid_place(poly,s):
     for angle,p in orientations(poly):
         if angle>=180:continue
         # Laser sheets pack to the exact cell; jigsaw sheets keep one spare cell of slack.
-        slack=0 if s['laser'] else 1
+        slack=0 if s['laser'] or s.get('cnc') else 1
         _,_,w,h=p.bounds;kw=math.ceil(w/g-1e-9)+slack;kh=math.ceil(h/g-1e-9)+slack
         if kw>occupied.shape[1] or kh>occupied.shape[0]:continue
         sums=integ[kh:,kw:]-integ[:-kh,kw:]-integ[kh:,:-kw]+integ[:-kh,:-kw]
         ys,xs=np.where(sums==0)
+        if s.get('cnc'):
+            margin=s.get('end_margin',10)
+            keep=(y0+ys*g>=margin-1e-6)&(y0+ys*g+h<=s['height']-margin+1e-6)
+            ys,xs=ys[keep],xs[keep]
         if len(xs)==0:continue
         # Arrays are row-major, giving a repeatable bottom-left placement.
         x,y=x0+int(xs[0])*g,y0+int(ys[0])*g
@@ -137,7 +150,7 @@ def place(poly,s):
     for angle,p in orientations(poly):
         _,_,w,h=p.bounds
         if w>x1-x0 or h>y1-y0:continue
-        xs={x0};ys={y0}
+        xs={x0};ys={max(y0,s.get('end_margin',0))}
         pv=list(p.exterior.coords)[:-1]
         for old in s['placed']:
             a,b,c,d=old.bounds;xs.update([a,c+spacing,c-w]);ys.update([b,d+spacing,d-h])
@@ -147,6 +160,7 @@ def place(poly,s):
         xs=sorted(round(x,3) for x in xs if x0-.01<=x<=x1-w+.01)
         ys=sorted(round(y,3) for y in ys if y0-.01<=y<=y1-h+.01)
         for y in ys:
+            if s.get('cnc') and (y<s.get('end_margin',10) or y+h>s['height']-s.get('end_margin',10)):continue
             if best and y+h>best[0][0]+.01:break
             for x in xs:
                 pp=affinity.translate(p,x,y);bp=pp.buffer(spacing/2,join_style=2)

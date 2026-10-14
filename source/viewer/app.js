@@ -152,7 +152,7 @@ for(const d of derived.dimensions??[]){
 // ---------- what "remove attic" hides ----------
 const atticFloorZ=tops[3];
 function minZ(mesh){return new THREE.Box3().setFromObject(mesh).min.z;}
-const attic=meshes.filter(m=>['part','figure'].includes(m.userData.kind)&&(m.userData.inst.part==='F02'||m.userData.inst.group==='RoofLocks'||(['Furniture','Figures'].includes(m.userData.inst.group)&&minZ(m)>=atticFloorZ-1)));
+const attic=meshes.filter(m=>['part','figure'].includes(m.userData.kind)&&(m.userData.part.assembly_panel==='F02'||m.userData.inst.group==='RoofLocks'||(['Furniture','Figures'].includes(m.userData.inst.group)&&minZ(m)>=atticFloorZ-1)));
 const atticIds=new Set(attic.map(m=>m.userData.inst.id));
 for(const h of hardwareObjects)if(h.userData.owners?.some(id=>atticIds.has(id)))attic.push(h);
 
@@ -161,10 +161,10 @@ const travel=derived.drawer.travel;
 const state={walls:0,doors:0,drawer:0,lift:0,roof:'on',explode:0,cut:total+10,porch:true,furniture:true,figures:true,hardware:false,edges:true,xray:false,dims:true,highlight:false};
 const target={walls:0,doors:0,drawer:0,lift:0,explode:0};
 const $=id=>document.getElementById(id);
-$('drawer').max=travel;$('cut').max=total+10;$('cut').value=total+10;
+$('drawer').step='any';$('drawer').max=travel;$('cut').step='any';$('cut').max=total+10;$('cut').value=total+10;
 function bindSlider(id,key,fmt){const el=$(id),out=$(id+'Out');el.addEventListener('input',()=>{target[key]=+el.value;state[key]=+el.value;out.textContent=fmt(+el.value);});return v=>{el.value=v;out.textContent=fmt(v);};}
 const deg=v=>`${v}°`;
-const setters={walls:bindSlider('walls','walls',deg),doors:bindSlider('doors','doors',deg),drawer:bindSlider('drawer','drawer',v=>`${v} mm`),explode:bindSlider('explode','explode',v=>`${v}%`)};
+const setters={walls:bindSlider('walls','walls',deg),doors:bindSlider('doors','doors',deg),drawer:bindSlider('drawer','drawer',v=>`${Number(v.toFixed(1))} mm`),explode:bindSlider('explode','explode',v=>`${v}%`)};
 $('cut').addEventListener('input',e=>{state.cut=+e.target.value;$('cutOut').textContent=state.cut>=total?'off':`Z${state.cut}`;});
 function setRoof(mode){
   state.roof=mode;target.lift=mode==='on'?0:350;
@@ -261,7 +261,7 @@ renderer.setAnimationLoop(()=>{
   const dt=Math.min(clock.getDelta(),.05),k=1-Math.exp(-dt*6);
   for(const key of ['walls','doors','drawer','lift','explode']){
     if(Math.abs(state[key]-target[key])>.05)state[key]+=(target[key]-state[key])*k;else state[key]=target[key];
-    if(setters[key])setters[key](Math.round(state[key]));
+    if(setters[key])setters[key](key==='drawer'?state[key]:Math.round(state[key]));
   }
   if(flight&&flight.t<1){flight.t=Math.min(1,flight.t+dt*1.8);const s=flight.t*flight.t*(3-2*flight.t);camera.position.lerpVectors(flight.from,flight.to,s);controls.target.lerpVectors(flight.fromT,flight.toT,s);}
   apply();controls.update();renderer.render(scene,camera);labels.render(scene,camera);

@@ -69,9 +69,10 @@ def vertical_plate(pid,a,b,z,inside,group='Fixed'):
 
 def build():
     PARTS.clear();INSTANCES.clear();HARDWARE.clear();FASTENERS.clear();JOINTS.clear();FIGURES.clear();WALLS.clear()
-    T=CFG['thickness']; base=T['structure']; bt=T['base']; wall=T['wall']; pitch=CFG['floor_pitch']; H=CFG['wall_height']
+    T=CFG['thickness']; base=T['floor']; bt=T['base']; wall=T['wall']; pitch=CFG['floor_pitch']; H=CFG['wall_height']
+    scale=H/450; q=lambda value:value*scale
     WH=CFG['wall_hinge'];doors=CFG['doors'];door_ids=[doors['main'],doors['veranda']]
-    door_w,door_h,sill=50,96,6   # exterior door notch, and the E10 threshold standing in it
+    door_w,door_h,sill=q(50),q(96),wall
     a=CFG['tower_diameter']/2*math.cos(math.pi/12)
     width=2*(a-wall)*math.tan(math.pi/12)-1
     floor_r=(a-wall-CFG['moving_clearance'])/math.cos(math.pi/12)
@@ -82,13 +83,15 @@ def build():
     # The round base B01 is bt thick; the plinth height runs from its top to the ground-floor top.
     PL=CFG['plinth'];G=bt+PL['height'];tops=[G+k*pitch for k in range(4)]
     # Corner gussets: low ones 26 above each floor, high ones 20 below the ceiling (clear of the floor ledges).
-    gusset_dz=(26,pitch-base-20)
+    gusset_dz=(q(26),pitch-base-q(20))
     door_corners={round((facet_angle(p)+side)/30)%12 for p in door_ids for side in (-15,15)}
     def gusset_height(corner,level,dz):
-        return 96 if corner in door_corners and level==0 and dz==gusset_dz[0] else dz
+        return door_h if corner in door_corners and level==0 and dz==gusset_dz[0] else dz
     # Gusset plan shape: blunt inner edge at radius GI (half-width GW), reaching GR along each wall face from the corner.
-    GI,GW,GR=150.0,10.0,22.0
-    feet=[(-145,-14),(127,-14),(-68,104),(50,104)]
+    GI,GW,GR=q(150),q(10),q(22)
+    post_width=q(18);post_t=T['structure']
+    posts=[(q(x),q(y)) for x,y in [(-145,10),(127,10),(-68,128),(50,128)]]
+    feet=[(x,y-24) for x,y in posts]
     # Veranda frame: pu runs along its wall facet, pv points from the outer deck edge toward the wall.
     ver=CFG['veranda'];vth=math.radians(facet_angle(ver['facet']))
     pn=(math.cos(vth),math.sin(vth),0);pu=(-pn[1],pn[0],0);pv=(-pn[0],-pn[1],0)
@@ -103,10 +106,10 @@ def build():
     fholes=[dict(hole(r0+x+12,r0+y+12,3.2,None,'SC3 foot-block screw clearance; countersink underside D6 x 1.5'),entry='bottom',countersink=6,countersink_depth=1.5) for x,y in feet]
     add('F00','Ground floor plate / plinth top',base,poly(12,r0,r0,r0),holes=fholes,color='stone',note=f'Twelve-sided plate, {2*Ap:g} across flats: the ground floor and the top of the stone plinth, its rim showing 8 mm outside the walls. Screw the four A04 feet on from below (SC3) before gluing it onto the plinth.')
     put('F00',(-r0,-r0,G-base))
-    add('A04','Rear frame foot block (solid wood)',12,rect(24,24),holes=[dict(hole(12,12,2.0,8,'SC3 blind pilot from bottom'),entry='bottom')],category='Purchased wood',note='Four 24 x 24 x 12 blocks. Glue to F00 and the frame post; SC3 enters through the F00 underside.')
+    add('A04','Rear frame foot block (solid wood)',12,rect(24,24),holes=[dict(hole(12,12,2.0,10,'SC3 blind pilot from bottom'),entry='bottom')],category='Purchased wood',note='Four 24 x 24 x 12 blocks. Glue to F00 and the frame post; SC3 enters through the F00 underside.')
     for x,y in feet:
         block=put('A04',(x,y,G))
-        FASTENERS.append({'id':f'FS-Base-{len(FASTENERS)+1}','type':'SC3','diameter':3,'length':16,'head_diameter':6,'head_height':1.5,'origin':[x+12,y+12,G-base],'axis':[0,0,1],'parts':['F00-01',block['id']],'pilot':2.0,'pilot_depth':8,'note':'3 x 16 mm countersunk wood screw from the F00 underside into the 12 mm solid wood foot block. D3.2 clearance through F00; D2 pilot 8 mm into block. Fit before F00 goes onto the plinth.'})
+        FASTENERS.append({'id':f'FS-Base-{len(FASTENERS)+1}','type':'SC3','diameter':3,'length':16,'head_diameter':6,'head_height':1.5,'origin':[x+12,y+12,G-base],'axis':[0,0,1],'parts':['F00-01',block['id']],'pilot':2.0,'pilot_depth':10,'note':'3 x 16 mm countersunk wood screw from the F00 underside into the 12 mm solid wood foot block. D3.2 clearance through F00; D2 pilot 10 mm into block. Fit before F00 goes onto the plinth.'})
     DR=PL['drawer'];dang=math.radians(DR['direction']);e_out=(math.cos(dang),math.sin(dang));e_side=(-e_out[1],e_out[0])
     def dpt(rho,w):return (rho*e_out[0]+w*e_side[0],rho*e_out[1]+w*e_side[1])
     def rho_face(w):return (Ap-tp-abs(w)*math.sin(math.pi/12))/math.cos(math.pi/12)
@@ -132,10 +135,12 @@ def build():
     add('DB1','Drawer back stop',tp,rect(2*hw+2,ph),note='Glued between the guide walls; the closed drawer rests against it.')
     for w in (hw+1,-hw-1):vertical_plate('DG1',dpt(back-6.5,w),dpt(gfront,w),bt,dpt(0,w*2))
     vertical_plate('DB1',dpt(back-.5,-hw-1),dpt(back-.5,hw+1),bt,dpt(back-10,0))
-    add('F01','First / second floor',base,floor_points,color='wood',note='Two identical solid floors; use F02 for the attic. No openings: the floors are reached through the opening front walls.')
+    allowance=CFG['fabrication']['pillar_clearance']
+    post_slots=[cutrect(floor_r+x-allowance/2,floor_r+y-post_t-allowance/2,post_width+allowance,post_t+allowance) for x,y in posts]
+    add('F01','First / second floor',base,floor_points,cuts=post_slots,color='wood',note='Slide both levels over the four continuous P01 pillars. Glue divided panels over 4 x4 mm supports; dry-fit the pillar openings with measured plywood.')
     attic_holes=[]
     for angle in (60,120):
-        th=math.radians(angle);attic_holes.append(hole(floor_r+145*math.cos(th),floor_r+145*math.sin(th),3.2,None,'BL1 roof turn-button pivot clearance'))
+        th=math.radians(angle);attic_holes.append(hole(floor_r+q(145)*math.cos(th),floor_r+q(145)*math.sin(th),3.2,None,'BL1 roof turn-button pivot clearance'))
     add('F02','Attic floor with roof-lock pivot holes',base,floor_points,holes=attic_holes,color='wood',note='Two D3.2 vertical pivot holes for the roof retaining turn-buttons. Do not use F01 as the attic floor.')
     for k in range(1,4):put('F02' if k==3 else 'F01',(-floor_r,-floor_r,tops[k]-base),group='Fixed',label='Attic floor' if k==3 else f'Floor {k+1}')
     # Wall facets: six fixed at the back; three facets in each moving half.
@@ -145,7 +150,7 @@ def build():
         pid=f'W{i+1:02}';cuts=[]
         for level in range(3):
             if pid in door_ids and level==0:cuts.append(cutrect((width-door_w)/2,0,door_w,door_h))
-            elif i%2==1:cuts.append(cutrect((width-40)/2,level*pitch+54,40,60))
+            elif i%2==1:cuts.append(cutrect((width-q(40))/2,level*pitch+q(54),q(40),q(60)))
         holes=[]
         # Facets beside a hinge axis (0 or 180 degrees) carry the wall hinge leaves.
         hinge_end='start' if round(angle-15)%180==0 else 'end' if round(angle+15)%180==0 else None
@@ -184,9 +189,9 @@ def build():
             x,y,x2,y2=bounds(c)
             if pid in door_ids and j==0:continue
             if 'D01' not in PARTS:
-                add('D01','Window horizontal bar',3,rect(50,5),color='cream',category='Exterior',note='Three per window: the bottom and top frame bars, and the crossbar glued across the outside of the frame at mid-height.')
-                add('D02','Window vertical bar',3,rect(5,60),color='cream',category='Exterior',note='Three per window: the two side frame bars, and the middle bar set inside the frame between the bottom and top bars.')
-            for fid,dx,dz,r in [('D01',-5,-5,wall),('D01',-5,60,wall),('D02',-5,0,wall),('D02',40,0,wall),('D02',17.5,0,wall),('D01',-5,27.5,wall+3)]:
+                add('D01','Window horizontal bar',3,rect(q(40)+7.2,3.6),color='cream',category='Exterior',note='Three per window: the bottom and top frame bars, and the crossbar glued across the outside of the frame at mid-height.')
+                add('D02','Window vertical bar',3,rect(3.6,q(60)),color='cream',category='Exterior',note='Three per window: the two side frame bars, and the middle bar set inside the frame between the bottom and top bars.')
+            for fid,dx,dz,r in [('D01',-3.6,-3.6,wall),('D01',-3.6,q(60),wall),('D02',-3.6,0,wall),('D02',q(40),0,wall),('D02',(q(40)-3.6)/2,0,wall),('D01',-3.6,(q(60)-3.6)/2,wall+3)]:
                 put(fid,(origin[0]+u[0]*(x+dx)+n[0]*r,origin[1]+u[1]*(x+dx)+n[1]*r,G+y+dz),u,(0,0,1),group)
         if 'D03' not in PARTS:add('D03','White eave fascia',3,rect(width,8),color='cream',category='Exterior',note='One fascia per wall facet at eave. Never glue across hinge seams or the front closing edges.')
         yy=PARTS[pid]['height']-8;put('D03',(origin[0]+n[0]*wall,origin[1]+n[1]*wall,G+yy),u,(0,0,1),group)
@@ -228,11 +233,8 @@ def build():
         HARDWARE.append({'id':f'MG-Stop-{group}','kind':'Stop magnet','group':'Fixed','position':[pc[0]+nn[0]*WS['gap'],pc[1]+nn[1]*WS['gap'],G+zc],'height':MG['magnet'][1],'width':MG['magnet'][0],'note':f'{mg} magnet in the GP1 face toward the {group} shell. '+bed})
         HARDWARE.append({'id':f'SD-Stop-{group}','kind':'Steel disc','group':group,'position':[face[0],face[1],G+zc],'height':MG['disc'][1],'width':MG['disc'][0],'note':f'Epoxied flush into the {wi["part"]} outer-face recess.'})
     # Structural posts and ledges entirely in the fixed rear half.
-    # Continuous posts would intersect floors: use floor-to-floor segments instead.
-    add('P01','Rear frame post segment',8,rect(18,pitch-base),color='wood',note='Eight upper post segments. Glue between floors; rear ledges tie floors to the fixed wall shell.')
-    add('P02','Lower rear frame post segment',8,rect(18,pitch-base-12),color='wood',note=f'Four lower posts sit on 12 mm solid wood foot blocks. Top at the first-floor underside, Z{tops[1]-base:g}.')
-    for x,y in [(-145,10),(127,10),(-68,128),(50,128)]:
-        for k in range(3):upright('P02' if k==0 else 'P01',x,y,tops[k]+(12 if k==0 else 0),axis='xz')
+    add('P01','Continuous rear frame pillar',post_t,rect(post_width,3*pitch-base-12),color='wood',note='Four one-piece pillars on 12 mm foot blocks. Slide the two F01 levels over their rectangular openings, then seat F02 on the pillar tops. Keep the supplied 8 mm plywood thickness.')
+    for x,y in posts:upright('P01',x,y,G+12,axis='xz')
     add('L01','Rear floor support ledge',6,rect(width-16,12),note=f'Twelve ledges: four per elevated floor, directly under it. Top faces at Z{tops[1]-base:g}, Z{tops[2]-base:g} and Z{tops[3]-base:g}.')
     for idx in (3,4,7,8):
         th=math.radians(-75+idx*30);n=(math.cos(th),math.sin(th));u=(-n[1],n[0],0);v=(-n[0],-n[1],0)
@@ -259,13 +261,14 @@ def build():
     from architecture import entrances_and_veranda, dormer
     entrances_and_veranda(globals(),width,a,bt,pu,pv,pn,po,G)
     # Roof panels are planar triangles, not fake mesh sheets.
-    roof_z=G+H;roof_peak=CFG['height']-33;roof_h=roof_peak-roof_z
+    finial_height=3+q(30)
+    roof_z=G+H;roof_peak=CFG['height']-CFG['fabrication']['base_lift']-finial_height;roof_h=roof_peak-roof_z
     roof_a=CFG['roof_diameter']/2*math.cos(math.pi/12)-3*roof_h/math.hypot(CFG['roof_diameter']/2*math.cos(math.pi/12),roof_h)
     slant=math.hypot(roof_a,roof_h);rw=2*roof_a*math.tan(math.pi/12)-2
     topcut=3*roof_a/roof_h;topwidth=rw*topcut/slant
     add('R01','Roof triangular panel',3,[[0,0],[rw,0],[rw/2+topwidth/2,slant-topcut],[rw/2-topwidth/2,slant-topcut]],color='red',category='Roof',note='Eleven standard panels plus special R06. Assemble over the roof-angle jig; glue interior cloth seam tapes, then fill and paint exterior seams.')
     from architecture import dormer_layout
-    roof={'z':roof_z,'h':roof_h,'a':roof_a,'slant':slant,'rw':rw}
+    roof={'z':roof_z,'h':roof_h,'a':roof_a,'slant':slant,'rw':rw,'scale':scale}
     dormer_cut=dormer_layout(roof)['cut'];dcw=dormer_cut[1][0]-dormer_cut[0][0];dch=dormer_cut[2][1]-dormer_cut[0][1]
     add('R06','Roof panel with attic dormer opening',3,PARTS['R01']['outer'],[dormer_cut],color='red',category='Roof',note=f'One special front-right panel with the dormer opening, {dcw:g} x {dch:.1f}. Cut while supported; the dormer sides stand on the skin beside it.')
     for j in range(12):
@@ -273,37 +276,53 @@ def build():
         put('R06' if j==1 else 'R01',(n[0]*roof_a-u[0]*rw/2,n[1]*roof_a-u[1]*rw/2,roof_z),u,v,'Roof')
     dormer(globals(),roof)
     # Eave backing ring kept below the sloping skins, seated on short roof support blocks.
-    ringr=182
+    ringr=q(182)
     add('R02','Roof eave reinforcement ring',6,poly(12,ringr,ringr,ringr),[poly(12,ringr-16,ringr,ringr)],color='red',category='Roof',note='Glue to 12 padded internal cleats at the eave. Ring lifts off with roof; do not glue to fixed walls.')
     put('R02',(-ringr,-ringr,roof_z),group='Roof')
     add('R03','Roof top cap',3,poly(12,7,7,7),color='red',category='Roof');put('R03',(-7,-7,roof_peak),group='Roof')
-    add('FN01','White roof finial',4,[[0,0],[16,0],[14,5],[11,7],[13,10],[14,14],[12,18],[10,21],[10,25],[8,30],[6,25],[6,21],[4,18],[2,14],[3,10],[5,7],[2,5]],color='cream',category='Roof',note='Glue the broad 16 x4 mm foot to R03. File and round the tip. Never lift the roof by this ornament.')
-    upright('FN01',-8,2,roof_peak+3,group='Roof')
-    cleat_r=170;cleat_z=roof_z+6;cleat_run=roof_a*(1-6/roof_h)-cleat_r;cleat_rise=roof_h*(1-cleat_r/roof_a)-6
+    add('FN01','White roof finial',4,[[q(x),q(y)] for x,y in [[0,0],[16,0],[14,5],[11,7],[13,10],[14,14],[12,18],[10,21],[10,25],[8,30],[6,25],[6,21],[4,18],[2,14],[3,10],[5,7],[2,5]]],color='cream',category='Roof',note='File and round the tip. Never lift the roof by this ornament.')
+    upright('FN01',-q(8),2,roof_peak+3,group='Roof')
+    cleat_r=q(170);cleat_z=roof_z+6;cleat_run=roof_a*(1-6/roof_h)-cleat_r;cleat_rise=roof_h*(1-cleat_r/roof_a)-6
     add('R04','Roof sloping support cleat',12,[[0,0],[cleat_run,0],[0,cleat_rise]],color='red',category='Purchased wood',note='Twelve triangular cleats cut from 12 mm solid wood. Glue bottom to roof ring and slope to roof skin. Wood grain along the sloping edge.')
     for j in range(12):
         th=math.radians(-75+j*30);n=(math.cos(th),math.sin(th));u=(n[0],n[1],0);v=(0,0,1);t=(n[1],-n[0],0)
         put('R04',(n[0]*cleat_r-t[0]*6,n[1]*cleat_r-t[1]*6,cleat_z),u,v,'Roof')
     add('E08','Roof retaining turn-button',3,rect(38,16),holes=[hole(8,8,3.2)],color='cream',category='Roof',note='Two horizontal captive turn-buttons, 3 mm above roof ring. Rotate 90 degrees toward center to unlock. Set pivot friction; use threadlocker on cap nuts.')
     for idx,angle in enumerate((60,120)):
-        th=math.radians(angle);n=(math.cos(th),math.sin(th),0);u=(-n[1],n[0],0);r=145;z=roof_z+9
+        th=math.radians(angle);n=(math.cos(th),math.sin(th),0);u=(-n[1],n[0],0);r=q(145);z=roof_z+9
         tab=put('E08',(n[0]*(r-8)-u[0]*8,n[1]*(r-8)-u[1]*8,z),(n[0],n[1],0),u,'RoofLocks')
         head=[n[0]*r,n[1]*r,tops[3]-base-.5]
-        FASTENERS.append({'id':f'FS-RoofPivot-{idx}','type':'BL1','diameter':3,'length':25,'head_diameter':6,'head_height':2,'origin':head,'axis':[0,0,1],'parts':['F02-01',tab['id']],'pilot':3.2,'pilot_depth':None,'stack_mm':[.5,8,8,.5,.5,3,.5,.5],'note':'M3 x 25 pan-head machine screw; four steel washers (0.5 mm each), one nylon washer (0.5 mm), 8 mm spacer, M3 domed cap nut. Stack 21.5 mm; 3.5 mm thread engagement; verify nut cavity >=3.8 mm.'})
+        FASTENERS.append({'id':f'FS-RoofPivot-{idx}','type':'BL1','diameter':3,'length':25,'head_diameter':6,'head_height':2,'origin':head,'axis':[0,0,1],'parts':['F02-01',tab['id']],'pilot':3.2,'pilot_depth':None,'stack_mm':[.5,base,8,.5,.5,3,.5,.5,.5,.5,.5,.5],'note':'M3 x 25 pan-head machine screw; eight steel washers (0.5 mm each, five above the button), one nylon washer (0.5 mm), 8 mm spacer, M3 domed cap nut. Stack 21.5 mm; 3.5 mm thread engagement; verify nut cavity >=3.8 mm.'})
         HARDWARE.append({'id':f'RP-{idx}','kind':'Captive roof pivot','group':'RoofLocks','position':head,'height':25,'width':16})
     add('R05','Roof assembly angle jig',wall,[[0,0],[roof_a,0],[0,roof_h]],color='wood',category='Tools',note='Two temporary jigs. Do not install in finished attic; use them to check roof slope before gluing.')
     # Chimney is attached to a roof panel above rear side (small, lightweight hollow box).
     def roofoutside(x,y):return roof_peak-(roof_h/roof_a)*(x+y)/math.sqrt(2)+3*slant/roof_a
-    ctop=roofoutside(64,66)+53   # chimney rises 53 above the highest roof point beneath it
-    for pid,x,y,length,axis,ref in [('CH01',64,69,21,'xz',66),('CH02',64,87,21,'xz',84),('CH03',64,69,15,'yz',64),('CH04',82,69,15,'yz',82)]:
+    chimney_x,chimney_y,chimney_width=q(64),q(66),q(21)
+    ctop=roofoutside(chimney_x,chimney_y)+q(53)
+    for pid,x,y,length,axis,ref in [('CH01',chimney_x,chimney_y+3,chimney_width,'xz',chimney_y),('CH02',chimney_x,chimney_y+chimney_width,chimney_width,'xz',chimney_y+chimney_width-3),('CH03',chimney_x,chimney_y+3,chimney_width-6,'yz',chimney_x),('CH04',chimney_x+chimney_width-3,chimney_y+3,chimney_width-6,'yz',chimney_x+chimney_width-3)]:
         z0=roofoutside(x,ref) if axis=='xz' else roofoutside(ref,y)
         z1=roofoutside(x+length,ref) if axis=='xz' else roofoutside(ref,y+length)
-        add(pid,'Chimney '+pid[-2:]+' sloped side',3,[[0,z0],[length,z1],[length,ctop],[0,ctop]],color='cream',category='Exterior',note='Short lower edge seats on roof. Sand across 3 mm thickness to match roof slope; do not change the dimensioned side profile.')
+        add(pid,'Chimney '+pid[-2:]+' sloped side',3,[[0,z0],[length,z1],[length,ctop],[0,ctop]],color='cream',category='Exterior',note='Short lower edge seats on roof. Sand across 3 mm thickness to match roof slope.')
         upright(pid,x,y,min(z0,z1),group='Roof',axis=axis)
-    add('E07','Chimney cap',3,rect(29,29),color='red',category='Exterior')
-    put('E07',(60,62,ctop),group='Roof')
+    add('E07','Chimney cap',3,rect(q(21)+8,q(21)+8),color='red',category='Exterior')
+    put('E07',(q(64)-4,q(66)-4,ctop),group='Roof')
     # Interior furniture. All parts are plywood, with broad glued joints.
+    furniture_start=len(INSTANCES)
     furnish(tops)
+    # Preview furniture scales as an assembly; it has no fabrication stock.
+    furniture_ids={i['part'] for i in INSTANCES[furniture_start:]}
+    for pid in furniture_ids:
+        p=PARTS[pid]
+        for key in ('outer','cuts'):
+            if key=='outer':p[key]=[[q(x),q(y)] for x,y in p[key]]
+            else:p[key]=[[[q(x),q(y)] for x,y in loop] for loop in p[key]]
+        for key in ('width','height','thickness'):p[key]=q(p[key])
+        for h in p['holes']+p['starters']:
+            for key in ('x','y','diameter'):h[key]=q(h[key])
+    for pid in furniture_ids:PARTS[pid]['starters']=[]
+    for inst in INSTANCES[furniture_start:]:
+        x,y,z=inst['origin'];level=max((top for top in tops if top<=z+1e-6),default=0)
+        inst['origin']=[q(x),q(y),level+q(z-level)]
     place_figures(tops,a-wall)
     vr=(a-wall)/math.cos(math.pi/12);tipx=vr-GR*math.sin(math.pi/12);tipy=GR*math.cos(math.pi/12)
     add('J01','Wall corner plywood gusset',6,[[GI,-GW],[tipx,-tipy],[vr,0],[tipx,tipy],[GI,GW]],color='blue',category='Walls',note=f'Fifty-four gussets. Their two long edges glue flat against both walls, {GR-.5:g} mm along each; the blunt inner edge keeps them clear of the rear posts. Lower gussets start 26 mm above their floor, upper ones 20 mm below the ceiling; beside both doors the ground-floor low gussets sit 96 mm up, just above the door openings.')
@@ -342,6 +361,7 @@ def build():
     for p in PARTS.values():
         p['optional']=p['category'] in ('Furniture','Accessories','Figures')
         p['render_only']=p['optional']
+        if p['render_only']:p['starters']=[]
     # Window counts come from the actual wall cut-outs (per wall level) plus the dormer opening.
     windows=[0,0,0]
     for pid,p in PARTS.items():
@@ -353,7 +373,7 @@ def build():
     travel=DR['travel']
     views={'open_angle':WS['angle'],'open':{'Roof':[0,0,300],'Drawer':[e_out[0]*travel,e_out[1]*travel,0]},'exploded':{'WallRight':[230,-40,0],'WallLeft':[-230,-40,0],'Roof':[0,0,420],'Porch':[pn[0]*150,pn[1]*150,0],'Furniture':[0,-80,0],'Figures':[0,-80,0],'Drawer':[e_out[0]*250,e_out[1]*250,0]}}
     # Dimension annotations for the 3D viewer: lines (a-b, optional extension lines), level marks and labels.
-    total=roof_peak+33;deck_top=G+T['wall'];dims=[]
+    total=roof_peak+finial_height;deck_top=G+T['wall'];dims=[]
     def dim(label,a,b,ext=(),group=None):dims.append({'kind':'line','label':label,'a':list(a),'b':list(b),'ext':[list(map(list,e)) for e in ext],'group':group})
     def mark(label,p,group=None):dims.append({'kind':'label','label':label,'p':list(p),'group':group})
     sx,sy=Ap+40,40
@@ -364,7 +384,7 @@ def build():
     for k in range(3):dim(f'{pitch:g}',(sx,sy,tops[k]),(sx,sy,tops[k+1]))
     for k,z in enumerate(tops):mark(f'{names[k]} Z{z:g}',(sx+10,sy,z))
     dim(f'Roof {roof_h:.0f} (about {math.degrees(math.atan(roof_h/roof_a)):.0f} degrees)',(sx,sy,roof_z),(sx,sy,roof_peak))
-    dim('33 finial',(sx,sy,roof_peak),(sx,sy,total))
+    dim(f'{finial_height:g} finial',(sx,sy,roof_peak),(sx,sy,total))
     mark(f'Eave Z{roof_z:g}',(sx+10,sy,roof_z));mark(f'Top Z{total:g}',(sx+10,sy,total))
     dim(f'Drawer pulls out {travel:g}',(*dpt(r0,hw+30),bt),(*dpt(r0+travel,hw+30),bt),[((*dpt(r0,0),bt),(*dpt(r0,hw+30),bt))])
     mark(f'Hidden drawer {2*hw:g} x {front-back:.0f} x {dh_:g} (inside {2*hw-12:g} x {front-back-tp:.0f} x {dh_-4:g})',(*dpt((front+back)/2,0),bt+dh_+4),'Drawer')
@@ -399,9 +419,11 @@ def build():
     for pid,p in PARTS.items():
         if pid in new:p['revision']='new'
         elif pid in changed:p['revision']='changed'
-    CFG['height']=total
     derived={'views':views,'doorways':doorways,'figure_fit':fit,'dimensions':dims,'changes':changes,'figures':list(FIGURES),'drawer':{'direction':list(e_out),'side':side,'angle':DR['direction'],'travel':travel,'width':2*hw,'depth':front-back,'height':dh_},'plinth_height':PL['height'],'ground_floor':G,'total_height':total,'wall_width':width,'floor_radius':floor_r,'roof_slant':slant,'roof_panel_width':rw,'floor_tops':tops,'clear_room_height':pitch-base,'hinge_axes':{'WallRight':[hinge_x,0],'WallLeft':[-hinge_x,0]},'roof_eave':roof_z,'windows_per_floor':windows,'veranda_size':[ver['width'],ver['depth']],'veranda_facet':ver['facet'],'base_thickness':bt,'facets':[{'facet':k+1,'part':w['part'],'id':w['id'],'group':w['group']} for k,w in enumerate(WALLS)],'doors':doors,'reference_style':f'original/ photos: red hipped veranda on {ver["facet"]} ({facet_angle(ver["facet"])} degrees), white shaped columns and railings, gabled main entrance on {doors["main"]}'}
-    return {'config':CFG,'parts':PARTS,'instances':INSTANCES,'hardware':HARDWARE,'fasteners':FASTENERS,'joints':JOINTS,'derived':derived,'clay':figs}
+    data={'config':CFG,'parts':PARTS,'instances':INSTANCES,'hardware':HARDWARE,'fasteners':FASTENERS,'joints':JOINTS,'derived':derived,'clay':figs}
+    from fabrication import redesign_panels
+    redesign_panels(data)
+    return data
 
 def fabrication_parts(data):
     """Only profiles that belong in CAD plans, cutting files and the build inventory."""

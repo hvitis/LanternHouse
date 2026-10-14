@@ -60,14 +60,14 @@ def checks(root):
                 ops=p.get_contents().operations
                 clean_ok=clean_ok and not any(op in (b'Tj',b'TJ',b"'",b'"',b'Do',b'f',b'f*',b'B',b'B*',b'W',b'W*') for _,op in ops)
                 if name==supplier['pdf']:
-                    native=pdf_paths(p);dxf=dxf_paths(out/'dxf'/f'{s["id"]}-laser.dxf')
+                    native=pdf_paths(p);dxf=dxf_paths(out/'dxf'/f'{s["id"]}-cnc-{p.get("/MoominOperation")}.dxf')
                     geometry_ok=geometry_ok and len(native)==len(dxf) and all(a[0]==b[0] and len(a[1])==len(b[1]) and all(abs(x-y)<PDF_COORDINATE_EPS_MM for x,y in zip(a[1],b[1])) for a,b in zip(native,dxf))
-            else:size_ok=size_ok and abs(width-210)<.001 and abs(height-297)<.001
+            else:size_ok=size_ok and all(abs(a-b)<.001 for a,b in zip(sorted((width,height)),(210,297)))
     check('A4 workshop/reference pages and exact native-size production pages',size_ok)
     check('Production pages have only unannotated vector cutting paths',clean_ok)
-    check('Supplier production geometry matches independent laser DXFs within 0.0002 mm (PDF encoding)',geometry_ok)
-    supplier_start=contents['sections'][-1]['first_page']-1
-    check('Supplier appendix is last and preserves every original page',len(book.pages)-supplier_start==len(vendor.pages) and all(book.pages[supplier_start+j].get_contents().get_data()==p.get_contents().get_data() for j,p in enumerate(vendor.pages)))
+    check('Supplier production geometry matches operation DXFs within 0.0002 mm (PDF encoding)',geometry_ok)
+    check('Complete workshop book is entirely A4',all(all(abs(a-b)<.001 for a,b in zip(sorted((float(page.mediabox.width)*25.4/72,float(page.mediabox.height)*25.4/72)),(210,297))) for page in book.pages))
+    check('A3 machining pages remain in the separate supplier PDF',not any(page.get('/MoominPageRole')=='production' for page in book.pages) and any(page.get('/MoominPageRole')=='production' for page in vendor.pages))
     link_count=sum(len(book.pages[p].get('/Annots',[])) for p in range(1,1+contents['contents_pages']))
     check('Printed contents links cover every indexed entry',link_count==len(contents['entries']) and all(1<=e['complete_page']<=len(book.pages) for e in contents['entries']))
     destinations=[]
@@ -81,9 +81,9 @@ def checks(root):
     cfg=json.loads((root/'source/config.json').read_text());data=json.loads((out/'parts.json').read_text());nest=json.loads((out/'nesting.json').read_text())
     try:exporter.sheets_for(data,nest,exporter.settings(cfg));one_piece=True
     except ValueError:one_piece=False
-    check('Every supplier part fits one blank and laser envelope without splitting',one_piece and supplier['one_piece_check'])
+    check('Every fabrication section fits one A3 blank',one_piece and supplier['one_piece_check'])
     check('Supplier appendix excludes furniture and engraving',supplier['optional_pieces']==0 and supplier['engraving']=='none' and not any(s['optional'] for s in supplier['sheets']))
     check('Supplier language and revision recorded',vendor.trailer['/Root'].get('/Lang')==supplier['language'] and vendor.metadata.get('/Revision')==supplier['revision'])
     hand=json.loads((out/'reports/hand-template-index.json').read_text())
-    check('Hand templates cover the same complete sheets',{i['sheet'] for i in hand}=={s['id'] for s in supplier['sheets']})
+    check('3 mm hand templates cover every thin fabrication part',{i['part'] for i in hand}=={pid for pid,p in data['parts'].items() if p['thickness']==3 and not p.get('render_only') and p['category'] not in ('Purchased wood','Purchased packing')})
     return result

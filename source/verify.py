@@ -25,7 +25,7 @@ def main():
     # Independent design-rule quantities (from config / window cut-outs), not from the instance list itself.
     tower_windows=sum(data['derived']['windows_per_floor'][:3]);hinges=3*2*2
     # Windows: two horizontal and two vertical frame bars, a middle vertical bar and a crossbar (D01 x3, D02 x3).
-    expected={'F01':2,'F02':1,'R01':11,'R06':1,'J01':54,'A02':hinges,'A06':hinges,'A03':4,'E01':2,'E10':2,'D03':12,'D01':3*tower_windows,'D02':3*tower_windows,'C01':4,'E03':1,'F00':1,'PL1':10,'DR4':2,'DR2':2,'DG1':2,'PT1':2 if 'PT2' in p else 3,'VS2':2,'VJ1':2,'VS3':2,'ES1':2,'ET1':2*(data['config']['stairs']['risers']-1),'MC1':2,'GP1':2}
+    expected={'R01':11,'R06':1,'J01':54,'A02':hinges,'A06':hinges,'A03':4,'E01':2,'E10':2,'D03':12,'D01':3*tower_windows,'D02':3*tower_windows,'C01':4,'E03':1,'PL1':10,'DR4':2,'DR2':2,'DG1':2,'PT1':2 if 'PT2' in p else 3,'VS2':2,'VJ1':2,'VS3':2,'ES1':2,'ET1':2*(data['config']['stairs']['risers']-1),'MC1':2,'GP1':2}
     if 'PT2' in p:expected['PT2']=1
     walls=sum(v['quantity'] for k,v in p.items() if k.startswith('W') and v['category']=='Walls')
     check('Design-rule part quantities (12 wall facets)',walls==12 and all(k in p and p[k]['quantity']==v for k,v in expected.items()) and not {'D04','D05','VT1','TC01'}&set(p),str({k:(p.get(k,{}).get('quantity'),v) for k,v in expected.items() if p.get(k,{}).get('quantity')!=v}|{'walls':walls}))
@@ -46,7 +46,10 @@ def main():
     cadfigs=cad.get('clay_figures',[])
     # The CAD solid is the plain union of the lumps: it must match that volume, and the smoothed clay can only add to it.
     check('Clay meshes closed and match the estimate; CAD solids match their lumps',meshes_ok and len(cadfigs)==3 and all(f['valid'] and abs(f['cad_volume_mm3']-f['lumps_volume_mm3'])<.02*f['lumps_volume_mm3'] and f['clay_volume_mm3']>=f['lumps_volume_mm3'] for f in cadfigs),str([(f['id'],f['cad_volume_mm3'],f['lumps_volume_mm3'],f['clay_volume_mm3']) for f in cadfigs]))
-    check('No stairs or floor openings',not any(v['category']=='Stairs' for v in p.values()) and 'L02' not in p and not p['F01']['cuts'] and not p['F02']['cuts'] and sum('pivot' in h['purpose'] for h in p['F02']['holes'])==2)
+    panels=data['derived']['panels'];pillars=data['derived']['pillars']
+    check('Four continuous pillars and four through-openings per F01',p['P01']['quantity']==4 and 'P02' not in p and abs(p['P01']['height']-402)<.001 and sum(len(p[k]['cuts'])*p[k]['quantity'] for k in panels['F01']['sections'])==8 and not any(p[k]['cuts'] for k in panels['F02']['sections']))
+    check('All floor plates use 6 mm plywood',all(p[k]['thickness']==6 for parent in ('F00','F01','F02') for k in panels[parent]['sections']))
+
     coverage=Counter();copies=set();unique=True
     optional=nest.get('optional_sheets',[])
     mixed=[s['id'] for s in nest['sheets'] if any(p[i['part']].get('optional') for i in s['items'])]+[s['id'] for s in optional if any(not p[i['part']].get('optional') for i in s['items'])]
@@ -61,14 +64,9 @@ def main():
         if v['category'] in ('Purchased wood','Purchased packing'):coverage[id]+=v['quantity']
     check('Every required part has cutting stock / template',all(coverage[id]==v['quantity'] for id,v in build_parts.items()),str({id:(coverage[id],v['quantity']) for id,v in build_parts.items() if coverage[id]!=v['quantity']}))
     check('Unique numbered copies across cutting layouts',unique)
-    check('Sheet bounds and lanes (12 mm jigsaw, 2 mm laser)',all(c['bounds_and_spacing']=='PASS' for c in nest['validation']) and len(nest['validation'])==len(nest['sheets'])+len(optional))
-    # Every 3 mm part is on a laser sheet (A4, or A3 for the roof panels) with its laser files; an A4 one fits one printed page.
-    laser=data['config']['laser'];lsheets=[s for s in nest['sheets']+optional if s['thickness']==laser['thickness']]
-    a4ok=all(s['window']==laser['a4_window'] for s in lsheets if (s['width'],s['height'])==(210,297))
-    files=all((ROOT/'output/dxf'/f'{s["id"]}-laser.{ext}').exists() for s in lsheets for ext in ('dxf','svg'))
-    check(f'{laser["thickness"]:g} mm parts on A4/A3 laser sheets with laser files',bool(lsheets) and all(s['laser'] and (s['width'],s['height']) in ((210,297),(297,420)) and s['spacing']==laser['spacing'] for s in lsheets) and a4ok and files and not any(s.get('laser') for s in nest['sheets']+optional if s['thickness']!=laser['thickness']),str([(s['id'],s['width'],s['height']) for s in lsheets]))
-    existing=data['config']['stock']['main']['6']['count'];original=sum(bool(s.get('existing_stock')) for s in nest['sheets']);extra6=sum(s['thickness']==6 and not s.get('existing_stock') for s in nest['sheets'])
-    check('Existing 6 mm sheets used before extra 6 mm stock',original<=existing and (extra6==0 or original==existing),f'{original} existing, {extra6} extra')
+    check('A3 sheet bounds and 12 mm lanes',all(c['bounds_and_spacing']=='PASS' for c in nest['validation']) and len(nest['validation'])==len(nest['sheets'])+len(optional))
+    check('All plywood uses native A3 CNC stock',all((s['width'],s['height'])==(297,420) and s.get('cnc') for s in nest['sheets']) and all((ROOT/'output/dxf'/op['dxf']).exists() and (ROOT/'output/dxf'/op['svg']).exists() for s in nest['sheets'] for op in s['operations']))
+    check('No larger-stock fallback',all(spec['primary']==[297,420] and not spec['extra'] for spec in cfg['stock']['main'].values()))
     fast=Counter(f['type'] for f in data['fasteners']);check('Installed hardware counts',fast=={'SC1':24,'SC2':16,'SC3':6,'BL1':2},str(dict(fast)))
     check('Both doors have two hinges',sum(h['kind']=='Door butt hinge' for h in data['hardware'])==4)
     kinds=Counter(h['kind'] for h in data['hardware']);stop=data['config']['wall_stop']['angle']
@@ -95,7 +93,7 @@ def main():
             text=page.extract_text()
             if any(k in text for k in ('ACTUAL SIZE 100%','100% ACTUAL SIZE','outline actual size','Actual size / compare','print 100%','actual-size'))and '100 mm reference' not in text:missing.append(f'{name} p{n}')
     check('100 mm reference bar on every 1:1 page',not missing,str(missing[:5]))
-    index=json.loads((ROOT/'output/reports/template-index.json').read_text());check('Every sheet has all tiled printouts',len(index)==len(nest['sheets']) and all(i['last_tile_page']-i['first_tile_page']+1==i['rows']*i['columns']-len(i['skipped_tiles']) for i in index))
+    index=json.loads((ROOT/'output/reports/template-index.json').read_text());check('Every required part has one or two A4 template pages',{i['part'] for i in index}==set(build_parts) and all(1<=i['last_tile_page']-i['first_tile_page']+1<=2 for i in index))
     with zipfile.ZipFile(ROOT/'output/cad/MoominHouse.FCStd') as z:
         gui=ET.fromstring(z.read('GuiDocument.xml'));views=gui.find('ViewProviderData');native=ET.fromstring(z.read('Document.xml'))
         colorok=len(views)==len(native.find('Objects').findall('Object'))

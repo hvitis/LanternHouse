@@ -6,9 +6,9 @@ Every file it mentions under `output/` is **generated**: it is not in the reposi
 
 ## What you are building
 
-A real plywood house, 894 mm tall. It has three main floors, an attic under a steep spire roof, opening front walls, a permanent veranda, a stone plinth with a hidden drawer, and a round Ø560 grey base. The tower uses twelve flat facets so it can be built with a jigsaw.
+A real plywood house, 838.4 mm tall. It has three main floors, an attic under a steep spire roof, opening front walls, a permanent veranda, a stone plinth with a hidden drawer, and a round Ø522.7 grey base. The tower uses twelve flat facets so it can be built with a jigsaw.
 
-The ground floor has five windows, the middle and bedroom floors have six each, and the attic has one dormer window. The veranda has a 160 × 90 deck and stands on the fixed back-left facet W07, so it never has to be removed: both front walls swing open past it. It has:
+The ground floor has five windows, the middle and bedroom floors have six each, and the attic has one dormer window. The veranda has a 149.3 × 84 deck and stands on the fixed back-left facet W07, so it never has to be removed: both front walls swing open past it. It has:
 
 - a red hipped roof with hip and ridge caps;
 - shaped cream columns;
@@ -17,9 +17,9 @@ The ground floor has five windows, the middle and bedroom floors have six each, 
 
 Its door opens outward onto the deck. The main entrance on W12 has a separate small gabled canopy.
 
-The house stands on a 66 mm stone plinth on a 6 mm base, so the ground floor is at Z72. A drawer hidden in the plinth is 50 mm deep inside and slides 220 mm out to the back-right; its front is two stone plinth panels with a finger notch underneath. Each storey has one room divider with a 40 × 100 doorway at its front end, next to the opening walls, giving two rooms per floor (no door leaves; add them later if wanted). The two front wall shells click shut on magnetic catches under the attic floor and stop at 100° against two small garden posts on the base, whose magnets hold them open. One thermo-clay (oven-hardening polymer clay) Moomin stands on each floor: Moominmamma in the kitchen, Moominpappa in the living room and Moomintroll in the bedrooms. The veranda deck is level with the ground floor, on a blue skirt with a 4-step side stair, and the main entrance has 4 stone steps. Both entrance doors open outward on the right-hand jamb (seen from outside).
+The house stands on a 61.6 mm stone plinth on a 6 mm base, so the ground floor is at Z71.6. A drawer hidden in the plinth is about 46 mm deep inside and slides 205.3 mm out to the back-right; its front is two stone plinth panels with a finger notch underneath. Each storey has one room divider with a 38 × 93.3 doorway at its front end, next to the opening walls, giving two rooms per floor (no door leaves; add them later if wanted). The two front wall shells click shut on magnetic catches under the attic floor and stop at 100° against two small garden posts on the base, whose magnets hold them open. One thermo-clay (oven-hardening polymer clay) Moomin stands on each floor: Moominmamma in the kitchen, Moominpappa in the living room and Moomintroll in the bedrooms. The veranda deck is level with the ground floor, on a blue skirt with a 4-step side stair, and the main entrance has 4 stone steps. Both entrance doors open outward on the right-hand jamb (seen from outside).
 
-The floors are solid plates and there are no stairs inside. Play access is through the opening walls and the lift-off roof. The furniture appears in the 3D viewer and renders only. It has no CAD plans, printouts or cutting sheets.
+The F01 floors have four pillar openings each. There are no stairs inside. Play access is through the opening walls and the lift-off roof. The furniture appears in the 3D viewer and renders only. It has no CAD plans, printouts or cutting sheets.
 
 ## Open these files first
 
@@ -28,8 +28,8 @@ The floors are solid plates and there are no stairs inside. Play access is throu
 | `output/pdf/Moomin-House-Complete.pdf` | Cover, clickable contents, dimensioned plan, clay figures, hardware shopping list, illustrated instructions, dimensioned parts, full-size cutting printouts, decor, clay family and the supplier appendix at the end. Use the contents for page numbers. |
 | `output/pdf/Moomin-House-Instructions.pdf` | Assembly sequence, screw sections, hinge axes, glue joints, tools and workshop hints |
 | `output/pdf/Moomin-House-Cutting-Templates.pdf` | Calibration page, packed sheet layouts, overlapping A4 tiles, white 3 mm template headers and solid wood templates |
-| `output/pdf/Moomin-House-3mm-Hand-Templates.pdf` | House 3 mm parts only: calibrated A4 paper templates for gluing onto plywood and cutting by hand. A3 stock layouts span several A4 pages. |
-| `output/pdf/Moomin-House-Supplier.pdf` | Polish specification and inventory, separate reference maps, then clean vector production pages: one page per physical sheet at its actual A3 or A4 dimensions. Appended unchanged to the complete book. |
+| `output/pdf/Moomin-House-3mm-Hand-Templates.pdf` | House 3 mm parts only. Each large part uses two A4 pages with a 10 mm overlap. |
+| `output/pdf/Moomin-House-Supplier.pdf` | Polish specification, inventory, reference maps, and clean A3 production pages grouped by thickness and operation. Separate from the A4 complete book. |
 | `output/pdf/Moomin-House-Dimensioned-Parts.pdf` | House part inventory with page numbers; every profile dimensioned, several scaled references per page; hole diameter, depth and local coordinates; hinge checking templates |
 | `output/pdf/Moomin-House-Decor.pdf` | Paint palette, stone plinth panels, and fish-scale roof shingle strips cut one course at a time so they wrap the 12-facet roof |
 | `output/pdf/Moomin-House-Clay-Family.pdf` | Instructions for the clay family |
@@ -38,7 +38,7 @@ The floors are solid plates and there are no stairs inside. Play access is throu
 | `output/cad/MoominHouse-open.step` | Walls opened to the 100° stop posts and roof lifted; the veranda stays in place |
 | `output/cad/MoominHouse-exploded.step` | Separated structural assemblies |
 | `output/cad/parts/` | Individual solid STEP files |
-| `output/dxf/` | Millimetre DXF profiles (round parts as true circles), full-size nested sheet SVGs (`PLY*` house parts) and the laser-ready 3 mm sheets (`PLY3-*-laser.dxf`, `PLY3-*-laser.svg`) |
+| `output/dxf/` | Millimetre DXF profiles, A3 sheet maps, and separate CNC operation files for all plywood thicknesses (`PLY*-cnc-*.dxf`, `.svg`). |
 | `output/previews/` | CAD-derived closed (front and veranda side), open, furnished and assembly illustrations, each with a projection sidecar (`.json`); `clay-*.png` are the clay Moomin renders (front, side, back, three-quarter) |
 | `output/reports/parts.csv`, `hardware.csv`, `stock.csv` | Spreadsheet shopping and cutting lists |
 | `output/reports/template-index.json` | Template page ranges and tile row/column counts, per PDF |
@@ -48,15 +48,16 @@ The floors are solid plates and there are no stairs inside. Play access is throu
 
 ## Main dimensions
 
-- **Base:** a Ø560 grey circle, 6 mm.
-- **Plinth:** 66 mm above the base: stone panels under a 12-sided 8 mm plate (354 across flats), with the hidden drawer (160 × 275 × 54 outside, 148 × 269 × 50 inside, pulls out 220).
-- **Tower:** 350 across its vertices.
-- **Roof:** approximately 400 across.
-- **Floors:** tops at Z72, Z222, Z372 and Z522 (pitch 150); clear main-room height is 142.
-- **Roof:** eave at Z522, rising 339 mm at about 61°.
-- **Veranda:** the deck top is at Z78, level with the door threshold; its roof apex is about Z271.
-- **Figures:** thermo-clay Moominpappa 65 (with his hat), Moominmamma 54 and Moomintroll 46 tall; about 27, 23 and 14 cm³ of clay. At most 36 mm wide, so each passes upright through the 40 mm room doorways.
-- **Height:** the finial brings the finished height to 894.
+- **Base:** Ø522.7, four 6 mm sections over 4 mm underside supports. The horizontal seam is 4 mm below the centre.
+- **Plinth:** 61.6 mm above the base, with a divided 6 mm ground-floor plate.
+- **Tower:** 326.7 mm across vertices. Fixed walls are 420 mm tall. Opening walls are 418 mm tall.
+- **Floors:** 6 mm plywood. Tops are Z71.6, Z211.6, Z351.6, and Z491.6. Clear room height is 134 mm.
+- **Pillars:** four continuous 8 mm P01 parts, 402 mm long. Both F01 levels have matching through-openings.
+- **Floor joints:** straight seams over 4 mm thick, 4 mm wide strips. Each half has 2 mm bearing.
+- **Roof:** about 373.3 mm across, with an eave at Z491.6. The reinforcement ring uses two joined halves.
+- **Veranda:** 149.3 × 84 mm deck, with its top at Z77.6.
+- **Figures:** Pappa 60.7 mm, Mamma 50.4 mm, and Troll 42.9 mm target heights. All pass the 38 mm divider doorways.
+- **Height:** 838.4 mm, including the finial and base supports.
 
 These are the values for the default `source/config.json`. The book and the 3D viewer always show the values for your current config.
 
@@ -92,16 +93,21 @@ Interior pages have white backgrounds for economical printing. CAD diagrams have
 
 - Save window and roof-ring offcuts for clamping pads and painting samples.
 
-**Laser-cut 3 mm sheets**
-- Every 3 mm part is on its own laser sheet: window bars, eave fascias, roof panels, dormer, chimney, veranda roof, door handles and step treads. The sheets are A4 (210 × 297), plus A3 (297 × 420) for the 387 mm roof panels, with 2 mm between parts.
-- Send `Moomin-House-Supplier.pdf` for a quote. Its index identifies the reference and production pages for each sheet. Only the production pages are machine input: they have no dimensions, part labels, borders, crosshairs, textures or drill starter holes. No engraving is requested.
-- The current house uses three A3 sheets and one A4 sheet, containing 162 pieces. All twelve roof panels remain whole: their maximum local outline is about 100.13 × 387.21 mm, which fits A3 with the configured margins. The exporter rejects any clipped, repeated or missing part and any sheet outside the configured stock sizes or machine envelope. It never scales or divides a part to fit.
-- The specification requests supplier-provided raw birch plywood, nominal 3.0 mm. Agree thickness and cutting tolerances, kerf compensation and the current 2 mm spacing before manufacture. The appendix includes published supplier capacities and a retail material benchmark; these are not a cutting quote or confirmation of stock. Mika-Tech publishes 15 mm spacing, so its acceptance of this layout needs confirmation or repacking onto larger blanks with every part kept whole.
-- Existing `PLY3-xx-laser.dxf` and `.svg` files also contain optional ID-engraving layers. If the company requests DXF, use only the `CUT` layer. Do not send annotated paper templates as cutting paths.
-- For hand cutting, use `Moomin-House-3mm-Hand-Templates.pdf`. Glue the calibrated A4 tiles onto plywood and cut with a sharp knife against a steel rule, in several light passes. Openings have no jigsaw starter holes on these thin-part templates.
-- For supplied parts, follow the instructions' inspection page: compare IDs and quantities with the reference maps, check edges and pivot holes, and dry-fit before gluing. Do not repeat the hand-cutting waste allowance on finished supplied parts.
+**A3 CNC sheets and A4 hand templates**
 
-The supplier appendix is generated in Polish by default. `source/book.py --lang en` selects English for the whole appendix; it does not change geometry or translate the assembly manual. One run produces one language. Text lives in `source/locales/`, and supplier settings live in `source/config.json` under `supplier`.
+All plywood stock has the A3 dimensions 297 × 420 mm. Separate sheets cover 3, 4, 6, and 8 mm thicknesses. Fixed walls retain the supplied end edges. Moving walls have 1 mm end allowances. P01 pillars have 5 mm end margins. Other parts use 10 mm margins.
+
+1. Send `Moomin-House-Supplier.pdf` and its operation CSV, DXF, and SVG files to the company.
+2. Use the operation schedule to identify each production page.
+3. Confirm cutter sizes, hold-down, corner relief, compensation, and tolerances with the company.
+4. Confirm registration before machining the underside of a sheet.
+5. Compare delivered parts with the reference maps before assembly.
+
+Production pages contain unfilled vector paths without labels or backgrounds. Each page represents one machining operation. Operation names identify the face, diameter, and depth. The company applies cutter compensation once. These files contain nominal geometry, not machine-specific toolpaths.
+
+For DIY work, use `Moomin-House-Cutting-Templates.pdf`. Large individual parts use two A4 pages with 10 mm overlap. Some pages use landscape orientation. Print at 100% without automatic scaling. The separate 3 mm template PDF contains only thin parts. Use the dimensioned drawings for drilling faces and depths.
+
+The complete book contains an A4 supplier summary. The A3 production pages remain in the separate supplier PDF. Supplier text is Polish by default. `--lang en` selects English without changing the machining geometry.
 
 **Roof shingle strips (decor PDF)**
 - The roof is a cone of 12 flat panels, so a straight strip cannot follow a level course. Each strip is one course unrolled flat: it bends at the hips, where you crease it on the dotted line, and its ends are cut along the hips.
@@ -117,15 +123,10 @@ The packed house uses this plywood:
 <!-- stock:main:start -->
 | Thickness | Sheet size | Quantity |
 | --- | --- | --- |
-| 8 mm | 600 × 900 | 1 |
-| 8 mm | 400 × 400 | 2 |
-| 6 mm | 600 × 600 | 1 |
-| 6 mm | 500 × 600 | 1 |
-| 6 mm | 400 × 600 | 5 existing |
-| 6 mm | 210 × 297 | 2 |
-| 4 mm | 400 × 400 | 1 |
-| 3 mm | 297 × 420 | 3 |
-| 3 mm | 210 × 297 | 1 |
+| 8 mm | 297 × 420 | 1 |
+| 6 mm | 297 × 420 | 20 |
+| 4 mm | 297 × 420 | 2 |
+| 3 mm | 297 × 420 | 5 |
 <!-- stock:main:end -->
 
 Furniture and miniature accessories appear only in the 3D view and use no plywood stock.
@@ -137,7 +138,7 @@ The book also lists:
 - the two GP1 garden stop posts (20 × 20 mm square strip);
 - twelve rigid 0.9 mm hinge shims.
 
-Existing A4 plywood can supply matching small parts after the stock options in `source/config.json` are changed and the layout is regenerated.
+The current design requires A3 stock. Larger-stock fallbacks are disabled.
 
 Measure your plywood before cutting. `make tolerance` rebuilds the house from the nominal templates with the thinnest and thickest sheets in `thickness_tolerance` (about −0.5/+0.4 mm on 6 and 8 mm, ±0.3 mm on 3 and 4 mm) and fails if any clearance closes. Parts that only touch, such as glue faces or floors on posts, just move a fraction of a millimetre. If your sheets fall outside that band, change `thickness` or the band in `source/config.json` and rebuild.
 
@@ -152,7 +153,7 @@ Installed metal hardware (the instruction book starts with exact specifications,
 | Countersunk D3 × 16 wood screws | 6 |
 | M3 × 25 pan-head bolts | 2 |
 | M3 cap nuts | 2 |
-| 0.5 mm steel washers | 8 |
+| 0.5 mm steel washers | 16 |
 | 0.5 mm nylon washers | 2 |
 | 8 mm nylon spacers | 2 |
 | D8 × 3 neodymium disc magnets (N35–N42, axially magnetised) | 4 |
@@ -170,12 +171,12 @@ The hinge hole patterns, centers, pilots and packing all come from `config.json`
 
 ## Assembly and play access
 
-1. **Plinth.** Glue the ten stone panels, the two drawer guide walls and the back stop onto the grey base. Screw the four foot blocks to the ground-floor plate F00 from below, then glue F00 on top.
+1. **Base and plinth.** Join the four base quarters over the underside supports on a flat board. Then glue the ten stone panels, the two drawer guide walls and the back stop onto the grey base. Screw the four foot blocks to the ground-floor plate F00 from below, then glue F00 on top.
 2. **Drawer.** Build the drawer box with its stone front and slide it in from the back-right.
 3. **Fixed rear shell.** Glue up the six rear facets and glue them to F00. Identical walls share one ID, so the rear reads W04, W05, W06, W07, W06, W09; the wall map in the book shows each facet.
-4. **Floors.** Build the post-and-ledge frame and add the three solid floors.
+4. **Floors and pillars.** Join the 6 mm floor sections over their 4 × 4 mm supports. Use the positioning maps. Make a physical joint sample first. Install four continuous P01 pillars on the foot blocks. Slide both F01 levels over the rectangular openings. Seat F02 on the pillar tops. Fit the rear ledges under the floors.
 5. **Opening shells.** Build the two front wall shells.
-   - Square-edge wall corners use internal J01 gussets, blunt and wide with 21.5 mm of glue face on each wall. Beside both doors the ground-floor low gussets sit just above the door openings. Fill the small exterior seams where the walls are fixed; keep them clear where they move.
+   - Square-edge wall corners use internal J01 gussets, blunt and wide with about 20 mm of glue face on each wall. Beside both doors the ground-floor low gussets sit just above the door openings. Fill the small exterior seams where the walls are fixed; keep them clear where they move.
    - Glue backing blocks before drilling for hinges.
    - Follow the blue fastener borders and dashed drilling axes, and the orange glue-face outlines in the assembly diagrams.
    - Magnetic catches and stops: glue one MC1 block inside each shell near the front seam, just under F02. Fit the four magnets and four steel discs, then stand the two GP1 posts on the base: glue each one and screw it from below.
@@ -252,7 +253,7 @@ Every build writes `output/reports/cad-validation.json` and `release-validation.
 
 - **Parts and profiles:** valid one-solid profiles; native sketch features agree with the independent solids.
 - **Files:** the native document and the STEP files reopen correctly.
-- **Closed assembly:** no overlaps, with exact Ø560 × 894 bounds.
+- **Closed assembly:** no overlaps, with exact Ø522.666667 × 838.4 bounds.
 - **Wall motion:** sampled every 5° from 0° to the 100° stop, with the veranda, the garden posts and the example furniture in place. The catches, the stops and their four magnets are counted.
 - **Doors:** both doors swing 0–90° clear of everything.
 - **Windows:** the veranda keeps 10 mm clear in front of every window.
@@ -264,8 +265,8 @@ Every build writes `output/reports/cad-validation.json` and `release-validation.
 - **Roof lift:** clear at selected heights with the catches released.
 - **Cutting:**
   - starter holes stay inside waste;
-  - layout bounds and spacing are respected (12 mm on jigsaw sheets, 2 mm on laser sheets);
-  - every 3 mm part is on an A4 or A3 laser sheet with its laser files;
+  - layout bounds and spacing are respected (12 mm between parts on A3 CNC sheets);
+  - every plywood part is on an A3 sheet with separate CNC operation files;
   - identical house parts share one ID;
   - every part has a cut source, and copy numbers are unique;
   - furniture and miniature accessories have no cutting sheets or CAD plans.

@@ -6,9 +6,13 @@ FREECAD_ENV = MOOMIN_HEADLESS=1 QT_QPA_PLATFORM=offscreen
 # The venv also sees other projects' site-packages; their pytest plugins must not load here.
 TEST_ENV = PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
 
-.PHONY: all check build tolerance clean viewer site help
+.PHONY: all check build tolerance clean viewer site stress help
 
 all: check build tolerance  ## Config check and tests, full rebuild, then the plywood thickness check
+	$(PYTHON) source/package.py
+
+stress:  ## Physical real stress tests with FreeCAD FEM, CalculiX, and Eurocode 5 analytics
+	$(FREECAD_ENV) "$(FREECAD_PYTHON)" source/run_stress_tests.py
 
 check:  ## Config schema and rules, then the model tests (seconds, no FreeCAD)
 	$(PYTHON) source/config_check.py

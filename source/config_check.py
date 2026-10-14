@@ -24,6 +24,12 @@ def problems(cfg):
     if doors['main']==doors['veranda']:found.append(f'doors: the main and veranda doors are both on {doors["main"]}')
     if doors['veranda']!=ver['facet']:found.append(f'doors/veranda: the veranda door ({doors["veranda"]}) must be on the veranda facet ({ver["facet"]}) so it opens onto the deck')
     if cfg['roof_diameter']<=cfg['tower_diameter']:found.append(f'roof_diameter: {cfg["roof_diameter"]:g} must exceed tower_diameter {cfg["tower_diameter"]:g} so the roof overhangs the walls')
+    fab=cfg['fabrication']
+    if fab['sheet_mm']!=[297,420]:found.append('fabrication/sheet_mm: this design requires A3 blanks, [297, 420] mm')
+    if cfg['wall_height']>420:found.append('wall_height: a whole wall must not exceed the 420 mm A3 blank length')
+    if abs(cfg['wall_height']-3*cfg['floor_pitch'])>1e-6:found.append('wall_height/floor_pitch: the wall must span three equal storeys')
+    if fab['base_lift']!=fab['base_support'][0]:found.append('fabrication/base_lift: must equal the underside support thickness')
+    if cfg['floor_pitch']<=cfg['thickness']['floor']+12:found.append('floor_pitch: insufficient height for the foot blocks and floor plate')
     for name,limit in (('wall_hinge',cfg['wall_height']),('door_hinge',None)):
         h=cfg[name]
         for c in h['centers']:
@@ -36,6 +42,7 @@ def problems(cfg):
         for t,spec in stock.items():
             for size in [spec['primary']]+spec.get('extra',[]):
                 if min(size)<=2*cfg['stock_margin']:found.append(f'stock/{group}/{t}: a {size[0]:g} x {size[1]:g} sheet leaves no room inside the {cfg["stock_margin"]:g} mm margins')
+                if size!=fab['sheet_mm']:found.append(f'stock/{group}/{t}: only A3 [297, 420] mm blanks are supported')
     return found
 
 def check(path=CONFIG):

@@ -32,7 +32,7 @@ def test_height_matches_config(cfg,data):
     assert max(c[2] for i,p in house(data) for c in corners(i,p))==pytest.approx(cfg['height'],abs=.01)
 
 def test_floors_follow_plinth_and_pitch(cfg,data):
-    ground=cfg['thickness']['base']+cfg['plinth']['height']
+    ground=cfg['fabrication']['base_lift']+cfg['thickness']['base']+cfg['plinth']['height']
     assert data['derived']['floor_tops']==pytest.approx([ground+k*cfg['floor_pitch'] for k in range(4)])
 
 def test_everything_stands_on_the_base(cfg,data):

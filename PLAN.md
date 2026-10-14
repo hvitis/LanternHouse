@@ -464,3 +464,12 @@ Remaining comparison items moved to `TODO.md`.
   - I could not confirm the EN 315 tolerance formula, so the band is a plain measured spread and is not cited as a standard.
 - **Book:** MG1 and SD1 hardware rows, epoxy in the supplies, and a new "Toy-safe paint (EN 71-3)" page. It lists paint types (water-based acrylic recommended, primer, hardwax oil, water-based stain, clear finish, what to avoid) and example products whose makers state EN 71-3. A new assembly step, "Fit the magnetic catches and stops", has a `catches` render. The drawer side and the open angle in the book text come from the model.
 - **Checks:** 34 release checks. New: the magnets and stops, and figures through doorways. The F02 hole rule counts the pivot holes only. Two new model tests.
+
+
+## Revision 7: A3 CNC stock and continuous pillars
+
+All plywood parts use A3 stock (297 × 420 mm). Fixed walls are 420 mm and opening walls are 418 mm. The visual scale is 14/15 of revision 6. Floor pitch is 140 mm. All floor plates are 6 mm. Four continuous 8 mm P01 pillars, each 402 mm long, replace P01/P02 segments. Four openings in each F01 level let the floors slide over the pillars.
+
+The base uses four quarters. Floors and the roof ring use supported halves. Floor supports are 4 mm thick and 4 mm wide. Base supports raise the assembly by 4 mm. The finished height is 838.4 mm. The divider doorway is 38 mm wide to retain figure clearance. The thinner attic floor requires eight steel washers per roof pivot to preserve the existing bolt and cap-nut fit.
+
+The complete book remains A4. Each large individual fabrication piece uses two A4 pages with overlap. A separate supplier PDF contains native A3 pages, grouped by plywood thickness and operation. Machining exports distinguish cuts, drilling, pockets, countersinks, entry faces and depths. Fixed wall end edges remain uncut. Cutter selection, workholding and tolerances require supplier confirmation. Narrow floor joints require physical samples.

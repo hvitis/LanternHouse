@@ -18,9 +18,9 @@ W,H=A4;M=40;INK=colors.HexColor('#284849');TEAL=colors.HexColor('#197F98');RUST=
 OUT=ROOT/'output/pdf';OUT.mkdir(exist_ok=True)
 DER=DATA['derived'];DOORS=CFG['doors'];VER=CFG['veranda'];VER_FACET=int(VER['facet'][1:])-1
 TOPS=DER['floor_tops'];G0=TOPS[0];PITCH=CFG['floor_pitch'];EAVE=DER['roof_eave'];CLEAR=DER['clear_room_height']
-GUSSETS=(26,round(PITCH-8-20));HINGES=[G0+c for c in CFG['wall_hinge']['centers']];DRAWER=CFG['plinth']['drawer']
+GUSSETS=(26*CFG['wall_height']/450,PITCH-CFG['thickness']['floor']-20*CFG['wall_height']/450);HINGES=[G0+c for c in CFG['wall_hinge']['centers']];DRAWER=CFG['plinth']['drawer']
 MAG,CATCH,STOP=CFG['magnets'],CFG['wall_catch'],CFG['wall_stop'];OPEN=DER['views']['open_angle'];SIDE=DER['drawer']['side']
-STOPWALLS=' and '.join(k for k,v in P.items() if any('garden stop' in h['purpose'] for h in v['holes']));CATCHHOLES=' and '.join(h['id'] for h in P['F02']['holes'] if 'catch' in h['purpose'])
+STOPWALLS=' and '.join(k for k,v in P.items() if any('garden stop' in h['purpose'] for h in v['holes']));CATCHHOLES=' and '.join(f'{pid}/{h["id"]}' for pid,p in P.items() if p.get('assembly_panel')=='F02' for h in p['holes'] if 'catch' in h['purpose'])
 def zl(values):return ', '.join(f'Z{v:g}' for v in values[:-1])+f' and Z{values[-1]:g}'
 # The book covers the house and clay family; furnishings only appear in the 3D view.
 MAIN=fabrication_parts(DATA)
@@ -166,7 +166,7 @@ def stock_rows(sheets):
             for item in s['items']:
                 use=USE.get(P[item['part']]['category'],P[item['part']]['category'].lower())
                 if use not in uses:uses.append(use)
-        rows.append([f'{t:g} mm',f'{sw:g} x {sh:g} mm',len(group),'Existing supply' if existing else 'LASER CUT (or knife)' if laser else 'Buy / use matching stock',', '.join(uses).capitalize()])
+        rows.append([f'{t:g} mm',f'{sw:g} x {sh:g} mm',len(group),'Existing supply' if existing else 'A3 CNC / DIY templates',', '.join(uses).capitalize()])
     return rows
 def hardware_rows():
     counts=Counter(f['type'] for f in DATA['fasteners'])
@@ -178,7 +178,7 @@ def hardware_rows():
       ['SC3','D3 x 16 mm countersunk wood screw; head about D6.',counts['SC3'],'10','F00 into foot blocks; B01 into GP1 stop posts'],
       ['BL1','M3 x 25 mm pan-head machine screw; M3 matching nuts; length measured below head.',counts['BL1'],'4','Captive roof turn-buttons'],
       ['NT1','M3 domed cap nut; internal usable cavity at least 3.8 mm; matching thread.',2,'4','Covers both BL1 ends'],
-      ['WS1','M3 plain steel washer; D3.2 bore, about D7 outside, exactly 0.5 mm thick.',8,'12','Four per BL1 pivot'],
+      ['WS1','M3 plain steel washer; D3.2 bore, about D7 outside, exactly 0.5 mm thick.',16,'20','Eight per BL1 pivot'],
       ['WS2','M3 nylon washer; D3.2 bore, about D7 outside, 0.5 mm thick.',2,'4','Low-friction turn-button pivots'],
       ['SP1','M3 nylon spacer; D3.2 bore, outside D6, 8 mm long.',2,'4','Raises turn-buttons above roof ring'],
       ['SP2','Rigid 0.9 mm packing sheet; cut A06 x12, 10 x25 mm. Card, veneer or plastic.',12,'1 A4 sheet','Beneath wall hinge leaves'],
@@ -242,7 +242,7 @@ def overall_page(b):
         c.setFillColor(INK);c.setFont('Helvetica',8);c.drawCentredString(x+w/2,y-14,caption)
     wpf=DER['windows_per_floor'];tops=' / '.join(f'Z{z:g}' for z in DER['floor_tops'])
     dr=DRAWER;pl=CFG['plinth']
-    rows=[['Base',f'Round D{D:g}, {DER["base_thickness"]:g} mm plywood, plain grey'],['Stone plinth',f'{pl["height"]:g} high, 12 facets {2*pl["apothem"]:g} across flats; ground floor top Z{G0:g}'],['Hidden drawer',f'{DER["drawer"]["width"]:g} wide x {DER["drawer"]["depth"]:.0f} long x {DER["drawer"]["height"]:g} high ({DER["drawer"]["height"]-4:g} deep inside), in the plinth; pulls out {DER["drawer"]["travel"]:g} mm to the {SIDE}'],['Rooms',f'One divider per storey with a {CFG["partition"]["door_width"]:g} x {CFG["partition"]["door_height"]:g} doorway at its front end: two rooms per floor'],['Figures','Thermo-clay '+', '.join(f'{f["name"]} {f["height"]:.0f}' for f in DER['figures'])+'; one per floor (page 3)'],['Tower',f'12 flat facets, {CFG["tower_diameter"]:g} across vertices, 6 mm walls'],['Floors',f'Tops {tops}; clear room height {DER["clear_room_height"]:g}; attic inside the roof'],['Opening walls',f'{ids(shell("WallRight"))} (right) and {ids(shell("WallLeft"))} (left) on hinge axes X+/-{DER["hinge_axes"]["WallRight"][0]:g}; open to {OPEN:g} degrees against the GP1 stop posts'],['Roof',f'About {CFG["roof_diameter"]:g} across; eave Z{DER["roof_eave"]:g}; lifts off; finial top Z{top:g}'],['Veranda',f'{VER["width"]:g} x {VER["depth"]:g} deck on {VER["facet"]}; deck top Z{G0+6:g}; roof apex about Z{apex:.0f}'],['Doors',f'Main {DOORS["main"]}, veranda {DOORS["veranda"]}; 46 x 86, open outward'],['Windows',f'{wpf[0]} ground / {wpf[1]} middle / {wpf[2]} bedroom / {wpf[3]} dormer']]
+    rows=[['Base',f'Round D{D:g}, {DER["base_thickness"]:g} mm plywood, plain grey'],['Stone plinth',f'{pl["height"]:g} high, 12 facets {2*pl["apothem"]:g} across flats; ground floor top Z{G0:g}'],['Hidden drawer',f'{DER["drawer"]["width"]:g} wide x {DER["drawer"]["depth"]:.0f} long x {DER["drawer"]["height"]:g} high ({DER["drawer"]["height"]-4:g} deep inside), in the plinth; pulls out {DER["drawer"]["travel"]:g} mm to the {SIDE}'],['Rooms',f'One divider per storey with a {CFG["partition"]["door_width"]:g} x {CFG["partition"]["door_height"]:g} doorway at its front end: two rooms per floor'],['Figures','Thermo-clay '+', '.join(f'{f["name"]} {f["height"]:.0f}' for f in DER['figures'])+'; one per floor (page 3)'],['Tower',f'12 flat facets, {CFG["tower_diameter"]:g} across vertices, 6 mm walls'],['Floors',f'Tops {tops}; clear room height {DER["clear_room_height"]:g}; attic inside the roof'],['Opening walls',f'{ids(shell("WallRight"))} (right) and {ids(shell("WallLeft"))} (left) on hinge axes X+/-{DER["hinge_axes"]["WallRight"][0]:g}; open to {OPEN:g} degrees against the GP1 stop posts'],['Roof',f'About {CFG["roof_diameter"]:g} across; eave Z{DER["roof_eave"]:g}; lifts off; finial top Z{top:g}'],['Veranda',f'{VER["width"]:g} x {VER["depth"]:g} deck on {VER["facet"]}; deck top Z{G0+6:g}; roof apex about Z{apex:.0f}'],['Doors',f'Main {DOORS["main"]}, veranda {DOORS["veranda"]}; {P['E01']['width']:.1f} x {P['E01']['height']:.1f}, open outward'],['Windows',f'{wpf[0]} ground / {wpf[1]} middle / {wpf[2]} bedroom / {wpf[3]} dormer']]
     mini_table(c,rows,M,y-36,[90,425],['Item','Dimension'],8,15.5)
     b.end()
 
@@ -331,12 +331,12 @@ def manual():
     b.page('Read a screw drawing','Outer borders and the axis through the wood')
     screw_section(c,145,643,2,12,4,[(1,'Hinge leaf: 1'),(.9,'A06 shim: 0.9'),(6,'Wall: 6'),(8,'Backing: 8')],7,'SC1 / 24 screws')
     screw_section(c,145,436,1.6,8,3.2,[(.8,'Door hinge: 0.8'),(4,'Door: 4'),(8,'Backing: 8')],7,'SC2 / 16 screws')
-    screw_section(c,145,254,3,16,6,[(8,'F00 plate: 8'),(12,'Foot block: 12')],6,'SC3 / 4 screws')
+    screw_section(c,145,254,3,16,6,[(6,'F00 plate: 6'),(12,'Foot block: 12')],6,'SC3 / 4 screws')
     para(c,'Blue outlines show the complete fastener. The dashed arrow is its drilling and insertion axis. Dimensions are nominal mm; section diagrams are enlarged, not cutting templates. Tighten by hand after pilot drilling; stop when the head seats.',M,94,size=9,leading=13)
     b.end()
     b.page('Build the captive roof pivots','BL1 x 2 / actual section / no exposed thread')
     x=190;y=673;s=8
-    stack=[(.5,'WS1 steel washer 1 / under head'),(8,'F02 attic floor'),(8,'SP1 nylon spacer'),(.5,'WS1 steel washer 2'),(.5,'WS1 steel washer 3'),(3,'E08 turn-button'),(.5,'WS2 nylon washer'),(.5,'WS1 steel washer 4')]
+    stack=[(.5,'WS1 steel washer 1 / under head'),(6,'F02 attic floor'),(8,'SP1 nylon spacer'),(.5,'WS1 steel washer 2'),(.5,'WS1 steel washer 3'),(3,'E08 turn-button'),(.5,'WS2 nylon washer'),(2.5,'WS1 steel washers 4-8; 2.5 mm total')]
     cursor=y;previous_label=y+20
     for j,(thick,text) in enumerate(stack):
         h=thick*s;c.setFillColor(colors.HexColor('#DCC19D') if j in (1,5) else colors.HexColor('#DCE8E8'));c.setStrokeColor(INK);c.rect(x-40,cursor-h,80,h,fill=1,stroke=1)
@@ -345,7 +345,7 @@ def manual():
     c.setFillColor(colors.HexColor('#B9C7C6'));c.setStrokeColor(INK);c.roundRect(x-24,cursor-6*s,48,6*s,10,fill=1,stroke=1);label(c,'NT1 cap nut',x+56,min(cursor-20,previous_label-17),9)
     c.setStrokeColor(TEAL);c.setLineWidth(1.1);c.rect(x-3*s/2,y-25*s,3*s,25*s,fill=0,stroke=1);c.rect(x-3*s,y,6*s,2*s,fill=0,stroke=1)
     arrow(c,(x,y+35),(x,y-25*s-25),TEAL,True);dimension(c,(x-55,y),(x-55,y-25*s),'25 mm below head',-15)
-    para(c,'Four steel washers + one nylon washer per pivot. Stack thickness: 21.5 mm. Remaining threaded length: 3.5 mm. Check that the cap nut cavity is at least 3.8 mm and the nut seats against the washer, not against the screw tip.',M,375,size=10)
+    para(c,'Eight steel washers + one nylon washer per pivot. Stack thickness: 21.5 mm. Remaining threaded length: 3.5 mm. Check that the cap nut cavity is at least 3.8 mm and the nut seats against the washer, not against the screw tip.',M,375,size=10)
     para(c,f'Set light pivot friction, then apply a small amount of compatible removable threadlocker to the metal thread. Let it cure as directed. The tab must rotate without the nut turning. Do not glue the moving tab. Roof ring top is Z{EAVE+6:g}; tab underside is Z{EAVE+9:g}: a 3 mm retaining gap.',M,293,size=10)
     para(c,'Locked: tab points outward and overlaps the roof ring. Unlocked: rotate each tab 90 degrees toward the center, then lift the roof vertically. These fittings remain captive during play.',M,210,size=10)
     b.end()
@@ -363,11 +363,11 @@ def manual():
     rows=stock_rows(NEST['sheets'])
     y=table(c,rows,M,714,[55,105,50,145,160],['Ply','Sheet size','Qty','Existing supply','Use'],9)
     existing=sum(bool(sh.get('existing_stock')) for sh in NEST['sheets'])
-    y=para(c,f'This table covers the house only. The {CFG["laser"]["thickness"]:g} mm sheets are packed tightly for a laser cutter (see Cutting order). Your existing 400 x 600 x 6 mm sheets are allocated first ({existing} used). A4 stock can replace matching small-part blanks, but re-nest before substituting sheets. Thickness class and appearance do not guarantee actual thickness or flatness: inspect each sheet for bowing, damaged cores and splinters.',M,y-24,size=10)
+    y=para(c,f'All cutting stock is A3, 297 x420 mm, grouped by 3, 4, 6 and 8 mm thickness. Fixed walls retain the supplied 420 mm end edges; moving walls are 418 mm. Continuous P01 pillars use 5 mm end margins. Confirm workholding and cutters with the company. Inspect actual sheet thickness and flatness.',M,y-24,size=10)
     para(c,'Measure thickness at several edges. Cut T01/T02 and check the printed 100 mm length, blade entry, and joint fits. If stock differs materially, update source/config.json and regenerate the CAD and book. Sand to a supported glue fit; do not force slots or rely on friction alone.',M,y-8,size=10)
     imagebox(c,'house-open',M,58,W-2*M,300);b.end()
     b.page('Print, join and glue templates','Print actual size / 100% / A4 / single-sided')
-    para(c,'1. Print the calibration page first. Turn off Fit, Shrink, Scale to page and borderless enlargement. Measure the 100 mm square in both directions. Do not cut structural parts if either dimension differs by more than 0.5 mm.\n2. Lay out each sheet using its row/column map. Trim only the RIGHT and TOP overlap edges where needed. Overlap matching crosshairs by 10 mm; match long profile lines across seams.\n3. Tape joins on the back. Glue the completed sheet template to the correct plywood thickness using removable adhesive. Mark the sheet ID and keep the cutting-order page nearby.\n4. Use the cutting templates, not the small reference drawings. Decorations go onto finished wood later.',M,712,size=11,leading=17)
+    para(c,'1. Print the calibration page first. Turn off Fit, Shrink, Scale to page and borderless enlargement. Measure the 100 mm square in both directions. Do not cut structural parts if either dimension differs by more than 0.5 mm.\n2. Join each individual part template using its row/column labels. Trim only the RIGHT and TOP overlap edges where needed. Overlap matching crosshairs by 10 mm; match long profile lines across seams.\n3. Tape joins on the back. Glue the completed part template to the correct plywood thickness using removable adhesive. Mark the part ID and keep the cutting-order page nearby.\n4. Use the cutting templates, not the small reference drawings. Decorations go onto finished wood later.',M,712,size=11,leading=17)
     label(c,'Line legend',M,391,12)
     c.setStrokeColor(INK);c.line(M,365,M+90,365);label(c,'Black: final cut boundary',M+112,361,10)
     c.setStrokeColor(RUST);c.circle(M+45,331,8);c.line(M+34,331,M+56,331);c.line(M+45,320,M+45,342);label(c,'H: finished or pilot hole',M+112,327,10)
@@ -388,13 +388,12 @@ def manual():
     para(c,'For sheets you cut yourself:\n1. Drill finished holes and pilots using a depth stop for blind holes. Confirm the entry face: TOP or UNDERSIDE.\n2. Drill S holes and cut enclosed openings while the surrounding sheet is intact.\n3. Break the sheet into manageable groups through the blank lanes.\n4. Cut large exterior contours first, then small parts. Retain temporary bridges or extra surrounding stock until each part can be clamped safely.\n5. File to size, round exposed edges, remove template paper and label the back of each part.',M,714,size=11,leading=17)
     para(c,'The nested layout reserves 12 mm between independent contours and at least 15 mm at sheet edges. These are starting clearances; increase them if your blade, clamps or saw shoe need more room. Enclosed offcuts are not packed with parts because they support the sheet during sawing.',M,378,size=10)
     para(c,'Save window rectangles, roof-ring centers and large corner offcuts. They can become clamping pads, painting samples, future miniature decorations or spare parts. Clamp tiny blanks to a larger sacrificial carrier; never hold a small loose piece beside a moving blade.',M,273,size=10)
-    lz=CFG['laser'];lsheets=[s['id'] for s in NEST['sheets'] if s.get('laser')]
-    para(c,f'All {lz["thickness"]:g} mm parts are on the laser sheets {ids(lsheets)}, {lz["spacing"]:g} mm apart; use Moomin-House-3mm-Hand-Templates.pdf for A4 paper templates. Glue the calibrated prints onto plywood for hand cutting. For outsourcing, send Moomin-House-Supplier.pdf: its production pages are full-size, unannotated vector outlines. No engraving is requested.',M,154,size=10)
+    para(c,'All plywood thicknesses have A3 CNC layouts. Use the individual A4 cutting templates for DIY work; large parts take two pages. For outsourcing, send Moomin-House-Supplier.pdf and the operation CSV/DXF/SVG files. Reference pages identify the text-free production pages. No engraving is requested.',M,154,size=10)
     b.end()
     b.page('Inspect supplied 3 mm parts','For parts supplied by a cutting company')
     para(c,'Compare the supplied parts with the supplier inventory and reference maps. Inspect the narrow strips and check the pivot holes before assembly. Sort the supplied house parts by their shared build IDs.',M,710,size=11,leading=17)
     para(c,'Skip cutting, starter-hole drilling and waste-side filing for finished supplied parts. The 0.5 mm filing allowance applies only to hand-cut parts. Remove loose residue and lightly clean mating edges before gluing. Preserve the finished outline and dry-fit the parts.',M,553,size=11,leading=17)
-    para(c,'The supplier specification awaits confirmation of the actual 3 mm plywood, cutting tolerances, 2 mm spacing and kerf compensation. Keep textures in the decor PDF and apply them after assembly. Furniture appears only in the 3D view and uses no supplied plywood.',M,365,size=11,leading=17)
+    para(c,'The supplier specification awaits confirmation of the actual 3 /4 /6 /8 mm plywood, cutting tolerances, 12 mm lanes, cutters, hold-down and compensation. Keep textures in the decor PDF and apply them after assembly. Furniture appears only in the 3D view and uses no supplied plywood.',M,365,size=11,leading=17)
     b.end()
     b.page('Redesign from your photos',f'Veranda on {VER["facet"]} / gabled main entrance / round base')
     imagebox(c,'house-closed-veranda',M,284,W-2*M,430)
@@ -423,33 +422,33 @@ def manual():
     c.setStrokeColor(colors.HexColor('#ACB9AB'));c.setLineWidth(.7);c.circle(cx,cy,CFG['base_diameter']/2*s,fill=0,stroke=1)
     floor=P['F01'];r=DATA['derived']['floor_radius'];loop(c,[plan(x-r,y-r) for x,y in floor['outer']],stroke=INK)
     for i in DATA['instances']:
-        if i['part'] not in ('A04','P02'):continue
+        if i['part'] not in ('A04','P01'):continue
         x,y,z=i['origin'];w=P[i['part']]['width'];d=24 if i['part']=='A04' else 8
-        if i['part']=='P02':y-=8
+        if i['part']=='P01':y-=8
         loop(c,[plan(x,y),plan(x+w,y),plan(x+w,y+d),plan(x,y+d)],colors.HexColor('#E8C9A6') if i['part']=='A04' else colors.HexColor('#7C9B84'),RUST)
-        if i['part']=='P02':label(c,i['part'],*plan(x-13,y-14),size=7)
+        if i['part']=='P01':label(c,i['part'],*plan(x-13,y-14),size=7)
     arrow(c,plan(0,0),plan(50,0),TEAL);arrow(c,plan(0,0),plan(0,50),TEAL);label(c,'X',*plan(56,0),size=8);label(c,'Y',*plan(0,55),size=8)
     rows=[['1','-145, -14','-145, 2'],['2','127, -14','127, 2'],['3','-68, 104','-68, 120'],['4','50, 104','50, 120']]
     y=table(c,rows,M,284,[45,235,235],['Pair','A04 left/front corner X,Y','Post left/front corner X,Y'],9)
-    para(c,f'Feet: 24 x24 x12, screwed to F00 from below, bottom Z{G0:g}. Lower posts: footprint 18 x8, bottom Z{G0+12:g}, top Z{TOPS[1]-8:g}. Upper posts use the same footprint, bottoms Z{TOPS[1]:g} and Z{TOPS[2]:g}. L01 ledges are centered on {facet_ref(3)}, {facet_ref(4)}, {facet_ref(7)} and {facet_ref(8)}; top faces {zl([t-8 for t in TOPS[1:]])}. Each ledge starts 8 mm from its wall-facet edges, projects 12 mm inward and sits directly below the floor underside.',M,y-18,size=9,leading=13)
+    para(c,f'Feet: 24 x24 x12, screwed to F00 from below, bottom Z{G0:g}. P01 pillars: {DER['pillars']['width']:g} x8 footprint, {DER['pillars']['length']:g} long, bottom Z{G0+12:g}, top Z{TOPS[3]-6:g}. Both F01 levels have four matching through-openings. L01 ledges are centered on {facet_ref(3)}, {facet_ref(4)}, {facet_ref(7)} and {facet_ref(8)}; top faces {zl([t-6 for t in TOPS[1:]])}. Each ledge starts 8 mm from its wall-facet edges, projects 12 mm inward and sits directly below the floor underside.',M,y-18,size=9,leading=13)
     b.end()
     vd,md=DOORS['veranda'],DOORS['main'];wpf=DER['windows_per_floor'];bal=P['C09']['quantity']
     pl=CFG['plinth'];bt=DRAWER['travel'];st=CFG['stairs']
     steps=[
       ('Prepare and sort all parts','frame','Sort by thickness and part ID. Cut the test coupons first. Transfer part IDs onto hidden faces, then file edges and check that the matching quantities are present.','No screws yet. Identical parts share one ID and are interchangeable. Furniture is an example in the 3D view only.'),
-      ('Build the stone plinth','plinth-drawer',f'Glue the ten PL1 stone panels upright on the grey B01 base ({DER["base_thickness"]:g} mm plywood) around the F00 outline, leaving the two drawer facets on the {SIDE} open. Glue the two DG1 guide walls and the DB1 back stop between them. Screw the four A04 feet onto F00 from below (D3.2 clearance, D2 pilots, SC3 x4), then glue F00 on top: the ground floor is now at Z{G0:g}.','Blue outlines / axes: SC3 x4, heads flush under F00 so the drawer passes beneath them. Keep glue out of the drawer bay.'),
+      ('Build the stone plinth','plinth-drawer',f'Join the B01 quarters over the underside supports using the positioning map. Keep the screw access holes clear. Glue the ten PL1 stone panels upright on the grey B01 base ({DER["base_thickness"]:g} mm plywood) around the F00 outline, leaving the two drawer facets on the {SIDE} open. Glue the two DG1 guide walls and the DB1 back stop between them. Screw the four A04 feet onto F00 from below (D3.2 clearance, D2 pilots, SC3 x4), then glue F00 on top: the ground floor is now at Z{G0:g}.','Blue outlines / axes: SC3 x4, heads flush under F00 so the drawer passes beneath them. Keep glue out of the drawer bay.'),
       ('Make the hidden drawer','plinth-drawer',f'Glue the DR1 bottom between the DR2 sides and the DR3 back: the box is {DRAWER["height"]:g} high, {DRAWER["height"]-4:g} mm deep inside. Glue the two DR4 front panels to the box with small corner blocks, notched corner down. Wax the underside and slide the drawer in from the {SIDE}: closed, its stone front is flush with the plinth. It pulls out {bt:g} mm by the finger notch under the corner.','Paint the drawer front exactly like the plinth so it stays hidden. The drawer lifts out completely; do not overload it beyond the guides.'),
-      ('Make the fixed rear shell','walls-rear',f'Join {", ".join(shell("Fixed"))} in this order (facets 4-9) around the full-size floor outline on F00. Each adjacent panel pair forms a 150-degree inside corner. Glue J01 gussets at heights {GUSSETS[0]} and {GUSSETS[1]} within every room interval; beside the {vd} veranda door both low gussets sit 96 mm up, just above the opening. Use a temporary floor as an alignment gauge.','J2 orange joint marks: glue both gusset edge faces. Glue the fixed shell to F00. Do not glue the temporary alignment floor yet.'),
-      ('Build the independent floor frame','frame',f'Install P02 x4 on the foot blocks, then F01 at underside Z{TOPS[1]-8:g}. Add the P01 segments for the next levels and the second F01 at underside Z{TOPS[2]-8:g}. Add F02 at underside Z{TOPS[3]-8:g}. Glue the rear L01 ledges under the corresponding floors.',f'J1: floors rest on posts and ledges. Floor tops: {zl(TOPS)}. The floors are solid plates; play access is through the opening walls.'),
+      ('Make the fixed rear shell','walls-rear',f'Join {", ".join(shell("Fixed"))} in this order (facets 4-9) around the full-size floor outline on F00. Each adjacent panel pair forms a 150-degree inside corner. Glue J01 gussets at heights {GUSSETS[0]} and {GUSSETS[1]} within every room interval; beside the {vd} veranda door both low gussets sit {96*CFG["wall_height"]/450:g} mm up, just above the opening. Use a temporary floor as an alignment gauge.','J2 orange joint marks: glue both gusset edge faces. Glue the fixed shell to F00. Do not glue the temporary alignment floor yet.'),
+      ('Build the independent floor frame','frame',f'Install four continuous P01 pillars on the foot blocks. Join each 6 mm floor over its 4 x4 mm supports, following the positioning maps. Slide both F01 levels down over the pillar openings to undersides Z{TOPS[1]-6:g} and Z{TOPS[2]-6:g}. Seat F02 on the pillar tops at Z{TOPS[3]-6:g}. Fit the rear L01 ledges under the floors.',f'J1: floors rest on posts and ledges. Floor tops: {zl(TOPS)}. Only F01 has pillar openings; play access is through the opening walls.'),
       ('Fit the room dividers','rooms',f'On each storey glue one divider ({'PT2 on the ground floor, PT1 above' if 'PT2' in P else 'PT1 on all floors'}) along the house axis, from the rear corner to {CFG["partition"]["front_gap"]:g} mm short of the front seam: its rear notches slip over the corner gussets. Its {CFG["partition"]["door_width"]:g} x {CFG["partition"]["door_height"]:g} doorway sits at the front end, next to the opening walls.','J1 glued edges. Door leaves are not part of this plan; a 3 mm leaf on a cotton-tape hinge can be added later.'),
-      ('Build the two opening shells','wall-right',f'Right shell: {", ".join(shell("WallRight"))} (facets 1-3). Left shell: {", ".join(shell("WallLeft"))} (facets 10-12). Use J01 x12 per shell; beside the {md} door the ground-floor low gusset sits 96 mm up. The {md} door hinges at the front seam, where no gussets are needed; use the drawn positions elsewhere. Glue A02 onto the hinge mounting faces.','J2 + J3. Keep glue clear of the hinge and center seams. Do not glue the opening shells to F00.'),
-      ('Hang both wall assemblies','wall-left',f'Use HG1 x3 per side, centered at {zl(HINGES)}. Fit A06 shims below the leaves and align barrels on the axes X+179 or X-179, Y0. Check actual hinges against the printed template, then drill D1.5 pilots 11 mm into wood. Install SC1 x24.','SC1 x24 outlined blue. Verify the packing thickness against actual barrel geometry; regenerate changed hinge patterns before drilling.'),
+      ('Build the two opening shells','wall-right',f'Right shell: {", ".join(shell("WallRight"))} (facets 1-3). Left shell: {", ".join(shell("WallLeft"))} (facets 10-12). Use J01 x12 per shell; beside the {md} door the ground-floor low gusset sits {96*CFG["wall_height"]/450:g} mm up. The {md} door hinges at the front seam, where no gussets are needed; use the drawn positions elsewhere. Glue A02 onto the hinge mounting faces.','J2 + J3. Keep glue clear of the hinge and center seams. Do not glue the opening shells to F00.'),
+      ('Hang both wall assemblies','wall-left',f'Use HG1 x3 per side, centered at {zl(HINGES)}. Fit A06 shims below the leaves and align barrels on the axes X+/-{DER["hinge_axes"]["WallRight"][0]:g}, Y0. Check actual hinges against the printed template, then drill D1.5 pilots 11 mm into wood. Install SC1 x24.','SC1 x24 outlined blue. Verify the packing thickness against actual barrel geometry; regenerate changed hinge patterns before drilling.'),
       ('Fit the magnetic catches and stops','catches',f'Glue one MC1 block inside each opening shell, {CATCH["x"]:g} mm from the front seam, its top {CATCH["gap"]:g} mm under the attic floor F02 (a card shim sets the gap while the glue cures). Drill the blind D{MAG["pocket"][0]:g} x {MAG["pocket"][1]:g} pockets {CATCHHOLES} in the F02 underside above them, and the same pocket in the wall-side face of each GP1 post. Bed a D{MAG["magnet"][0]:g} x {MAG["magnet"][1]:g} magnet in each of the four pockets with slow 2-part epoxy, {MAG["pocket"][1]-MAG["magnet"][1]:g} mm below the surface, and fill the recess with epoxy. Epoxy the plain steel discs flush into the MC1 tops and into the recesses low on the outer face of {STOPWALLS}. Stand the GP1 posts on B01 over their screw holes: glue the foot and drive one SC3 from below.',f'Open each shell to {OPEN:g} degrees: it should touch its post and stay; closed, it should click shut. Swallowed magnets are dangerous: check that all four are buried and firm before every play session, and never use a loose one.'),
       ('Fit both doors and the entrance steps','wall-left',f'Fit one E01 door in {md} (main entrance) and one in {vd} (veranda door), hinged on the right-hand jamb seen from outside. Glue A03 backing strips, fit HG2 x2 and SC2 x8 per door, and add E02 handles and E10 thresholds. Each threshold top is Z{G0+6:g}; the door bottom at Z{G0+8:g} keeps a 2 mm gap. Glue the ES1/ET1 stone steps ({st["risers"]} risers) to B01 below the main door.','SC2 x16 total. Both doors open outward. Fit GD01 x2 and GD02 x2 as the small gabled canopy over the main entrance.'),
-      ('Add the window trim','wall-right',f'There are {wpf[0]} ground-floor windows, {wpf[1]} on the middle floor and {wpf[2]} on the bedroom floor: {sum(wpf[:3])} tower windows. For each, glue the frame first: D01 bars at the bottom and top, D02 bars at the sides. Fit a third D02 inside the frame in the middle, touching both D01 bars, then glue the third D01 across the outside at mid-height. Fit D03 x1 per wall facet as eave fascia. Paint trim cream.','J5 glued trim: D01 x3 and D02 x3 per window, all from the 3 mm laser sheets. Never bridge a moving seam with glued trim.'),
+      ('Add the window trim','wall-right',f'There are {wpf[0]} ground-floor windows, {wpf[1]} on the middle floor and {wpf[2]} on the bedroom floor: {sum(wpf[:3])} tower windows. For each, glue the frame first: D01 bars at the bottom and top, D02 bars at the sides. Fit a third D02 inside the frame in the middle, touching both D01 bars, then glue the third D01 across the outside at mid-height. Fit D03 x1 per wall facet as eave fascia. Paint trim cream.','J5 glued trim: D01 x3 and D02 x3 per window, all from the 3 mm A3 CNC sheets. Never bridge a moving seam with glued trim.'),
       ('Assemble roof and attic dormer','roof',f'Arrange R01 x11 and special R06 x1 over the two R05 gauges: the cone rises {DER["total_height"]-33-EAVE:.0f} mm above the eave. Reinforce seams with cotton tape. Fit the ring, cleats, top cap and FN01 white finial. Glue the DM01 front, the two triangular DM02 sides and the DM04 gable onto R06 around its opening, then the two DM05 roof panels and the window frame.','Cut R06 while the sheet is supported. Glue the finial by its broad foot. Never lift the roof by this ornament.'),
       ('Make the chimney','roof','Glue CH01-CH04 as a hollow square box, with sloped lower edges matching the roof plane. File the short bottom bevels, glue permanently to the rear roof panel and fit E07 cap.','The complete roof, dormer and chimney lift off together. Never glue the roof ring onto the house walls.'),
-      ('Install the captive roof catches','locks',f'Fit BL1 x2 upward through the F02 holes. Follow the washer/spacer stack on the hardware section page. Fit E08 tabs horizontally at underside Z{EAVE+9:g}. Locked tabs point outward over the roof ring; rotate 90 degrees inward to release.','BL1 x2, NT1 x2, WS1 x8, WS2 x2, SP1 x2. Set pivot friction and secure metal threads after testing.'),
+      ('Install the captive roof catches','locks',f'Fit BL1 x2 upward through the F02 holes. Follow the washer/spacer stack on the hardware section page. Fit E08 tabs horizontally at underside Z{EAVE+9:g}. Locked tabs point outward over the roof ring; rotate 90 degrees inward to release.','BL1 x2, NT1 x2, WS1 x16, WS2 x2, SP1 x2. Set pivot friction and secure metal threads after testing.'),
       ('Build and fix the veranda','porch',f'Glue the VS1 front skirt, the two VS2 side skirts and the two VJ1 joists upright on B01 against the plinth, then glue the E03 deck on top (top Z{G0+6:g}, level with the {vd} threshold). Stand C01 x4: two at the front corners, two against {vd}. Fit the C02 front header, glue the C10 rear header flat to {vd}, then the two angled C03 side headers. Add the C07 crossframe, the C04 front roof panel, the two C05 side panels (one turned over), the C11 hip caps and the C12 ridge cap. Fit C06 x2 front rails and C08 x2 side rails with {bal} C09 balusters, and the VS3 stair with three ET1 treads ({st["risers"]} risers) on the open end beside {facet_ref((VER_FACET-1)%12)}; paint those treads cream.',f'J5 glued joints. The veranda is permanent: both front walls open past it. The {vd} door opens outward onto the deck; keep its sweep clear.'),
       ('Paint and add paper details','house-open','Prime plywood, fill non-moving seams, sand lightly and apply blue exterior, red roof, cream trim, grey base and stone plinth. Glue the printed stone panels on the plinth and, if you like, the fish-scale shingle strips on the roof (decor book) after structural glue and paint cure. Add a compatible clear finish.','Keep glue faces, pilots, hinges, catches, the drawer gaps and mating clearances clear of paint build-up. Recheck movement after every coat.'),
       ('Open, close and check','house-open',f'To play: swing both walls outward until they rest against the GP1 garden posts, rotate the roof catches inward, and lift the roof if needed. Pull the hidden drawer out to the {SIDE} by its finger notch. The veranda stays in place. To close: seat the roof, rotate the catches outward and close the walls gently until the catches click.',f'The walls stop at the GP1 posts ({OPEN:g} degrees), where the magnets hold them open. Check all screws, pivot nuts, glue joints, room doors and the veranda columns. Do not lift the house by its roof, veranda or opening walls.'),
@@ -461,7 +460,7 @@ def manual():
         para(c,hint,M,y-8,size=9.5,leading=14,color=TEAL);b.end()
     b.page('Roof ring and cleats from below','R02 + R04 x12 / cone bearing faces / retaining gap')
     imagebox(c,'roof-underside',M,280,W-2*M,431)
-    para(c,f'R02 ring: underside Z{EAVE:g}, thickness 6, outer vertex radius 182. Center it on the cone. R04 cleats start at radial 170, bottom Z{EAVE+6:g}. Place one cleat in the center of each cone facet. Glue its level bottom to the ring and its slope to the roof skin.',M,244,size=10,leading=15)
+    para(c,f'R02 ring: underside Z{EAVE:g}, thickness 6, outer vertex radius {182*CFG["wall_height"]/450:g}. Join both ring sections over the upper bridges. Center it on the cone. R04 cleats start at radial {170*CFG["wall_height"]/450:g}, bottom Z{EAVE+6:g}. Place one cleat in the center of each cone facet. Glue its level bottom to the ring and its slope to the roof skin.',M,244,size=10,leading=15)
     para(c,f'Use R05 angle gauges to hold the cone while its taped seams cure. Make the ring and all twelve cleats part of the removable roof. The turn-button underside is Z{EAVE+9:g}, giving 3 mm above the ring. The finial top is Z{DER["total_height"]:g}.',M,152,size=10,leading=15)
     b.end()
     b.page('Validation and workshop checks','CAD checks do not replace a physical dry fit')
@@ -475,7 +474,7 @@ def manual():
     para(c,'This is a CAD-verified fabrication design, not a physically load-tested or certified toy. A physical dry fit is required. For ages 3-5, supervise small accessories and keep hands clear of hinge gaps; round edges and permanently secure small glued trim and hardware.',M,172,size=10)
     b.end()
     b.page('Files and reference sources','Rebuild from the included source files')
-    para(c,'Moomin-House-Complete.pdf: this instruction book, contents, dimensioned references, cutting templates, decor, clay family and the supplier appendix at the end.\nMoomin-House-Cutting-Templates.pdf: all house templates. Print at 100%. Use Moomin-House-3mm-Hand-Templates.pdf for the thin parts only.\nMoomin-House-Dimensioned-Parts.pdf: measurements and drilling schedule.\nMoomin-House-Decor.pdf: paint palette, stone plinth panels and roof shingle strips.\nMoomin-House-Clay-Family.pdf: the page on modelling the clay family.\nMoomin-House-Supplier.pdf: Polish by default; specification, reference maps and clean full-size cutting pages.\nMoominHouse.FCStd: native editable FreeCAD project. MoominHouse.step is the house. Furniture appears only in the 3D viewer and renders. DXF and sheet SVG files provide 1:1 profiles.',M,713,size=11,leading=17)
+    para(c,'Moomin-House-Complete.pdf: this A4 instruction book, contents, dimensioned references, individual cutting templates, decor, clay family and A4 supplier summary. Native A3 machining pages are in the separate supplier PDF.\nMoomin-House-Cutting-Templates.pdf: all house templates. Print at 100%. Use Moomin-House-3mm-Hand-Templates.pdf for the thin parts only.\nMoomin-House-Dimensioned-Parts.pdf: measurements and drilling schedule.\nMoomin-House-Decor.pdf: paint palette, stone plinth panels and roof shingle strips.\nMoomin-House-Clay-Family.pdf: the page on modelling the clay family.\nMoomin-House-Supplier.pdf: Polish by default; specification, reference maps and clean full-size cutting pages.\nMoominHouse.FCStd: native editable FreeCAD project. MoominHouse.step is the house. Furniture appears only in the 3D viewer and renders. DXF and sheet SVG files provide 1:1 profiles.',M,713,size=11,leading=17)
     para(c,'To change stock or hinges, edit source/config.json and regenerate all outputs together. Read README.md before changing CAD sketches: editable geometry changes do not automatically update already-exported PDF files.',M,423,size=10)
     sources=[('Official Moominhouse reference','https://shop.moomin.com/products/moominhouse-ninny-toy-40cm'),('FreeCAD official releases','https://github.com/FreeCAD/FreeCAD/releases'),('Bossard cap-nut specification examples','https://www.bossard.com/global-en/eshop/hex-nuts/hex-domed-cap-nuts-acorn-nuts/p/513/'),('Bosch jigsaw operating guidance','https://www.bosch-professional.com/binary/manualsmedia/o606338v21_160992AD26_202509.pdf')]
     y=324
@@ -503,15 +502,46 @@ def profile_reference(c,p,x,y,w,h,max_scale=5):
     dimension(c,xy(0,0),xy(p['width'],0),f'{p["width"]:.2f}',-18)
     dimension(c,xy(0,0),xy(0,p['height']),f'{p["height"]:.2f}',-26)
     if p['id'] in CFG['doors'].values():
-        dimension(c,xy(*p['outer'][2]),xy(*p['outer'][3]),'50.0 door notch',11,7)
-        dimension(c,xy(*p['outer'][4]),xy(*p['outer'][3]),'96.0',9,7)
+        dimension(c,xy(*p['outer'][2]),xy(*p['outer'][3]),f'{DER["doorways"][0]["width"]:.1f} door notch',11,7)
+        dimension(c,xy(*p['outer'][4]),xy(*p['outer'][3]),f'{DER["doorways"][0]["height"]+CFG["thickness"]["wall"]:.1f}',9,7)
     arrow(c,xy(0,0),xy(min(p['width'],25),0),TEAL);arrow(c,xy(0,0),xy(0,min(p['height'],25)),TEAL)
     c.setFont('Helvetica',7);c.setFillColor(TEAL);c.drawString(ox-6,oy-9,'0,0')
 
 def references():
     b=Book('Moomin-House-Dimensioned-Parts.pdf','Dimensioned parts');c=b.c
     part_pages(b,MAIN,'All house wood parts / including temporary jigs')
+    assembly_maps(b)
     hinge_templates(b);return b.save()
+
+def assembly_maps(b):
+    """Dimensioned positioning maps, in the original panel lower-left datum."""
+    c=b.c;lift=CFG['fabrication']['base_lift']
+    for parent,panel in DER['panels'].items():
+        b.page(parent+' / section and support positioning','Scaled assembly map / coordinates in mm / not a cutting template')
+        outline=panel['outline'];ww=max(x for x,y in outline);hh=max(y for x,y in outline)
+        k=min((W-2*M)/ww,340/hh);ox=(W-ww*k)/2;oy=340
+        def xy(x,y):return ox+x*k,oy+y*k
+        loop(c,[xy(x,y) for x,y in outline],stroke=colors.black)
+        for cut in panel['cuts']:loop(c,[xy(x,y) for x,y in cut],stroke=colors.black)
+        datum=panel['origin'];panel_z=datum[2]+lift
+        sections=[i for i in DATA['instances'] if i['design_part']==parent and abs(i['origin'][2]-panel_z)<.001]
+        supports=[i for i in DATA['instances'] if P[i['part']].get('assembly_panel')==parent and i['design_part']!=parent and (abs(i['origin'][2]+P[i['part']]['thickness']-panel_z)<.001 or parent=='R02' and abs(i['origin'][2]-panel_z-panel['thickness'])<.001)]
+        for inst in sections+supports:
+            part=P[inst['part']]
+            pts=[[inst['origin'][0]+inst['u'][0]*x+inst['v'][0]*y-datum[0],inst['origin'][1]+inst['u'][1]*x+inst['v'][1]*y-datum[1]] for x,y in part['outer']]
+            c.setDash(3,2) if inst in supports else c.setDash()
+            loop(c,[xy(x,y) for x,y in pts],stroke=RUST if inst in supports else TEAL)
+            xx,yy=xy(sum(x for x,y in pts)/len(pts),sum(y for x,y in pts)/len(pts));label(c,inst['part'],xx,yy,7)
+        c.setDash();dimension(c,xy(0,0),xy(ww,0),f'{ww:.2f} mm',-18,8)
+        dimension(c,xy(0,0),xy(0,hh),f'{hh:.2f} mm',-18,8)
+        rows=[]
+        for inst in supports:
+            angle=math.degrees(math.atan2(inst['u'][1],inst['u'][0]))
+            rows.append([inst['part'],f'{inst["origin"][0]-datum[0]:.2f}',f'{inst["origin"][1]-datum[1]:.2f}',f'{angle:.0f} deg'])
+        y=table(c,rows,M,300,[95,120,120,180],['Support','Origin X','Origin Y','Orientation'],8)
+        para(c,'Coordinates refer to the lower-left corner of the complete panel outline. Blue lines identify fabrication sections. Dashed brown lines identify support pieces. Place each support using its template origin and orientation. Centre floor supports on the seam for 2 mm bearing per half.',M,y-18,size=9,leading=13)
+        para(c,'Join panels on a flat board. Keep upper faces flush. Glue base supports below the base and ring bridges above the roof ring. Make a physical sample of the narrow floor joint before assembly.',M,y-92,size=9,leading=13)
+        b.end()
 
 HALF=(W-2*M-12)/2;REF_SCALE=2.5
 def block_spec(p):
@@ -615,17 +645,16 @@ def calibration(b):
     label(c,'100 mm / check both printer directions',M,167,11);scale_bar_bottom(c);b.end()
 
 def templates():
-    b=Book('Moomin-House-Cutting-Templates.pdf','Cutting templates')
-    purchased=[p for p in MAIN.values() if p['category'] in ('Purchased wood','Purchased packing')]
-    import supplier
-    options=supplier.settings(json.loads((ROOT/'source/config.json').read_text()))
-    extra=[s for s in NEST.get('optional_sheets',[]) if s['thickness']==3] if options['include_optional'] else []
-    index=template_pages(b,NEST['sheets']+extra,purchased)
+    from hand_templates import pages
+    b=Book('Moomin-House-Cutting-Templates.pdf','Individual cutting templates')
+    index=pages(b,MAIN,draw_sheet,scale_bar,calibration)
     return b.save(),[dict(i,pdf=b.path.name) for i in index]
 
 def hand_templates(selected):
+    from hand_templates import pages
     b=Book('Moomin-House-3mm-Hand-Templates.pdf','3 mm hand-cutting templates')
-    index=template_pages(b,selected,[])
+    thin={pid:p for pid,p in MAIN.items() if p['thickness']==3 and p['category'] not in ('Purchased wood','Purchased packing')}
+    index=pages(b,thin,draw_sheet,scale_bar,calibration)
     return b.save(),[dict(i,pdf=b.path.name) for i in index]
 
 def segment_hits_rect(a,b,x0,y0,x1,y1):
@@ -866,15 +895,16 @@ def main(lang='pl'):
     selected=supplier.sheets_for(DATA,NEST,supplier.settings(cfg))
     hand_path,hand_index=hand_templates(selected)
     supplier_path,supplier_report=supplier.build(DATA,NEST,cfg,lang)
-    paths=[manual(),references(),template_path,decor(),appendix_path,supplier_path]
+    summary_path=supplier.summary(supplier_report,OUT/'Moomin-House-Supplier-Summary.pdf')
+    paths=[manual(),references(),template_path,decor(),appendix_path,summary_path]
     (ROOT/'output/reports/template-index.json').write_text(json.dumps(main_index,indent=2))
     titles=['Instructions and hardware','Dimensioned parts','Full-size cutting templates','Color and decor','Appendix: clay family',supplier_report['title']]
     sections=[{'path':p,'title':t,'entries':[]} for p,t in zip(paths,titles)]
     sections[0]['entries']=PAGE_TITLES[paths[0].name]
     sections[2]['entries']=[{'title':i['sheet'],'page':i['overview_page'] or i['first_tile_page']} for i in main_index]
-    sections[-1]['entries']=[{'title':i['title'],'page':i['page']} for i in supplier_report['pages']]
+    sections[-1]['entries']=[]
     contents=combine(sections,OUT/'Moomin-House-Complete.pdf')
-    report={'pdfs':{p.name:len(PdfReader(p).pages) for p in paths+[hand_path]},'complete_pages':contents['complete_pages'],'paper':'A4 workshop pages; supplier and complete book include native A3 production sheets','template_scale':'1 mm = 72/25.4 PDF points','print_background':'White interior pages, transparent CAD diagram backgrounds, unfilled tables; original cover and textures preserved','starter_holes':sum(len(p['starters'])*p['quantity'] for p in MAIN.values()),'fasteners':dict(Counter(f['type'] for f in DATA['fasteners'])),'windows_per_floor':DATA['derived']['windows_per_floor'],'veranda':f'Permanent {VER["width"]:g} x {VER["depth"]:g} veranda on fixed facet {VER["facet"]}: hipped red roof with caps, shaped white columns, front and side railings, side steps','furniture':'3D view only; no CAD plans, templates or stock','laser_sheets':[s['id'] for s in NEST['sheets'] if s.get('laser')],'supplier_language':lang}
+    report={'pdfs':{p.name:len(PdfReader(p).pages) for p in paths+[hand_path,supplier_path]},'complete_pages':contents['complete_pages'],'paper':'A4 complete workshop book; separate supplier PDF has native A3 machining pages','template_scale':'1 mm = 72/25.4 PDF points','print_background':'White interior pages, transparent CAD diagram backgrounds, unfilled tables; original cover and textures preserved','starter_holes':sum(len(p['starters'])*p['quantity'] for p in MAIN.values()),'fasteners':dict(Counter(f['type'] for f in DATA['fasteners'])),'windows_per_floor':DATA['derived']['windows_per_floor'],'veranda':f'Permanent {VER["width"]:g} x {VER["depth"]:g} veranda on fixed facet {VER["facet"]}: hipped red roof with caps, shaped white columns, front and side railings, side steps','furniture':'3D view only; no CAD plans, templates or stock','cnc_sheets':[s['id'] for s in NEST['sheets'] if s.get('cnc')],'supplier_language':lang}
     for name,data in [('supplier-index.json',supplier_report),('hand-template-index.json',hand_index),('contents-index.json',contents)]:
         (ROOT/'output/reports'/name).write_text(json.dumps(data,ensure_ascii=False,indent=2))
     (ROOT/'output/reports/pdf-report.json').write_text(json.dumps(report,indent=2));print(json.dumps(report,indent=2))

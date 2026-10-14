@@ -8,7 +8,7 @@
   <img src="docs/images/cover.jpg" width="380" alt="Book cover: the round blue tower with a red cone roof and a small veranda, standing in a summer meadow">
 </p>
 
-The house is a round blue tower, 894 mm tall, with a red spire roof, three floors and an attic. Its twelve flat facets can be cut with a jigsaw, and the thin parts with a laser cutter. The front walls swing open on real hinges, the roof lifts off, a permanent veranda stands on the side, and a drawer is hidden in the stone plinth. Three thermo-clay Moomins live on the three floors.
+The house is a round blue tower, 838.4 mm tall, with a red spire roof, three floors and an attic. All plywood parts fit A3 stock (297 × 420 mm). CNC machining and calibrated A4 templates support company cutting and DIY work. The front walls swing open on real hinges, the roof lifts off, a permanent veranda stands on the side, and a drawer is hidden in the stone plinth. Three thermo-clay Moomins live on the three floors.
 
 <p align="center">
   <b><a href="https://hvitis.github.io/moominshouse/">Open the 3D model in your browser</a></b> &nbsp;·&nbsp;
@@ -33,11 +33,11 @@ The house is a round blue tower, 894 mm tall, with a red spire roof, three floor
 ## Features
 
 - **A real build, not just a model.** Every part has a plywood thickness, an outline, its holes and its jigsaw starter holes, packed onto real sheet sizes. The book contains tiled 1:1 templates with a calibration square, hinge checking templates, a hardware shopping list and step-by-step assembly.
-- **Play features.** Two front wall shells open to 100°, where a magnet in a small garden post holds each one open; magnetic catches under the attic floor hold them shut. Two doors open outward. The roof lifts off after two turn-button catches are released. A drawer slides 220 mm out of the plinth. Each floor has two rooms.
+- **Play features.** Two front wall shells open to 100°, where a magnet in a small garden post holds each one open; magnetic catches under the attic floor hold them shut. Two doors open outward. The roof lifts off after two turn-button catches are released. A drawer slides 205.3 mm out of the plinth. Each floor has two rooms.
 - **One config drives everything.** Height, base, plinth, drawer, doors, veranda position and size, hinge hole patterns, plywood stock and colours all live in `source/config.json`.
 - **Checked automatically.** Every build checks for solid overlaps, samples the wall swing every 5° up to the 100° stop and sweeps both doors. It also checks drawer travel, roof lift, window clearance, that every clay figure passes upright through every doorway, cut-sheet spacing, starter holes, part and hardware counts, and the PDF print scale. A separate check rebuilds the house with the thinnest and thickest measured plywood. Any failed check stops the build.
 - **Clay figures.** Moominpappa, Moominmamma and Moomintroll are signed-distance "lumps" pressed together like real clay. The build computes each figure's volume, the grams of clay per colour, and the saving from a foil core.
-- **Many output formats.** A native FreeCAD document, STEP solids (closed, open, exploded, one per build part), DXF profiles, sheet layouts as SVG, laser files as SVG and DXF, PDFs and CSV shopping lists.
+- **Many output formats.** A native FreeCAD document, STEP solids (closed, open, exploded, one per build part), DXF profiles, sheet layouts as SVG, CNC operation files as SVG and DXF, PDFs and CSV shopping lists.
 
 ## Try it: the 3D viewer (no FreeCAD needed)
 
@@ -101,16 +101,18 @@ The rebuild takes about two minutes and the thickness check about one. The rebui
 
 | Path | Contents |
 | --- | --- |
-| `output/pdf/` | Eight PDFs with A4 workshop pages and native A3 supplier sheets: the complete book, instructions, cutting templates, dimensioned parts, decor (palette, stone panels, roof shingle strips) and the clay family, 3 mm hand templates and a supplier appendix |
+| `output/pdf/` | Nine PDFs with A4 workshop pages and native A3 supplier sheets: the complete book, instructions, cutting templates, dimensioned parts, decor (palette, stone panels, roof shingle strips) and the clay family, 3 mm hand templates and a supplier appendix |
 | `output/cad/` | `MoominHouse.FCStd` (native, editable), STEP assemblies (closed, open, exploded) and `parts/*.step` |
-| `output/dxf/` | One DXF per profile, full-size sheet layouts (`*-layout.svg`), and laser files for the 3 mm sheets (`*-laser.svg`, `*-laser.dxf`) |
+| `output/dxf/` | One DXF per profile, full-size sheet layouts (`*-layout.svg`), and CNC operation files for every thickness (`*-cnc-*.svg`, `*-cnc-*.dxf`) |
 | `output/previews/` | CAD-derived renders and clay renders |
 | `output/reports/` | `release-validation.json` (every check), `cad-validation.json`, `thickness-tolerance.json`, `parts.csv`, `hardware.csv`, `stock.csv` |
 | `output/Moomin-House-Build-Kit.zip` | All of the above plus the source, in one package |
 
 Then read the [build guide](docs/BUILD-GUIDE.md) before you print anything. The 1:1 templates must be printed at 100 % and measured.
 
-For outsourced 3 mm house parts, send `Moomin-House-Supplier.pdf`. It contains the Polish specification, inventory and reference maps followed by clean A3/A4 production pages. Every roof panel fits whole on A3. Furniture is excluded. The complete book has a clickable contents section and the same supplier appendix at the end. Use `Moomin-House-3mm-Hand-Templates.pdf` for A4 glue-on paper templates; textures remain in the decor PDF. Supplier tolerances and cutting clearance still need the company's confirmation. Add `--lang en` to `source/rebuild.py` to generate the supplier appendix in English instead.
+For CNC machining, send `Moomin-House-Supplier.pdf` and the matching operation CSV, DXF, and SVG files. Native A3 production pages cover 3, 4, 6, and 8 mm plywood. Each page contains one operation without labels or a background. Separate reference pages identify the parts, machining faces, and depths. The complete book remains entirely A4 and includes an A4 supplier summary. Large individual parts use two A4 template pages with overlap. `Moomin-House-3mm-Hand-Templates.pdf` remains available for thin parts only. Add `--lang en` to `source/rebuild.py` for English supplier text.
+
+Fixed walls are 420 mm tall and retain the blank end edges. Opening walls are 418 mm tall. Four continuous 402 mm pillars pass through both intermediate floors. All floor plates use 6 mm plywood. The divided floors join over 4 mm thick, 4 mm wide strips. The round base uses four quarters, and the roof ring uses two halves. Positioning maps show the seams and supports. Check a physical floor-joint sample before assembly. The company must confirm cutters, hold-down, boundary cutting, and tolerances.
 
 ## Change the design
 

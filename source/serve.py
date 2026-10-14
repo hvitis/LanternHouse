@@ -6,7 +6,7 @@
 
 The viewer builds every solid in the browser from output/parts.json, the same profiles and
 placements the CAD export uses. If that file is missing (a fresh clone), or with --rebuild, it is
-generated from source/model.py, which needs only numpy, not FreeCAD. Only the viewer folder and
+generated from source/model.py, which needs numpy and shapely, not FreeCAD. Only the viewer folder and
 that one data file are served, on the local machine unless --host says otherwise.
 """
 import argparse, errno, http.server, json, mimetypes, sys, time, webbrowser

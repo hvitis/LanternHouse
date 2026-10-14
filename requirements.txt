@@ -3,5 +3,6 @@ Pillow>=11,<13
 numpy>=2,<3
 pypdf>=5,<7
 jsonschema>=4.23,<5
+shapely>=2.0,<3
 # Run source/build_cad.py with FreeCAD's bundled Python (FreeCAD 1.1+).
 # That runtime also supplies shapely and the OpenCASCADE solid kernel.

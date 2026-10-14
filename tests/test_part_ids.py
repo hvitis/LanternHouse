@@ -16,7 +16,7 @@ def test_all_interchangeable_profiles_share_an_id(data):
 def test_shared_build_quantities_and_design_roles(data):
     parts=data['parts']
     assert {pid:parts[pid]['quantity'] for pid in ('J01','P01','DM06','PC01','PC02','PC03','K1A')}=={
-        'J01':54,'P01':8,'DM06':4,'PC01':9,'PC02':14,'PC03':5,'K1A':8,
+        'J01':54,'P01':4,'DM06':4,'PC01':9,'PC02':14,'PC03':5,'K1A':8,
     }
     assert not {'DM07','K4A','K4B','K4C','K5A'} & parts.keys()
     chairs=[i for i in data['instances'] if i['design_part'] in ('PC01','K4A')]
@@ -41,7 +41,8 @@ def test_shared_build_quantities_and_design_roles(data):
 ])
 def test_standard_furniture_blanks_have_shared_ids(data,build_id,design_parts,size,quantity):
     p=data['parts'][build_id]
-    assert (p['width'],p['height'],p['thickness'])==size
+    scale=data['config']['wall_height']/450
+    assert (p['width'],p['height'],p['thickness'])==pytest.approx([value*scale for value in size])
     assert p['quantity']==quantity
     uses=[i for i in data['instances'] if i['part']==build_id]
     assert {i['design_part'] for i in uses}==design_parts

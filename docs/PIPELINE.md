@@ -22,7 +22,7 @@ flowchart LR
   cad --> parts[(output/parts.json)]
   cad --> step[cad/*.FCStd, *.step<br/>dxf/*.dxf<br/>previews/mesh.json]
   parts --> nest[nest.py<br/><i>FreeCAD Python</i>]
-  nest --> nesting[(output/nesting.json<br/>dxf/*-layout.svg<br/>dxf/*-laser.svg/.dxf)]
+  nest --> nesting[(output/nesting.json<br/>dxf/*-layout.svg<br/>dxf/*-cnc-*.svg/.dxf)]
   step --> audit[audit_connections.py<br/><i>FreeCAD</i>]
   parts --> render[render.py<br/>clay_render.py]
   render --> previews[previews/*.png]
@@ -44,7 +44,7 @@ flowchart LR
 | Order | Script | Runtime | Reads | Writes |
 | --- | --- | --- | --- | --- |
 | 1 | `build_cad.py` | FreeCAD | `config.json` via `model.py`, `clay.py` | `output/parts.json`, native `MoominHouse.FCStd`, the closed, open and exploded STEP files, one STEP per part, one DXF per profile, `previews/mesh.json`, `reports/cad-validation.json` (overlaps, wall swing to the stop posts, door sweep, drawer, roof lift, window clearance, figures through doorways); exits with an error if any of them fails |
-| 2 | `nest.py` | FreeCAD Python (shapely) | `parts.json` | `nesting.json`, full-size sheet SVGs, laser-ready SVG/DXF sheets |
+| 2 | `nest.py` | FreeCAD Python (shapely) | `parts.json` | `nesting.json`, full-size sheet SVGs, CNC operation SVG/DXF sheets |
 | 3 | `audit_connections.py` | FreeCAD | `parts.json` | `reports/furniture-connections.json` |
 | 4 | `render.py` (+ `clay_render.py`) | venv | `parts.json`, `previews/mesh.json` | the CAD-derived illustrations and the clay figure renders in `output/previews/` |
 | 5 | `cover.py` | venv | `previews/cover-house.png` | `previews/cover.png` |
@@ -67,12 +67,12 @@ A full rebuild takes about two minutes on an Apple-silicon Mac. The FreeCAD CAD 
 | `architecture.py` | Entrances, the permanent veranda, stairs and the attic dormer, built with the same `add`/`put` API as `model.py`. |
 | `clay.py` | The thermo-clay figures as smooth unions of signed-distance "lumps", meshed with surface nets (display) and marching tetrahedra (volume). Pure numpy. |
 | `build_cad.py` | Turns `parts.json` into native FreeCAD sketches, extrusions, cuts and linked assembly instances, then runs the solid-kernel checks and exports STEP and DXF. |
-| `nest.py` | Packs every fabrication profile onto the configured plywood stock (jigsaw spacing and margins, or tight laser spacing) and writes the cut sheets. |
+| `nest.py` | Packs every fabrication profile onto the configured plywood stock (A3 stock, per-part end margins and 12 mm lanes) and writes the cut sheets. |
 | `render.py`, `clay_render.py` | Flat-shaded CAD illustrations and soft clay renders, rasterised in numpy. Each image gets a `.json` sidecar with its projection, so the book can draw dimensions over it. |
 | `cover.py` | Paints the cover scene in code around the CAD render. |
 | `book.py`, `shingles.py` | The A4 building book (ReportLab): instructions, dimensioned parts, 1:1 tiled cutting templates, decor and roof shingle strips. |
 | `supplier.py`, `locales/`, `supplier_sources.json` | Single-language supplier appendix: Polish by default, English with `--lang en`. Separate reference pages and clean, native-size cutting paths; stock and machine-envelope checks reject parts that cannot fit whole. |
-| `pdf_assembly.py`, `pdf_checks.py` | Printed linked contents after the cover, supplier appendix at the end, and independent geometry comparison against laser DXFs. |
+| `pdf_assembly.py`, `pdf_checks.py` | Printed linked contents after the cover, A4 supplier summary, and geometry comparison against CNC operation DXFs. |
 | `verify.py`, `audit_connections.py` | Independent release checks and the shopping and cutting CSVs. |
 | `serve.py`, `viewer/` | The local three.js viewer (three.js r160 is vendored in `viewer/vendor/`, MIT licence). |
 | `export_viewer.py` | Writes the viewer and its data as a static site, for GitHub Pages. |
@@ -117,7 +117,8 @@ To add a part, call `add(...)` to define its profile and `put(...)` (or `upright
 | `tower_diameter`, `roof_diameter`, `floor_pitch`, `wall_height` | The main proportions. |
 | `thickness` | Plywood thickness per role: `structure`, `base`, `wall`, `furniture`, `detail`. |
 | `moving_clearance`, `nest_spacing`, `stock_margin`, `starter_diameter` | Workshop tolerances. |
-| `laser` | Which thickness is laid out for laser cutting, its spacing, margin and A4 print window. |
+| `fabrication` | A3 stock, pillar opening allowance, pillar end margins, floor and base support sections, base lift, and floor seam position. |
+| `laser` | Legacy laser settings. The A3 CNC fabrication policy takes precedence. |
 | `supplier` | Revision, raw material, engraving choice, permitted stock sizes, machine envelope and proposed manufacturing tolerances. Null tolerances require supplier agreement. Furniture is excluded in the current project. |
 | `wall_hinge`, `door_hinge` | Hinge footprints, hole patterns, centres, pilot holes and packing. Measure your real hinges. |
 | `doors` | Which facets carry the main door and the veranda door. |
@@ -151,7 +152,7 @@ Without `make`: `.venv/bin/python source/rebuild.py --freecad-python /Applicatio
 
 Add `--lang en` to `rebuild.py` for an English supplier appendix. With current CAD, nesting and previews already generated, `.venv/bin/python source/book.py --lang pl` rebuilds only the PDFs and PDF indices. Run `source/verify.py` and `source/package.py` afterwards to refresh validation and the kit. Each run produces one appendix language; production contours are identical across languages. Supplier and contents pages embed the bundled DejaVu Sans fonts for Polish characters; the workshop book keeps its existing fonts.
 
-The clean production pages preserve the physical stock dimensions rather than A4 paper tiles. Every requested copy must occur exactly once and its full outline must stay inside one sheet's cutting window. The exporter also checks the stock format and machine envelope. It never joins two pieces, rescales a roof panel or clips geometry. Paper-only hand templates remain A4. PDF validation compares the clean paths with independently exported DXFs within 0.0002 mm for PDF numeric encoding; this is not an agreed manufacturing tolerance. The `thickness_tolerance` CAD stress test is also separate from the tolerances to agree with the supplier.
+The clean production pages preserve the physical stock dimensions rather than A4 paper tiles. Every requested copy must occur exactly once and its full outline must stay inside one sheet's cutting window. The exporter also checks the stock format and machine envelope. The model explicitly divides the base, floors and ring into supported sections before nesting. Export never splits a fabrication section. Each large part uses two A4 template pages with overlap. The complete book includes an A4 supplier summary, while native A3 machining pages remain separate. PDF validation compares the clean paths with the operation DXFs within 0.0002 mm for PDF numeric encoding; this is not an agreed manufacturing tolerance. The `thickness_tolerance` CAD stress test is also separate from the tolerances to agree with the supplier.
 
 **See what a change did.** `output/` is not in git, so before you edit, copy `output/parts.json` and `output/nesting.json` to a scratch folder. After the rebuild, diff the new files against those copies. The validation report lists every check with its detail.
 

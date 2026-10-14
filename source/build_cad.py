@@ -320,7 +320,8 @@ def validate(data,shapes,world,figures):
     # The hidden drawer slides out along its direction in 10 mm steps without touching anything else.
     drawer=[i for i in installed if i['group']=='Drawer'];dd=data['derived']['drawer'];drawer_hits=[]
     others=[i for i in installed if i['group']!='Drawer']
-    for step in range(0,int(dd['travel'])+1,10):
+    drawer_steps=sorted(set(range(0,int(dd['travel'])+1,10))|{dd['travel']})
+    for step in drawer_steps:
         for i in drawer:
             moved=world[i['id']].copy();moved.translate(App.Vector(dd['direction'][0]*step,dd['direction'][1]*step,0))
             for ob in hits_any(moved,others):drawer_hits.append({'travel_mm':step,'part':i['id'],'obstacle':ob})
@@ -354,6 +355,6 @@ def validate(data,shapes,world,figures):
             if drill.cut(waste).Volume>.001:starter_errors.append(f'{pid}-{sh["id"]}')
     # Exact bounds: the default BoundBox follows the 0.8 mm display tessellation on curved faces.
     box=Part.makeCompound([world[i['id']] for i in installed]).optimalBoundingBox(False,False)
-    return {'profile_count':len(fabrication_parts(data)),'render_only_profiles':len(shapes)-len(fabrication_parts(data)),'installed_instances':len(installed),'house_instances':sum(i['group'] not in ('Furniture','Figures') for i in installed),'optional_furniture_instances':sum(i['group'] in ('Furniture','Figures') for i in installed),'invalid_profiles':bad,'closed_assembly_bounds_mm':[box.XLength,box.YLength,box.ZLength],'collisions':collisions,'wall_swing':swing,'roof_lift_collisions':roof_lift,'door_sweep':door_sweep,'drawer_travel':{'travel_mm':dd['travel'],'collisions':drawer_hits},'window_occlusion':occlusion,'starter_hole_errors':starter_errors,'windows_per_floor':data['derived']['windows_per_floor'],'wall_swing_configuration':'Permanent veranda, roof and optional furniture all installed while the walls swing.','physical_validation_required':['Measured plywood thickness','Actual hinge footprint and screw head seating','Continuous hinge movement between sampled angles','Glue bond strength, roof catches and tip resistance','Printer scale and test joints']}
+    return {'profile_count':len(fabrication_parts(data)),'render_only_profiles':len(shapes)-len(fabrication_parts(data)),'installed_instances':len(installed),'house_instances':sum(i['group'] not in ('Furniture','Figures') for i in installed),'optional_furniture_instances':sum(i['group'] in ('Furniture','Figures') for i in installed),'invalid_profiles':bad,'closed_assembly_bounds_mm':[box.XLength,box.YLength,box.ZLength],'collisions':collisions,'wall_swing':swing,'roof_lift_collisions':roof_lift,'door_sweep':door_sweep,'drawer_travel':{'travel_mm':dd['travel'],'checked_travel_mm':drawer_steps,'collisions':drawer_hits},'window_occlusion':occlusion,'starter_hole_errors':starter_errors,'windows_per_floor':data['derived']['windows_per_floor'],'wall_swing_configuration':'Permanent veranda, roof and optional furniture all installed while the walls swing.','physical_validation_required':['Measured plywood thickness','Actual hinge footprint and screw head seating','Continuous hinge movement between sampled angles','Glue bond strength, roof catches and tip resistance','Printer scale and test joints']}
 
 if __name__=='__main__':main()

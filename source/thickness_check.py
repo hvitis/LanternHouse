@@ -46,9 +46,29 @@ def main():
     for f in data['derived']['figures']:
         clay[f['id']]=bc.clay_solid(f)[0];figures.append({'id':f['id'],'part':f['code'],'group':'Figures'})
     _,nominal=assemble(data,None);nominal.update(clay);gap={}
-    def nominal_gap(a,b):
-        key=tuple(sorted((a,b)))
-        if key not in gap:gap[key]=nominal[a].distToShape(nominal[b])[0]
+    def nominal_gap(a,b,check,at):
+        # Compare the same motion pose. A drawer can cross onto a different
+        # base quarter, which is far away from it in the closed assembly.
+        key=(a,b,check,at)
+        if key in gap:return gap[key]
+        moving=nominal[a].copy();other=nominal[b]
+        if check=='drawer travel':
+            direction=data['derived']['drawer']['direction']
+            moving.translate(bc.App.Vector(direction[0]*at,direction[1]*at,0))
+        elif check.endswith(' swing') and check.startswith('Wall'):
+            group=check.split()[0];sign=1 if group=='WallRight' else -1
+            moving.rotate(bc.App.Vector(data['derived']['hinge_axes'][group][0],0,0),bc.App.Vector(0,0,1),sign*at)
+        elif check.startswith('door '):
+            door=check.split()[1];hinge=next(h for h in data['hardware'] if h.get('door')==door)
+            axis=bc.App.Vector(*hinge['position'][:2],0);probe=nominal[door].copy();probe.rotate(axis,bc.App.Vector(0,0,1),10)
+            sign=1 if (probe.BoundBox.Center-nominal[door].BoundBox.Center).dot(bc.App.Vector(*hinge['outward'],0))>0 else -1
+            moving.rotate(axis,bc.App.Vector(0,0,1),sign*at)
+        elif check=='roof lift':
+            moving.translate(bc.App.Vector(0,0,at))
+            inst=next((i for i in data['instances'] if i['id']==b),None)
+            if inst and inst['group']=='RoofLocks':
+                pivot=next(f for f in data['fasteners'] if b in f['parts'])['origin'];other=other.copy();other.rotate(bc.App.Vector(*pivot),bc.App.Vector(0,0,1),90)
+        gap[key]=moving.distToShape(other)[0]
         return gap[key]
     result={'band_mm':band,'rule':'nominal outlines and placements, each plywood part at the measured thickness about its mid-plane','scenarios':{}}
     failures=[]
@@ -57,7 +77,7 @@ def main():
         shapes,world=assemble(data,end);world.update(clay)
         report=bc.validate(data,shapes,world,figures);shifts=0;lost=[]
         for check,at,a,b in flagged(report):
-            g=nominal_gap(a,b)
+            g=nominal_gap(a,b,check,at)
             if g<TOUCH:shifts+=1
             else:lost.append({'check':check,'at':at,'part':a,'other':b,'nominal_gap_mm':round(g,2)})
         result['scenarios'][name]={'thickness_mm':{t:float(t)+v[end] for t,v in band.items()},'touching_pairs_that_shift':shifts,'lost_clearances':lost}
