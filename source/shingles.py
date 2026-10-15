@@ -172,3 +172,64 @@ def pack(items,width,height,gap=GAP,step=.5,key=lambda s:(-s['m'],s['row']%2,s['
             for j in range(max(0,off+i-reach),min(cols,off+i+reach+1)):sky[j]=max(sky[j],top)
         pages[p].append((s,off*step-x0,base-y0,angle))
     return pages
+
+def _mask(poly,step):
+    """Filled raster of a polygon (shifted to its own corner) at `step` mm per cell, rows = y."""
+    from PIL import Image, ImageDraw
+    import numpy as np
+    x0=min(x for x,_ in poly);y0=min(y for _,y in poly)
+    w=int(math.ceil((max(x for x,_ in poly)-x0)/step))+2;h=int(math.ceil((max(y for _,y in poly)-y0)/step))+2
+    im=Image.new('1',(w,h),0);ImageDraw.Draw(im).polygon([((x-x0)/step+.5,(y-y0)/step+.5) for x,y in poly],fill=1,outline=1)
+    return np.array(im,dtype=bool),x0,y0
+
+def pack_raster(items,width,height,gap=GAP,step=.5):
+    """First-fit raster packing: the curved strips drop into the hollows under their neighbours' arcs, which a
+    column skyline cannot reach. Every orientation is tried on every open page; a strip goes to the lowest,
+    then leftmost, free spot of the first page it fits. Same result format as pack()."""
+    import numpy as np
+    W,H=int(width/step),int(height/step);grow=int(math.ceil(gap/step))
+    def dilate(m):
+        out=m.copy()
+        for _ in range(grow):
+            g=out.copy();g[1:]|=out[:-1];g[:-1]|=out[1:];g[:,1:]|=out[:,:-1];g[:,:-1]|=out[:,1:];out=g
+        return out
+    pages=[];occ=[];order=sorted(items,key=lambda s:-(s['bbox'][2]-s['bbox'][0])*(s['bbox'][3]-s['bbox'][1]))
+    for s in order:
+        shapes=[]
+        for angle in (0,90,180,270):
+            poly=turn(s['poly'],angle);m,x0,y0=_mask(poly,step)
+            if m.shape[0]<=H and m.shape[1]<=W:shapes.append((angle,m,x0,y0))
+        if not shapes:raise ValueError(f'Shingle strip of course {s["row"]} does not fit the page')
+        placed=None
+        for p in range(len(occ)+1):
+            grid=occ[p] if p<len(occ) else np.zeros((H,W),bool);F=np.fft.rfft2(grid.astype(float))
+            best=None
+            for angle,m,x0,y0 in shapes:
+                k=np.zeros((H,W));k[:m.shape[0],:m.shape[1]]=m
+                hits=np.fft.irfft2(F*np.conj(np.fft.rfft2(k)),s=(H,W))[:H-m.shape[0]+1,:W-m.shape[1]+1]
+                free=np.argwhere(hits<.5)
+                if len(free):
+                    oy,ox=free[np.lexsort((free[:,1],free[:,0]))[0]]
+                    if best is None or (oy+m.shape[0],ox)<(best[0][0],best[0][1]):best=((oy+m.shape[0],ox),angle,m,x0,y0,oy,ox)
+            if best:placed=(p,best);break
+        p,(_,angle,m,x0,y0,oy,ox)=placed
+        if p==len(occ):occ.append(np.zeros((H,W),bool));pages.append([])
+        block=np.zeros((H,W),bool);block[oy:oy+m.shape[0],ox:ox+m.shape[1]]=m;occ[p]|=dilate(block)
+        pages[p].append((s,ox*step-x0,oy*step-y0,angle))
+    return pages
+
+def best_pack(items,width,height,gap=GAP):
+    """The packing with fewer pages, after an exact check that no two strips on a page come closer than the gap."""
+    from shapely.geometry import Polygon
+    from shapely import affinity
+    options=[pack(items,width,height,gap)]
+    try:options.append(pack_raster(items,width,height,gap))
+    except ValueError:pass
+    for pages in sorted(options,key=len):
+        ok=True
+        for page in pages:
+            polys=[affinity.translate(Polygon(turn(s['poly'],a)),x,y) for s,x,y,a in page]
+            if any(p.bounds[0]<-.01 or p.bounds[1]<-.01 or p.bounds[2]>width+.01 or p.bounds[3]>height+.01 for p in polys):ok=False;break
+            if any(polys[i].distance(polys[j])<gap-.3 for i in range(len(polys)) for j in range(i+1,len(polys))):ok=False;break
+        if ok:return pages
+    return options[0]

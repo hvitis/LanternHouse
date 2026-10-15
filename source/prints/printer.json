@@ -1,0 +1,14 @@
+{
+  "name": "FDM printer, 0.4 mm nozzle, 220 × 220 × 250 mm",
+  "bed": [220, 220, 250],
+  "bed_margin": 5,
+  "nozzle": 0.4,
+  "layer": 0.2,
+  "min_wall": 1.2,
+  "max_overhang": 45,
+  "min_base_area": 40,
+  "wall_samples": 600,
+  "shell": 1.2,
+  "infill": 0.15,
+  "material": {"name": "PLA", "density": 1.24}
+}

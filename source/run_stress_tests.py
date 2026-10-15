@@ -139,8 +139,9 @@ def run_calculix_analysis(doc: App.Document, obj: App.DocumentObject,
     }
 
 def test_roof_turn_button_e08(parts: dict) -> dict:
-    """TEST 1: Roof turn-button E08 under roof lifting load."""
-    p = parts['E08']
+    """TEST 1: Roof turn-button E08 under roof lifting load. The E08 and E09 plies are glued into one button, so the
+    model is one solid of their combined thickness."""
+    p = dict(parts['E08'], thickness=parts['E08']['thickness'] + parts.get('E09', {}).get('thickness', 0))
     shape = profile_shape(p)
     doc = App.newDocument('Test_E08')
     obj = doc.addObject('Part::Feature', 'E08')
@@ -175,7 +176,7 @@ def test_roof_turn_button_e08(parts: dict) -> dict:
     return {
         'component': 'E08 (Roof retaining turn-button)',
         'thickness_mm': p['thickness'],
-        'material': 'Birch plywood (3 mm)',
+        'material': f"Birch plywood ({p['thickness']:g} mm: E08 and E09 plies glued), 22 mm neck, D12 fender washers",
         'load_case': 'Roof lifting load without unlocking turn-buttons (32 N vertical pull per button)',
         'fea_results': fea_res,
         'allowable_stress_MPa': round(allowable_bending, 2),
@@ -184,8 +185,8 @@ def test_roof_turn_button_e08(parts: dict) -> dict:
         'safety_factor': sf,
         'pass': passed,
         'status': 'PASS' if passed else 'FAIL (CRITICAL RED SPOT)',
-        'failure_mode': 'Tension & bending fracture across the 3.2 mm hole net section, tab snapping',
-        'upgrade': 'Increase plywood thickness from 3 mm to 6 mm, or CNC cut from 2 mm brass/aluminum plate. Widen neck around hole from 16 mm to 22 mm.'
+        'failure_mode': 'Tension & bending across the net section beside the 3.2 mm pivot hole',
+        'upgrade': 'Done: 6 + 3 mm plies glued into a 9 mm button (one 6 mm ply gave SF 1.26, and a wider neck does not help), 22 mm neck round the pivot, D12 fender washer on each face. If it still fails, cut E08 from 2 mm aluminium.'
     }
 
 def test_veranda_deck_e03(parts: dict) -> dict:
@@ -231,11 +232,28 @@ def test_veranda_deck_e03(parts: dict) -> dict:
         'upgrade': 'Ensure skirt VS1 and deck E03 have glued joint corner reinforcement cleats (10x10 mm) underneath.'
     }
 
-def test_wall_hinge_and_fasteners() -> dict:
+def shell_mass_kg(data: dict, group: str) -> float:
+    """Placed mass of one wall shell: plywood, hardwood blocks and shims, at the risk-audit densities."""
+    import risk_audit
+    from shapely.geometry import Polygon
+    total = 0.0
+    for inst in data['instances']:
+        if inst['group'] != group:
+            continue
+        p = data['parts'][inst['part']]
+        total += Polygon(p['outer'], p['cuts']).area * p['thickness'] * risk_audit.DENSITY.get(p['category'], risk_audit.PLY)
+    return total
+
+def test_wall_hinge_and_fasteners(data: dict) -> dict:
     """TEST 3: Wall butt hinges HG-WallRight/Left and SC1 screws under opening shell prying."""
-    # Shell parameters: 3 facets of 6 mm plywood, height 420 mm, total width ~255 mm
-    shell_mass_kg = 1.15
-    gravity_force_N = shell_mass_kg * 9.81
+    cfg = data['config']
+    WH = cfg['wall_hinge']
+    wall = cfg['thickness']['wall']
+    # Design shell weight: 2.5 x the placed mass of the heavier opening shell, for slams and a child leaning on it
+    # (the 0.45 kg 6 mm shell was taken as 1.15 kg).
+    placed_kg = max(shell_mass_kg(data, g) for g in ('WallRight', 'WallLeft'))
+    shell_mass_kg_design = 2.5 * placed_kg
+    gravity_force_N = shell_mass_kg_design * 9.81
     gravity_lever_arm_mm = 140.0
 
     # Usage load: Child pulling door or pushing down on open door edge
@@ -243,38 +261,38 @@ def test_wall_hinge_and_fasteners() -> dict:
     usage_lever_arm_mm = 220.0
 
     total_moment_Nmm = (gravity_force_N * gravity_lever_arm_mm) + (usage_down_force_N * usage_lever_arm_mm)
-    # Distance between top hinge (Z=382.7) and bottom hinge (Z=37.3) = 345.4 mm
-    hinge_span_mm = 382.7 - 37.3
+    # Distance between the top and bottom hinges.
+    hinge_span_mm = max(WH['centers']) - min(WH['centers'])
     top_hinge_prying_force_N = total_moment_Nmm / hinge_span_mm
 
     # Prying geometry about hinge barrel (leaf width 20 mm, pivot to center 5 mm -> lever ratio ~ 3.5)
     screw_tension_N = top_hinge_prying_force_N * (1.0 + 15.0 / 5.0)
 
-    # Upgraded fastener: M2.5 brass through-machine screw with decorative dome cap nut
-    # (or ∅2.5 × 16 mm wood screw) engaging the full 8 mm thickness of backing block A02.
-    # Holding capacity with through-machine bolt and interior dome cap nut exceeds 450 N.
-    effective_thread_mm = 8.0
-    screw_diam_mm = 2.5
-    allowable_capacity_N = 450.0  # M2.5 through-bolt + brass dome cap nut bearing capacity
-
+    # SC1 countersunk wood screw: what is left after the hinge leaf, the shim and the wall is thread in the
+    # hardwood A02 block (D1.8 pilot). Withdrawal capacity per EC5 8.7.2 with the characteristic parameter used throughout.
+    sc1 = next(f for f in data['fasteners'] if f['type'] == 'SC1')
+    effective_thread_mm = sc1['length'] - WH['leaf_thickness'] - WH['packing_thickness'] - wall - 0.1
+    screw_diam_mm = sc1['diameter']
+    allowable_capacity_N = PLYWOOD_PROPERTIES['screw_withdrawal_param_N_mm2'] * screw_diam_mm * effective_thread_mm * PLYWOOD_PROPERTIES['load_duration_factor_k_mod'] / PLYWOOD_PROPERTIES['safety_factor_material_gamma_M']
     sf = round(allowable_capacity_N / screw_tension_N, 2)
     passed = sf >= 1.5
 
     return {
         'component': 'HG-Wall butt hinges & SC1 fasteners (top hinge)',
-        'fastener_type': 'SC1 (M2.5 x 16.0 mm brass through-screw + decorative dome cap nut / 2.5 x 16 mm wood screw)',
-        'pilot_hole_mm': 2.5,
-        'effective_thread_engagement_mm': effective_thread_mm,
+        'fastener_type': f'SC1 ({screw_diam_mm:g} x {sc1["length"]:g} mm countersunk wood screw through the {wall:g} mm wall into hardwood A02)',
+        'pilot_hole_mm': sc1['pilot'],
+        'effective_thread_engagement_mm': round(effective_thread_mm, 2),
+        'shell_mass_kg': {'placed': round(placed_kg, 3), 'design': round(shell_mass_kg_design, 3)},
         'load_case': 'Cantilever gravity torque + child 25 N downward push on 100° opened shell',
         'applied_prying_moment_Nmm': round(total_moment_Nmm, 1),
         'top_hinge_pull_force_N': round(top_hinge_prying_force_N, 1),
         'outer_screw_tension_N': round(screw_tension_N, 1),
-        'allowable_screw_pullout_N': allowable_capacity_N,
+        'allowable_screw_pullout_N': round(allowable_capacity_N, 1),
         'safety_factor': sf,
         'pass': passed,
         'status': 'PASS' if passed else 'FAIL (CRITICAL RED SPOT)',
-        'failure_mode': 'Prying pull-out prevented by through-machine screw and interior decorative dome cap nut engaging full 8 mm A02 block',
-        'upgrade': 'Upgraded to M2.5 x 16 mm brass countersunk through-screws with decorative dome cap nuts on inside of A02 (holding capacity > 450 N).'
+        'failure_mode': 'Screw withdrawal from the backing block under prying',
+        'upgrade': 'Wood screws sized so the tip stays inside the 8 mm hardwood A02 block; the M2.5 bolt with a dome cap nut raises the capacity further.'
     }
 
 def test_floor_seam_and_cantilever() -> dict:
@@ -286,15 +304,16 @@ def test_floor_seam_and_cantilever() -> dict:
     lever_arm_mm = 95.0
     seam_moment_Nmm = applied_load_N * lever_arm_mm  # 3800 N*mm
 
-    # Interlocking CNC puzzle/finger joints directly between F01 and F01B:
-    # 6 mm birch plywood with 50% net tooth engagement along 294 mm seam width
-    b_net = 294.0 * 0.5
+    # Interlocking CNC finger joints between the front pieces (F01, F01C) and the rear piece F01B. The front is two
+    # pieces joined on the house axis by a puzzle joint; a load near one front edge is taken, conservatively, by that
+    # piece's half of the 294 mm seam alone (puzzle joint and FS strips ignored), with 50% net tooth engagement.
+    b_net = 294.0 / 2 * 0.5
     h = 6.0
-    section_modulus_W = (b_net * h**2) / 6.0  # 882.0 mm^3
-    bending_stress_joint_MPa = seam_moment_Nmm / section_modulus_W  # ~4.3 MPa
+    section_modulus_W = (b_net * h**2) / 6.0  # 441.0 mm^3
+    bending_stress_joint_MPa = seam_moment_Nmm / section_modulus_W  # ~8.6 MPa
 
     # Interlocking finger tooth flank glue shear area
-    glue_area_mm2 = 10.0 * 2.0 * 10.0 * 6.0  # 10 teeth * 2 flanks * 10 mm depth * 6 mm thickness = 1200 mm^2
+    glue_area_mm2 = 5.0 * 2.0 * 10.0 * 6.0  # 5 teeth per front piece * 2 flanks * 10 mm depth * 6 mm thickness = 600 mm^2
     glue_shear_stress_MPa = applied_load_N / glue_area_mm2
 
     allowable_bending = PLYWOOD_PROPERTIES['bending_strength_characteristic_MPa'] * 0.8 / 1.3
@@ -304,9 +323,9 @@ def test_floor_seam_and_cantilever() -> dict:
     passed = sf >= 1.5
 
     return {
-        'component': 'Floor Seam Interlocking CNC Finger Joints (F01 / F01B)',
+        'component': 'Floor Seam Interlocking CNC Finger Joints (front piece F01 / rear F01B)',
         'joint_type': 'CNC interlocking puzzle / finger joints along parting line',
-        'load_case': 'Child pressing on front floor rim during open-dollhouse play (40 N downward, 95 mm arm)',
+        'load_case': 'Child pressing on one front floor piece rim during open-dollhouse play (40 N downward, 95 mm arm, half the seam)',
         'applied_cantilever_moment_Nmm': round(seam_moment_Nmm, 1),
         'batten_bending_stress_MPa': round(bending_stress_joint_MPa, 1),
         'allowable_bending_stress_MPa': round(allowable_bending, 1),
@@ -346,137 +365,157 @@ def test_floor_pillar_slot_notch_factor() -> dict:
         'upgrade': 'CNC dogbone fillets (R >= 2.0 mm) implemented on all 4 corners of each pillar slot, reducing Kt by > 60%.'
     }
 
-def test_wall_corner_gusset_racking() -> dict:
-    """TEST 6: Wall corner gussets J01 under shell torsional racking."""
-    # 3-facet shell swung open to 100° has no floor/roof constraint.
-    # Child bumps open shell or tries to close it against an obstruction (20 N horizontal racking force at bottom).
+def test_wall_corner_gusset_racking(data: dict) -> dict:
+    """TEST 6: Corner ribs and brackets (J01-J04) under shell racking, from the model's glue joints.
+
+    Shear: the racking couple of an opened shell shared by its braces, on each brace's shortest glued edge.
+    Corner moment: a push on a free facet tries to open or close a corner; each brace resists it with the glue
+    line on its weaker side, a section modulus t * L^2 / 6. The sum over the braces holding a corner is compared
+    with the revision-7 design: six 6 mm two-wall gussets, 20 mm legs."""
     racking_force_N = 20.0
     shell_height_mm = 420.0
     racking_torque_Nmm = racking_force_N * shell_height_mm  # 8400 N*mm
-
-    # 54 gussets in total, but in one 3-facet shell there are 2 seams x 3 levels x 2 gussets = 12 gussets
-    # Each gusset has two glued contact legs (18 mm x 6 mm = 108 mm^2)
-    num_gussets = 12
-    shear_per_gusset_N = (racking_torque_Nmm / (255.0 / 2)) / num_gussets  # approx 5.5 N
-    glue_shear_stress_MPa = shear_per_gusset_N / 108.0
-
+    joints = [j for j in data['joints'] if j['type'] == 'J2 corner rib joint']
+    walls = {i['id']: i for i in data['instances']}
+    by_brace = {}
+    for j in joints:
+        a, b = j['outline'][0], j['outline'][1]
+        by_brace.setdefault(j['parts'][0], []).append((j['parts'][1], math.hypot(b[0] - a[0], b[1] - a[1]), j['contact_area_mm2']))
+    worst_shear = 0.0
+    corners = {}
+    for brace, sides in by_brace.items():
+        group = walls[brace]['group']
+        t = data['parts'][walls[brace]['part']]['thickness']
+        if group in ('WallRight', 'WallLeft'):
+            n = sum(walls[b]['group'] == group for b in by_brace)
+            worst_shear = max(worst_shear, (racking_torque_Nmm / (255.0 / 2)) / n / min(area for _, _, area in sides))
+        for (wa, la, _), (wb, lb, _) in zip(sides, sides[1:]):
+            corners.setdefault((wa, wb), []).append(t * min(la, lb) ** 2 / 6)
+    reference = 6 * 6.0 * 20.0 ** 2 / 6
+    ratios = sorted(sum(v) / reference for v in corners.values())
     allowable_glue = PLYWOOD_PROPERTIES['pva_glue_allowable_shear_MPa']
-    sf = round(allowable_glue / glue_shear_stress_MPa, 2)
-    passed = sf >= 1.5
-
+    sf = round(allowable_glue / worst_shear, 2)
+    passed = sf >= 1.5 and ratios[0] >= 0.95
+    kinds = {pid: data['parts'][pid]['quantity'] for pid in ('J01', 'J02', 'J03', 'J04') if pid in data['parts']}
     return {
-        'component': 'J01 Wall corner plywood gussets',
-        'thickness_mm': 6.0,
-        'contact_area_per_leg_mm2': 108.0,
+        'component': 'J01-J04 corner ribs and brackets',
+        'thickness_mm': data['parts']['J01']['thickness'],
+        'braces': kinds,
         'load_case': 'Torsional racking of 100° opened shell (20 N horizontal impact at bottom corner)',
         'racking_torque_Nmm': racking_torque_Nmm,
-        'glue_shear_stress_MPa': round(glue_shear_stress_MPa, 2),
+        'glue_shear_stress_MPa': round(worst_shear, 3),
         'allowable_glue_shear_MPa': allowable_glue,
+        'corners_held': len(corners),
+        'corner_moment_capacity_vs_6mm_gussets': {'worst': round(ratios[0], 2), 'best': round(ratios[-1], 2)},
         'safety_factor': sf,
         'pass': passed,
         'status': 'PASS' if passed else 'FAIL',
-        'failure_mode': 'PVA glue joint fatigue delamination on ground floor where gussets were moved up above doors',
-        'upgrade': 'Lengthen J01 gusset gluing legs from 18 mm to 24 mm, and bevel CNC edge seams for continuous tongue/rabbet joint.'
+        'failure_mode': 'Edge glue line peeling at the end of a short rib leg, worst at the low braces raised over the ground-floor doors',
+        'upgrade': 'Ribs reach 30 mm onto the end facets (20 mm only where raised beside a window); the seam battens outside glue along the full height of every corner that does not move.'
     }
 
 def test_garden_stop_post_end_grain() -> dict:
-    """TEST 7: Garden stop post GP1 end-grain screw fastening."""
-    # GP1 post (20x20 mm solid wood) fastened with single SC3 screw (3x16 mm) into bottom end grain
-    # Neodymium magnet pull force = ~12 N, impact lever arm = 45 mm
-    impact_moment_Nmm = 12.0 * 45.0  # 540 N*mm
-    screw_tension_N = impact_moment_Nmm / 10.0  # 54 N
-
-    # End-grain screw withdrawal parameter: Eurocode 5 specifies 45% of cross-grain withdrawal
-    f_ax_k_end_grain = PLYWOOD_PROPERTIES['screw_withdrawal_param_N_mm2'] * PLYWOOD_PROPERTIES['screw_withdrawal_end_grain_factor']
-    screw_diam_mm = 3.0
-    thread_depth_mm = 10.0  # 16 mm screw minus 6 mm base plate
-    f_ax_rk = f_ax_k_end_grain * screw_diam_mm * thread_depth_mm  # ~162 N
-    f_ax_rd = f_ax_rk * 0.8 / 1.3  # ~99.7 N
-
-    # Dynamic impact fatigue reduces allowable end-grain holding by another 40%
-    f_ax_fatigue_N = f_ax_rd * 0.6  # ~59.8 N
-    sf = round(f_ax_fatigue_N / screw_tension_N, 2)
+    """TEST 7: Garden stop post GP1 on two D4 dowels, glued, with one SC3 screw into its end grain."""
+    # The enclosed magnet pulls through a 1 mm skin; take the full 12 N impact anyway, 45 mm above the base.
+    impact_moment_Nmm = 12.0 * 45.0
+    # The two dowels, 14 mm apart, take the moment as a couple; the screw only holds the post down.
+    dowel_spacing_mm = 14.0
+    dowel_force_N = impact_moment_Nmm / dowel_spacing_mm
+    # Each D4 hardwood dowel: shear of its section, or the glue line on its 4 mm embedment in B01, whichever is less.
+    d = 4.0
+    shear_N = 10.0 * math.pi * d**2 / 4
+    glue_N = PLYWOOD_PROPERTIES['pva_glue_allowable_shear_MPa'] * math.pi * d * 4.0
+    capacity_N = min(shear_N, glue_N) * PLYWOOD_PROPERTIES['load_duration_factor_k_mod'] / PLYWOOD_PROPERTIES['safety_factor_material_gamma_M']
+    sf = round(capacity_N / dowel_force_N, 2)
     passed = sf >= 1.5
-
     return {
-        'component': 'GP1 Garden stop post & SC3 screw',
-        'fastener': 'SC3 (3.0 x 16.0 mm screw into end grain of 20x20 mm post)',
-        'load_case': 'Magnetic catch snap impact & repeated opening wall shock (12 N magnetic pull, 540 N*mm moment)',
-        'screw_prying_tension_N': round(screw_tension_N, 1),
-        'end_grain_fatigue_capacity_N': round(f_ax_fatigue_N, 1),
+        'component': 'GP1 Garden stop post on dowels & SC3 screw',
+        'fastener': 'Two D4 x 12 hardwood dowels (4 mm into B01, 8 mm into the post), glued foot, one SC3 3 x 16 mm screw',
+        'load_case': 'Opened wall shell striking the post (12 N at 45 mm, 540 N*mm)',
+        'screw_prying_tension_N': round(dowel_force_N, 1),
+        'end_grain_fatigue_capacity_N': round(capacity_N, 1),
         'safety_factor': sf,
         'pass': passed,
-        'status': 'PASS with warning' if passed else 'FAIL (VULNERABLE SPOT)',
-        'failure_mode': 'End-grain screw stripping and post wobbling over repeated magnetic latching cycles',
-        'upgrade': 'Mortise post 4 mm into a CNC pocket in B01 base with PVA glue, or add two 4 mm alignment dowels flanking the screw.'
+        'status': 'PASS' if passed else 'FAIL (VULNERABLE SPOT)',
+        'failure_mode': 'Dowel shear or glue-line failure at the post foot',
+        'upgrade': 'Done in revision 7: two D4 alignment dowels beside the screw take the side load; felt dot on the post face.'
     }
 
-def test_miniature_door_hinge_sc2() -> dict:
-    """TEST 8: Miniature door hinges on E01 & A03 backing strip."""
-    # Door E01 (4 mm plywood, 86 x 46 mm) with SC2 (1.6 x 8 mm) screws into 8 mm backing strip A03
-    # Child pulling door past 90° or tugging on handle (15 N horizontal pull)
+def test_miniature_door_hinge_sc2(parts: dict) -> dict:
+    """TEST 8: Door hinges on E01 / E04: SC2 2.0 x 10 mm screws through the door into 16 mm hardwood A03 strips."""
     pull_force_N = 15.0
-    door_width_mm = 46.0
+    door_width_mm = max(parts[k]['width'] for k in ('E01', 'E04') if k in parts)
     hinge_offset_mm = 8.0
-    prying_moment_Nmm = pull_force_N * door_width_mm  # 690 N*mm
-    screw_tension_N = prying_moment_Nmm / hinge_offset_mm  # 86.2 N shared by 2 screws = 43.1 N/screw
-
-    # 1.6 mm screw with 1.2 mm pilot. Length 8 mm minus 0.8 mm leaf = 7.2 mm. Taper 2 mm -> 5.2 mm thread
-    effective_thread_mm = 4.0
-    f_ax_rk = PLYWOOD_PROPERTIES['screw_withdrawal_param_N_mm2'] * 1.6 * effective_thread_mm  # 76.8 N
-    f_ax_rd = f_ax_rk * 0.8 / 1.3  # 47.3 N
+    prying_moment_Nmm = pull_force_N * door_width_mm
+    screw_tension_N = prying_moment_Nmm / hinge_offset_mm / 2   # the top leaf's two screws share the pull
+    # 10 mm screw, 0.8 mm leaf and the door (3 mm): the rest of the thread is in the hardwood strip (the door's own grip ignored).
+    door_mm = max(parts[k]['thickness'] for k in ('E01', 'E04') if k in parts)
+    effective_thread_mm = 10.0 - 0.8 - door_mm
+    f_ax_rd = PLYWOOD_PROPERTIES['screw_withdrawal_param_N_mm2'] * 2.0 * effective_thread_mm * PLYWOOD_PROPERTIES['load_duration_factor_k_mod'] / PLYWOOD_PROPERTIES['safety_factor_material_gamma_M']
     sf = round(f_ax_rd / screw_tension_N, 2)
     passed = sf >= 1.5
-
     return {
-        'component': 'Door butt hinge (E01) & SC2 screws',
-        'fastener': 'SC2 (1.6 x 8.0 mm miniature screw in 8 mm backing strip A03)',
-        'load_case': 'Child pulling open door outward beyond 90° (15 N handle tug)',
+        'component': 'Door butt hinge (E01 / E04) & SC2 screws',
+        'fastener': 'SC2 (2.0 x 10 mm wood screw into a 16 mm wide hardwood A03 strip)',
+        'load_case': f'Child pulling the {door_width_mm:.1f} mm door outward beyond 90 degrees (15 N at the latch edge)',
         'screw_tension_N': round(screw_tension_N, 1),
         'allowable_screw_pullout_N': round(f_ax_rd, 1),
         'safety_factor': sf,
         'pass': passed,
-        'status': 'PASS with warning' if passed else 'FAIL (VULNERABLE SPOT)',
-        'failure_mode': '1.6 mm screw pull-out from thin backing strip; leaf bending',
-        'upgrade': 'Increase screw size to 2.0 x 10 mm and increase A03 backing strip width from 12 mm to 16 mm.'
+        'status': 'PASS' if passed else 'FAIL (VULNERABLE SPOT)',
+        'failure_mode': 'Screw pull-out from the backing strip; leaf bending',
+        'upgrade': 'Done in revision 7: 2.0 x 10 mm screws, 16 mm hardwood strips, pilots drilled from the real leaf.'
     }
 
-def test_plinth_drawer_cantilever_and_friction() -> dict:
-    """TEST 9: Plinth drawer cantilever travel & off-center stick-slip jamming."""
-    drawer_width_mm = 149.33
-    drawer_travel_mm = 205.33
-    aspect_ratio = round(drawer_travel_mm / drawer_width_mm, 2)
-
-    # Off-center single-hand pull test (15 N pull applied 50 mm off-center)
+def test_plinth_drawer_cantilever_and_friction(parts: dict, cfg: dict) -> dict:
+    """TEST 9: Plinth drawer pulled off-centre at its captive stop: does it jam in its guides?"""
+    dr = cfg['plinth']['drawer']
+    drawer_width_mm = 2 * dr['half_width']
+    drawer_travel_mm = dr['travel']
+    drawer_length_mm = parts['DR2']['width']
     pull_force_N = 15.0
     eccentricity_mm = 50.0
-    contact_guide_length_mm = 45.0  # length of runner engagement when extended
-    wood_on_wood_friction_coef = 0.38
-
-    # Normal reaction force at guide corners
-    normal_reaction_N = (pull_force_N * eccentricity_mm) / contact_guide_length_mm  # 16.67 N
-    # Friction resistance
-    friction_resistance_N = 2.0 * wood_on_wood_friction_coef * normal_reaction_N  # 12.67 N
-
-    # Jamming occurs when friction resistance exceeds or approaches pull force (F_fric / F_pull > 0.8)
+    # At full travel the drawer is still held over this length by the guide walls and the stop dowel in its slot.
+    contact_guide_length_mm = drawer_length_mm - drawer_travel_mm
+    waxed_friction_coef = 0.20   # waxed birch on birch; 0.38 bare
+    normal_reaction_N = (pull_force_N * eccentricity_mm) / contact_guide_length_mm
+    friction_resistance_N = 2.0 * waxed_friction_coef * normal_reaction_N
     jamming_ratio = round(friction_resistance_N / pull_force_N, 2)
-    sf = round(1.0 / jamming_ratio, 2) if jamming_ratio > 0 else 5.0
-    passed = aspect_ratio <= 1.0 and jamming_ratio < 0.7
-
+    sf = round(0.7 / jamming_ratio, 2) if jamming_ratio > 0 else 5.0
+    passed = jamming_ratio < 0.7
     return {
-        'component': 'Plinth drawer (B02/B03) runners & bottom plate',
+        'component': 'Plinth drawer (DR1-DR4) runners & captive stop',
         'travel_mm': drawer_travel_mm,
-        'width_mm': drawer_width_mm,
-        'aspect_ratio_travel_to_width': aspect_ratio,
-        'load_case': 'Single-hand off-center drawer pull (15 N at 50 mm eccentricity, extended 205 mm)',
+        'width_mm': round(drawer_width_mm, 2),
+        'guide_engagement_at_stop_mm': round(contact_guide_length_mm, 1),
+        'load_case': f'Single-hand off-centre drawer pull (15 N at 50 mm eccentricity) at the {drawer_travel_mm:g} mm stop',
         'stress_or_force_label': 'Jamming Friction Ratio',
         'peak_value': f"{jamming_ratio} (F_fric/F_pull)",
         'allowable_value': "< 0.70 (smooth slide)",
         'safety_factor': sf,
         'pass': passed,
-        'status': 'PASS with warning' if passed else 'FAIL (VULNERABLE SPOT)',
-        'failure_mode': 'Stick-slip jamming and edge wedging against plinth frame; bottom 3 mm plate sag (0.85 mm)',
-        'upgrade': 'Add a central T-guide runner or apply beeswax/UHMWPE low-friction adhesive tape on sliding surfaces. Increase bottom plywood thickness from 3 mm to 4 mm.'
+        'status': 'PASS' if passed else 'FAIL (VULNERABLE SPOT)',
+        'failure_mode': 'Stick-slip jamming and edge wedging against the guide walls',
+        'upgrade': 'Done in revision 7: waxed runners and slot, a captive DS1 stop dowel so the drawer keeps 56 mm in its guides and can never come out.'
+    }
+
+def test_tip_over(data: dict) -> dict:
+    """TEST 10: Open house pushed sideways at the eave (risk_audit numbers)."""
+    import risk_audit
+    report = risk_audit.audit(data)['tip_over']
+    force = report['force_at_eave_N']
+    target = 25.0   # a toddler leaning on the open house at eave height
+    sf = round(force / target, 2)
+    return {
+        'component': 'Whole house, walls open (stability)',
+        'load_case': f"Horizontal push at the eave ({report['eave_height_mm']:g} mm), walls at the stop angle, roof on",
+        'peak_value': f"{force} N tips it free-standing",
+        'allowable_value': f'{target:g} N push; larger pulls taken by the AT1 anti-tip strap',
+        'safety_factor': sf,
+        'pass': sf >= 1.0,
+        'status': 'PASS (strap fitted)' if sf >= 1.0 else 'FAIL',
+        'failure_mode': f"Tipping over the base footprint (mass {report['mass_kg']} kg, centre of gravity {report['centre_of_gravity_mm'][2]:.0f} mm up)",
+        'upgrade': 'Done in revision 7: rim pads under the base, steel ballast in the plinth, AB1 anchor and an anti-tip strap to the room wall.'
     }
 
 def main():
@@ -494,13 +533,14 @@ def main():
     tests = [
         ("Test 1: Roof Turn-Button E08 (FEA)", lambda: test_roof_turn_button_e08(parts)),
         ("Test 2: Veranda Deck E03 Cantilever (FEA)", lambda: test_veranda_deck_e03(parts)),
-        ("Test 3: Wall Butt Hinges & SC1 Fasteners", test_wall_hinge_and_fasteners),
-        ("Test 4: Floor Seam Joint & 4x4 mm Batten", test_floor_seam_and_cantilever),
+        ("Test 3: Wall Butt Hinges & SC1 Fasteners", lambda: test_wall_hinge_and_fasteners(parts_data)),
+        ("Test 4: Floor Finger Joint & 6x12 mm Strips", test_floor_seam_and_cantilever),
         ("Test 5: Pillar Slot Notch Concentration", test_floor_pillar_slot_notch_factor),
-        ("Test 6: Wall Corner Gussets J01 Racking", test_wall_corner_gusset_racking),
-        ("Test 7: Garden Stop Post GP1 End-Grain Screw", test_garden_stop_post_end_grain),
-        ("Test 8: Miniature Door Hinges SC2 Screws", test_miniature_door_hinge_sc2),
-        ("Test 9: Plinth Drawer Cantilever & Friction", test_plinth_drawer_cantilever_and_friction),
+        ("Test 6: Corner Ribs J01-J04 Racking", lambda: test_wall_corner_gusset_racking(parts_data)),
+        ("Test 7: Garden Stop Post GP1 on Dowels", test_garden_stop_post_end_grain),
+        ("Test 8: Door Hinges SC2 Screws", lambda: test_miniature_door_hinge_sc2(parts)),
+        ("Test 9: Plinth Drawer Friction at the Stop", lambda: test_plinth_drawer_cantilever_and_friction(parts, parts_data['config'])),
+        ("Test 10: Tip-over with Walls Open", lambda: test_tip_over(parts_data)),
     ]
 
     results = []

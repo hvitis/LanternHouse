@@ -15,8 +15,8 @@ def main():
     if not args.freecad_python:p.error('--freecad-python is required')
     sys.path.insert(0,str(ROOT/'source'));import config_check;config_check.check()   # fail in a second, not minutes into FreeCAD
     clean();env=dict(os.environ,MOOMIN_HEADLESS='1',QT_QPA_PLATFORM='offscreen')
-    for script in ('build_cad.py','nest.py','audit_connections.py'):
+    for script in ('build_cad.py','audit_connections.py'):
         subprocess.run([args.freecad_python,str(ROOT/'source'/script)],cwd=ROOT,env=env,check=True)
-    for script in ('render.py','cover.py','readme_images.py','decorate_cad.py','book.py','verify.py','package.py'):
+    for script in ('nest.py','stackup.py','risk_audit.py','render.py','cover.py','readme_images.py','decorate_cad.py','book.py','cut_file.py','verify.py','package.py'):
         subprocess.run([sys.executable,str(ROOT/'source'/script)]+(['--lang',args.lang] if script=='book.py' else []),cwd=ROOT,check=True)
 if __name__=='__main__':main()

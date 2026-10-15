@@ -1,16 +1,17 @@
 """Physical stock limits, supported seams, continuous pillars and print coverage."""
-import copy
+import copy, math
 from collections import Counter
 import pytest
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, box
 from shapely.ops import unary_union
 import cnc
 from hand_templates import layout
+from model import BOUGHT
 
 
 def test_every_fabrication_piece_fits_a3_and_two_a4(data):
     for pid,p in data['parts'].items():
-        if p.get('render_only') or p['category'] in ('Purchased wood','Purchased packing'):continue
+        if p.get('render_only') or p['category'] in BOUGHT:continue
         assert min(p['width'],p['height'])<=297+1e-6,pid
         assert max(p['width'],p['height'])<=420+1e-6,pid
         spec=layout(p['width'],p['height'])
@@ -21,16 +22,43 @@ def test_every_fabrication_piece_fits_a3_and_two_a4(data):
 
 
 def test_sections_reconstruct_panels_without_gaps(data):
+    cnc=data['config']['cnc'];seam=data['config']['fabrication']['seam_y']
     for parent,panel in data['derived']['panels'].items():
         original=Polygon(panel['outline'],panel['cuts']);o=panel['origin'];pieces=[]
         # Before base lift, panel origins describe the original assembly datum.
         ids=[i for i in data['instances'] if i['design_part']==parent]
         if parent=='F01':ids=sorted(ids,key=lambda i:i['origin'][2])[:len(panel['sections'])]
+        elif parent=='R02':ids=sorted(ids,key=lambda i:i['origin'][2])[:len(ids)//2]
         for inst in ids:
             p=data['parts'][inst['part']]
             def world(loop):return [[inst['origin'][0]+inst['u'][0]*x+inst['v'][0]*y-o[0],inst['origin'][1]+inst['u'][1]*x+inst['v'][1]*y-o[1]] for x,y in loop]
             pieces.append(Polygon(world(p['outer']),[world(c) for c in p['cuts']]))
         assembled=unary_union(pieces)
+        if parent in ('F00','F01','F02'):
+            # Finger and puzzle joints: only the fit clearance and the cutter relief at inside corners are missing,
+            # all of it in the joint zones; nothing is added and nothing is lost elsewhere. F00 has a straight seam.
+            y=original.bounds[3]/2+seam;split=panel['front_split'];pz=data['config']['fabrication']['front_split']
+            reach=pz['reach']+pz['head']/2+1;puzzle=box(split['x']-reach,-1,split['x']+reach,y+10)
+            finger=box(-1,y-10,original.bounds[2]+1,y+10) if parent!='F00' else box(0,0,0,0)
+            assert assembled.difference(original).area<1e-6,parent
+            missing=original.difference(assembled)
+            assert missing.difference(puzzle.union(finger)).area<1e-6,parent
+            assert missing.difference(finger).area<(y+len(split['knobs'])*(2*pz['reach']+math.pi*pz['head']))*cnc['joint_clearance']*1.5,parent
+            assert missing.intersection(finger).area<original.bounds[2]*cnc['joint_clearance']*3+60*math.pi*(cnc['tool_diameter']/2)**2,parent
+            continue
+        if parent=='R02':
+            assert assembled.symmetric_difference(original).area<1e-6,f'{parent} lower'
+            all_ids=sorted([i for i in data['instances'] if i['design_part']==parent],key=lambda i:i['origin'][2])
+            upper_ids=all_ids[len(all_ids)//2:]
+            upper_pieces=[]
+            for inst in upper_ids:
+                p=data['parts'][inst['part']]
+                def world_u(loop):return [[inst['origin'][0]+inst['u'][0]*x+inst['v'][0]*y-o[0],inst['origin'][1]+inst['u'][1]*x+inst['v'][1]*y-o[1]] for x,y in loop]
+                upper_pieces.append(Polygon(world_u(p['outer']),[world_u(c) for c in p['cuts']]))
+            upper_assembled=unary_union(upper_pieces)
+            assert upper_assembled.symmetric_difference(original).area<1e-6,f'{parent} upper'
+            assert sum(p.area for p in upper_pieces)==pytest.approx(original.area),f'{parent} upper'
+            continue
         assert assembled.symmetric_difference(original).area<1e-6,parent
         assert sum(p.area for p in pieces)==pytest.approx(original.area),parent
 
@@ -56,9 +84,12 @@ def test_continuous_pillars_pass_through_both_floors(data):
 
 
 def test_floor_supports_keep_requested_cross_section(data):
-    supports=[p for p in data['parts'].values() if p['name'].startswith('Floor seam support')]
+    fab=data['config']['fabrication'];supports=[p for p in data['parts'].values() if p['name'].startswith('Floor seam support')]
     assert supports
-    assert all(p['thickness']==4 and min(p['width'],p['height'])==pytest.approx(4) for p in supports)
+    for p in supports:
+        t,w=fab['plinth_floor_support'] if p['assembly_panel']=='F00' else fab['floor_support']
+        assert t==3 and p['dxf']['layer']=='CUT_3MM',p['id']
+        assert p['thickness']==t and min(p['width'],p['height'])==pytest.approx(w),p['id']
     assert all(panel['thickness']==6 for parent,panel in data['derived']['panels'].items() if parent.startswith('F'))
 
 
@@ -95,3 +126,29 @@ def test_dimension_labels_include_the_base_support_height(data):
         if match:
             point=dim.get('p',dim.get('b'))
             assert float(match[1])==pytest.approx(point[2]),dim['label']
+
+
+def test_dxf_files_are_strict_r12(tmp_path):
+    ezdxf=pytest.importorskip('ezdxf')
+    from ezdxf import recover
+    from dxf_r12 import DXF
+    d=DXF();d.polyline([[0,0],[80,0],[80,420],[0,420]],'CUT');d.circle(40,20,4.1,'pocket-top-d8.2-z3.5');d.polyline([[0,0],[10,0]],'CUT',closed=False)
+    path=tmp_path/'sheet.dxf';d.save(path)
+    doc,auditor=recover.readfile(path)
+    assert doc.dxfversion=='AC1009' and not auditor.has_errors
+    kinds=sorted(e.dxftype() for e in doc.modelspace())
+    assert kinds==['CIRCLE','POLYLINE','POLYLINE']
+    assert {l.dxf.name for l in doc.layers}>={'CUT','POCKET-TOP-D8_2-Z3_5'}
+    assert doc.header['$INSUNITS']==4
+
+
+def test_cnc_leaves_small_and_underside_features_to_the_builder():
+    p={'outer':[[0,0],[100,0],[100,60],[0,60]],'cuts':[],'thickness':6,'holes':[
+        {'id':'H01','x':10,'y':10,'diameter':3.2,'depth':None,'entry':'bottom','countersink':6,'countersink_depth':1.5,'purpose':'Screw clearance'},
+        {'id':'H02','x':30,'y':10,'diameter':1.4,'depth':6,'entry':'top','purpose':'Hinge pilot'},
+        {'id':'H03','x':50,'y':10,'diameter':10.2,'depth':1.2,'entry':'bottom','purpose':'Steel disc recess'}]}
+    data={'config':{'cnc':{'two_sided':False,'min_drill':2.0}},'parts':{'P':p}}
+    ops,hand=cnc.features(data,{'id':'S','items':[{'part':'P','copy':1,'x':0,'y':0,'angle':0}]})
+    assert 'drill-top-d3.2-z6' in ops   # a through hole is drilled from the top whatever its screw's side
+    assert not any(k.startswith(('countersink-bottom','pocket-bottom')) for k in ops)
+    assert {(h['hole'],h['feature']) for h in hand}=={('H01','countersink'),('H02','drill'),('H03','pocket')}

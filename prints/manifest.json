@@ -1,0 +1,323 @@
+{
+ "printer": {
+  "name": "FDM printer, 0.4 mm nozzle, 220 × 220 × 250 mm",
+  "bed": [
+   220,
+   220,
+   250
+  ],
+  "bed_margin": 5,
+  "nozzle": 0.4,
+  "layer": 0.2,
+  "min_wall": 1.2,
+  "max_overhang": 45,
+  "min_base_area": 40,
+  "wall_samples": 600,
+  "shell": 1.2,
+  "infill": 0.15,
+  "material": {
+   "name": "PLA",
+   "density": 1.24
+  }
+ },
+ "small_parts": [
+  31.7,
+  57.1
+ ],
+ "parts": {
+  "chair": {
+   "name": "chair",
+   "title": "Chair",
+   "notes": "Print upright, as shown. PLA, 0.2 mm layers, 3 walls, 15 % infill, no supports.",
+   "color": "#BD8B5D",
+   "about": "A chair for the Moomin House, sized for Moomintroll, that prints upright with no supports.\n\nThe four legs are what is left of a solid block after two pointed tunnels are cut through it, front to back and\nside to side. Their roofs lean 45°, the most an FDM printer prints without support, so the seat needs none. The\nback is a slab with an arched top. The outer corners, the seat and the back are rounded; the bottom edges stay\nsharp, because a rounded bottom edge would overhang.",
+   "params": {
+    "width": {
+     "value": 34.0,
+     "default": 34,
+     "min": 32,
+     "max": 50,
+     "step": 0.5,
+     "unit": "mm"
+    },
+    "depth": {
+     "value": 32.0,
+     "default": 32,
+     "min": 32,
+     "max": 45,
+     "step": 0.5,
+     "unit": "mm"
+    },
+    "seat_height": {
+     "value": 17.0,
+     "default": 17,
+     "min": 12,
+     "max": 30,
+     "step": 0.5,
+     "unit": "mm"
+    },
+    "seat": {
+     "value": 3.0,
+     "default": 3,
+     "min": 1.5,
+     "max": 6,
+     "step": 0.25,
+     "unit": "mm"
+    },
+    "leg": {
+     "value": 5.0,
+     "default": 5,
+     "min": 3,
+     "max": 10,
+     "step": 0.25,
+     "unit": "mm"
+    },
+    "back_height": {
+     "value": 30.0,
+     "default": 30,
+     "min": 15,
+     "max": 50,
+     "step": 0.5,
+     "unit": "mm"
+    },
+    "back": {
+     "value": 3.5,
+     "default": 3.5,
+     "min": 2,
+     "max": 6,
+     "step": 0.25,
+     "unit": "mm"
+    },
+    "round": {
+     "value": 1.0,
+     "default": 1,
+     "min": 0,
+     "max": 1.5,
+     "step": 0.25,
+     "unit": "mm"
+    }
+   },
+   "hash": "1e651de8150f8c51",
+   "generator": "build123d 0.13.0",
+   "files": {
+    "stl": {
+     "path": "chair.stl",
+     "bytes": 466484
+    },
+    "3mf": {
+     "path": "chair.3mf",
+     "bytes": 108336
+    },
+    "step": {
+     "path": "chair.step",
+     "bytes": 157723
+    }
+   },
+   "size": [
+    34.0,
+    32.0,
+    46.99
+   ],
+   "volume": 12455.9,
+   "area": 6003.6,
+   "triangles": 9326,
+   "grams": {
+    "solid": 15.4,
+    "estimate": 9.9
+   },
+   "checks": [
+    {
+     "id": "closed",
+     "label": "Closed solid",
+     "status": "pass",
+     "detail": "Watertight, every edge shared by two faces."
+    },
+    {
+     "id": "pieces",
+     "label": "One piece",
+     "status": "pass",
+     "detail": "One connected solid."
+    },
+    {
+     "id": "bed",
+     "label": "Fits the printer",
+     "status": "pass",
+     "detail": "34.0 × 32.0 × 47.0 mm on a 220 × 220 × 250 mm build volume."
+    },
+    {
+     "id": "base",
+     "label": "Stands flat on the bed",
+     "status": "pass",
+     "detail": "99 mm² touches the bed."
+    },
+    {
+     "id": "overhang",
+     "label": "No supports needed",
+     "status": "pass",
+     "detail": "Nothing leans out more than 45° from vertical."
+    },
+    {
+     "id": "wall",
+     "label": "Walls thick enough",
+     "status": "pass",
+     "detail": "Thinnest wall 3.50 mm (at least 1.2 mm; 393 places measured).",
+     "at": [
+      10.57,
+      16.0,
+      40.12
+     ]
+    },
+    {
+     "id": "small_parts",
+     "label": "Too big to swallow",
+     "status": "pass",
+     "detail": "Does not fit the Ø31.7 × 57.1 mm small-parts cylinder (EN 71-1)."
+    }
+   ],
+   "status": "pass"
+  },
+  "table": {
+   "name": "table",
+   "title": "Round table",
+   "notes": "Print upright, as shown. PLA, 0.2 mm layers, 3 walls, 15 % infill, no supports.",
+   "color": "#FFF3DB",
+   "about": "A round table for the Moomin House on one flared pedestal, printed upright with no supports.\n\nThe column widens into the table top in a 45° cone, the most an FDM printer prints without support, so the\nunderside of the top needs none. The top's upper edge and the foot are rounded.",
+   "params": {
+    "diameter": {
+     "value": 52,
+     "default": 52,
+     "min": 40,
+     "max": 90,
+     "step": 1,
+     "unit": "mm"
+    },
+    "height": {
+     "value": 30.0,
+     "default": 30,
+     "min": 20,
+     "max": 50,
+     "step": 0.5,
+     "unit": "mm"
+    },
+    "top": {
+     "value": 3.0,
+     "default": 3,
+     "min": 2,
+     "max": 6,
+     "step": 0.25,
+     "unit": "mm"
+    },
+    "column": {
+     "value": 10.0,
+     "default": 10,
+     "min": 6,
+     "max": 20,
+     "step": 0.5,
+     "unit": "mm"
+    },
+    "foot": {
+     "value": 34,
+     "default": 34,
+     "min": 20,
+     "max": 60,
+     "step": 1,
+     "unit": "mm"
+    },
+    "foot_height": {
+     "value": 3.0,
+     "default": 3,
+     "min": 2,
+     "max": 8,
+     "step": 0.25,
+     "unit": "mm"
+    },
+    "round": {
+     "value": 1.0,
+     "default": 1,
+     "min": 0,
+     "max": 1.5,
+     "step": 0.25,
+     "unit": "mm"
+    }
+   },
+   "hash": "fad22de6fa2d4730",
+   "generator": "build123d 0.13.0",
+   "files": {
+    "stl": {
+     "path": "table.stl",
+     "bytes": 419884
+    },
+    "3mf": {
+     "path": "table.3mf",
+     "bytes": 80044
+    },
+    "step": {
+     "path": "table.step",
+     "bytes": 20929
+    }
+   },
+   "size": [
+    52.0,
+    52.0,
+    30.0
+   ],
+   "volume": 27487.0,
+   "area": 7534.9,
+   "triangles": 8396,
+   "grams": {
+    "solid": 34.1,
+    "estimate": 14.6
+   },
+   "checks": [
+    {
+     "id": "closed",
+     "label": "Closed solid",
+     "status": "pass",
+     "detail": "Watertight, every edge shared by two faces."
+    },
+    {
+     "id": "pieces",
+     "label": "One piece",
+     "status": "pass",
+     "detail": "One connected solid."
+    },
+    {
+     "id": "bed",
+     "label": "Fits the printer",
+     "status": "pass",
+     "detail": "52.0 × 52.0 × 30.0 mm on a 220 × 220 × 250 mm build volume."
+    },
+    {
+     "id": "base",
+     "label": "Stands flat on the bed",
+     "status": "pass",
+     "detail": "907 mm² touches the bed."
+    },
+    {
+     "id": "overhang",
+     "label": "No supports needed",
+     "status": "pass",
+     "detail": "Nothing leans out more than 45° from vertical."
+    },
+    {
+     "id": "wall",
+     "label": "Walls thick enough",
+     "status": "pass",
+     "detail": "Thinnest wall 2.25 mm (at least 1.2 mm; 476 places measured).",
+     "at": [
+      -16.97,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "small_parts",
+     "label": "Too big to swallow",
+     "status": "pass",
+     "detail": "Does not fit the Ø31.7 × 57.1 mm small-parts cylinder (EN 71-1)."
+    }
+   ],
+   "status": "pass"
+  }
+ }
+}

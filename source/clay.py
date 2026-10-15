@@ -1,4 +1,4 @@
-"""Moomin family as thermo-clay (oven-hardening polymer clay) figures.
+"""Moomin family and friends as thermo-clay (oven-hardening polymer clay) figures.
 
 Each figure is a smooth union of rounded lumps (signed distance functions), the way clay pieces are
 pressed together. A surface-nets mesh of the zero level gives the 3D shape for the viewer, the CAD
@@ -13,9 +13,11 @@ import numpy as np
 
 ROOT=Path(__file__).resolve().parents[1]
 CFG=json.loads((ROOT/'source/config.json').read_text())
-NAMES={'pappa':'Moominpappa','mamma':'Moominmamma','troll':'Moomintroll'}
-WHITE,BLACK,APRON=0,1,2
-COLOURS={'white':'#F1EDE4','black':'#2B2B2E','red':'#C8443B'}
+NAMES={'pappa':'Moominpappa','mamma':'Moominmamma','troll':'Moomintroll','snufkin':'Snufkin','snorkmaiden':'Snork Maiden','littlemy':'Little My'}
+WHITE,BLACK,APRON,GREEN,ORANGE,GOLD,BROWN,RED=range(8)
+COLOURS={'white':'#F1EDE4','black':'#2B2B2E','red':'#C8443B','green':'#5F7F4C','orange':'#D9772E','gold':'#E2B640','brown':'#6E4C35'}
+PALETTE={WHITE:0,BLACK:1,APRON:0,GREEN:3,ORANGE:4,GOLD:5,BROWN:6,RED:2}   # material -> COLOURS index (apron: white, striped red)
+MATERIAL_NAME={m:list(COLOURS)[i] for m,i in PALETTE.items()}
 STRIPE=2.2   # apron stripe width, design units
 
 def _rot(rx=0,ry=0,rz=0):
@@ -90,11 +92,48 @@ def _apron(P,body):
     region=np.maximum.reduce([3-P[...,0],6.5-P[...,2],P[...,2]-26.5])
     return np.maximum(body-1.0,region)
 
+def _snork():
+    """Snork Maiden: a Moomin body without ears, a golden fringe and a gold anklet."""
+    ops=_troll(ears=False)
+    ops+=[(ellipsoid((6.5,0,45.2),(5.2,8.2,3.4),(0,-24,0)),GOLD,1.4,'fringe'),
+          (cylinder((.6,6.1,6.2),4.9,.9,.4),GOLD,.3,'anklet')]
+    return ops
+
+def _snufkin():
+    """Snufkin: brown boots, green trousers and coat, a round face and his tall pointed hat with a wide brim."""
+    ops=[(ellipsoid((0,0,20),(9.5,9.5,12.5)),GREEN,0,'coat'),
+         (sphere((.8,0,34.5),8.4),WHITE,2.5,'head')]
+    for s_ in (1,-1):
+        ops+=[(capsule((0,4.4*s_,9),(0,4.6*s_,4.5),3.4),GREEN,1.5,'legs'),
+              (ellipsoid((2.6,4.6*s_,2.6),(5.6,3.7,2.6)),BROWN,1.2,'boots'),
+              (capsule((1,9*s_,27),(5.5,10.8*s_,17.5),2.6),GREEN,1.4,'arms'),
+              (sphere((5.9,11*s_,16.6),2.8),WHITE,1,'hands')]
+    ops+=[(cylinder((.5,0,41.6),12.6,.9,.6),GREEN,.8,'hat brim'),
+          (capsule((.5,0,43),(-2.2,0,59),8.2,2.8),GREEN,.6,'hat crown')]
+    for s_ in (1,-1):ops.append((ellipsoid((8.4,3*s_,36.4),(1.1,1.3,2.2),(0,-20,0)),BLACK,0,'eyes'))
+    return ops
+
+def _littlemy():
+    """Little My: a chunky red dress, short sturdy legs and her famous orange hair bun."""
+    ops=[(ellipsoid((0,0,14.5),(11.5,11.5,12)),RED,0,'dress'),
+         (sphere((.6,0,31),8.2),WHITE,2.2,'head'),
+         (ellipsoid((-1,0,35.6),(8.6,8.6,5.8)),ORANGE,1.2,'hair cap'),
+         (ellipsoid((-.6,0,44.4),(6.2,6.2,6.6)),ORANGE,1.6,'hair bun')]
+    for s_ in (1,-1):
+        ops+=[(capsule((0,4*s_,8),(.4,4.2*s_,3.4),3.3),WHITE,1.6,'legs'),
+              (ellipsoid((2.4,4.2*s_,2.3),(5,3.4,2.3)),BLACK,1.2,'shoes'),
+              (capsule((.8,8.6*s_,24),(4.6,11*s_,17.8),2.4),WHITE,1.4,'arms')]
+    for s_ in (1,-1):ops.append((ellipsoid((8.2,2.8*s_,32.6),(1,1.2,2),(0,-18,0)),BLACK,0,'eyes'))
+    return ops
+
 DESIGNS={
   # name: (target height mm from config figures.heights, extra ops, torso apron?)
   'troll':(CFG['figures']['heights']['troll'],lambda:_troll(),False),
   'mamma':(CFG['figures']['heights']['mamma'],lambda:_troll()+[(box((9.4,-15.4,10.2),(5.4,2.1,3.6),1.2),BLACK,.4,'handbag'),(handle((9.4,-15.4,13.4),2.6,.6),BLACK,.3,'handle')],True),
   'pappa':(CFG['figures']['heights']['pappa'],lambda:_troll(ears=False)+[(cylinder((.5,0,45.8),11.6,.8,.5),BLACK,.6,'hat brim'),(cylinder((.5,0,53.6),7.6,7.8,.9),BLACK,.3,'hat crown')],False),
+  'snorkmaiden':(CFG['figures']['heights']['snorkmaiden'],_snork,False),
+  'snufkin':(CFG['figures']['heights']['snufkin'],_snufkin,False),
+  'littlemy':(CFG['figures']['heights']['littlemy'],_littlemy,False),
 }
 
 def _design_field(name,P):
@@ -208,8 +247,8 @@ def mesh(name,step=1.0,watertight=False):
     _,mat=field(name,V);return V,F,Nrm,colour_index(V,mat,name),mat
 
 def colour_index(V,mat,name):
-    """Palette index per point: white, black, or red / white apron stripes."""
-    out=np.where(mat==BLACK,1,0)
+    """Palette index per point (COLOURS order); the apron is white with red stripes."""
+    out=np.vectorize(PALETTE.get,otypes=[np.uint8])(mat) if mat.size else np.zeros(0,np.uint8)
     stripe=(np.floor(V[:,1]/(STRIPE*scale(name)))%2==0)
     return np.where((mat==APRON)&stripe,2,out).astype(np.uint8)
 
@@ -226,7 +265,7 @@ def stats(name):
     Volume from the closed 1 mm mesh; colour shares and the core from a 0.5 mm grid."""
     V,F=mesh(name,1.0,True)[:2];G,d,mat=_grid(name,.5);inside=d<0
     cfg=CFG['figures']['clay'];total=mesh_volume(V,F)
-    counts=np.bincount(colour_index(G[inside],mat[inside],name),minlength=3).astype(float)
+    counts=np.bincount(colour_index(G[inside],mat[inside],name),minlength=len(COLOURS)).astype(float)
     by={k:total*counts[j]/counts.sum() for j,k in enumerate(COLOURS)}
     # Foil core: white body deeper than the clay wall; a ball of the same volume is easy to scrunch.
     core=float(((d<-cfg['foil_wall'])&(mat==WHITE)).sum()*.5**3)
@@ -241,7 +280,7 @@ def lumps(name):
     s=scale(name);out={}
     for f,m,_,label in DESIGNS[name][1]():
         if label:out.setdefault(label,[f.dims,m,0])[2]+=1
-    return [(label,[d*s for d in dims],'black' if m==BLACK else 'white',n) for label,(dims,m,n) in out.items()]
+    return [(label,[d*s for d in dims],MATERIAL_NAME[m],n) for label,(dims,m,n) in out.items()]
 
 def lumps_spec(name):
     """Every lump as (kind, parameters in mm, colour id) for building an exact CAD solid."""
@@ -264,6 +303,12 @@ def hard_volume(name,step=.5):
 def grams(volume_mm3):
     """Clay to buy: volume x density plus the handling allowance."""
     cfg=CFG['figures']['clay'];return volume_mm3/1000*cfg['density']*(1+cfg['allowance'])
+
+def small_part(name):
+    """True if the figure would fit the EN 71-1 small-parts cylinder (config figures.small_parts) in some orientation.
+    It cannot when its second-largest size is wider than the cylinder or its largest is longer than the cylinder."""
+    d,l=CFG['figures']['small_parts'];st=stats(name);a,b,c=sorted((st['height'],st['length'],st['width']))
+    return b<=d and c<=l
 
 def footprint(name):
     """Plan outline (convex hull, mm) of the whole figure, for placing it in a room."""

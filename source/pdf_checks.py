@@ -3,6 +3,7 @@ import json,math
 from collections import Counter
 from pathlib import Path
 from pypdf import PdfReader
+from model import BOUGHT
 
 # ReportLab rounds the largest A3 coordinates to 0.001 PDF point.
 # The resulting half-unit rounding is at most 0.000177 mm.
@@ -24,21 +25,23 @@ def pdf_paths(page):
     return result
 
 def dxf_paths(path):
-    lines=path.read_text().splitlines();pairs=list(zip(lines[::2],lines[1::2]));entities=[];entry=[]
+    """Curves of one per-operation R12 DXF (every entity is that operation): POLYLINE runs and CIRCLEs, in order."""
+    lines=path.read_text().splitlines();pairs=list(zip(lines[::2],lines[1::2]))
+    entities=[];entry=[]
     for code,value in pairs:
         if code=='0':
             if entry:entities.append(entry)
             entry=[]
         entry.append((code,value))
+        if (code,value)==('2','ENTITIES'):entry=[];entities=[]   # header and layer table are not curves
     if entry:entities.append(entry)
-    result=[]
+    result=[];poly=None
     for e in entities:
-        tags=dict(e)
-        if tags.get('8')!='CUT':continue
-        if e[0][1]=='LWPOLYLINE':
-            xs=[float(v) for c,v in e if c=='10'];ys=[float(v) for c,v in e if c=='20']
-            result.append(('polygon',[v for point in zip(xs,ys) for v in point]))
-        elif e[0][1]=='CIRCLE':result.append(('circle',[float(tags[k]) for k in ('10','20','40')]))
+        kind=e[0][1];tags=dict(e)
+        if kind=='POLYLINE':poly=[]
+        elif kind=='VERTEX' and poly is not None:poly+=[float(tags['10']),float(tags['20'])]
+        elif kind=='SEQEND' and poly is not None:result.append(('polygon',poly));poly=None
+        elif kind=='CIRCLE':result.append(('circle',[float(tags[k]) for k in ('10','20','40')]))
     return result
 
 def checks(root):
@@ -85,5 +88,5 @@ def checks(root):
     check('Supplier appendix excludes furniture and engraving',supplier['optional_pieces']==0 and supplier['engraving']=='none' and not any(s['optional'] for s in supplier['sheets']))
     check('Supplier language and revision recorded',vendor.trailer['/Root'].get('/Lang')==supplier['language'] and vendor.metadata.get('/Revision')==supplier['revision'])
     hand=json.loads((out/'reports/hand-template-index.json').read_text())
-    check('3 mm hand templates cover every thin fabrication part',{i['part'] for i in hand}=={pid for pid,p in data['parts'].items() if p['thickness']==3 and not p.get('render_only') and p['category'] not in ('Purchased wood','Purchased packing')})
+    check('3 mm hand templates cover every thin fabrication part',{i['part'] for i in hand}=={pid for pid,p in data['parts'].items() if p['thickness']==3 and not p.get('render_only') and p['category'] not in BOUGHT})
     return result

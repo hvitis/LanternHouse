@@ -13,7 +13,7 @@ slot, or a door or drawer gap that the real thickness would close. Solid-wood st
 import json,sys,time
 from pathlib import Path
 import build_cad as bc   # sets up FreeCAD (headless with MOOMIN_HEADLESS=1)
-from model import build
+from model import build, BOUGHT
 
 ROOT=Path(__file__).resolve().parents[1]
 TOUCH=.05   # mm: parts closer than this at nominal size count as touching
@@ -22,7 +22,7 @@ def assemble(data,end):
     """World solids with every plywood part at the thin (0) or thick (1) end of its band; None is nominal."""
     band=data['config']['thickness_tolerance'];shapes={};delta={};world={}
     for pid,p in data['parts'].items():
-        fixed=end is None or p['category'] in ('Purchased wood','Purchased packing')
+        fixed=end is None or p['category'] in BOUGHT
         delta[pid]=0 if fixed else band.get(f'{p["thickness"]:g}',(0,0))[end]
         shapes[pid]=bc.profile_shape(dict(p,thickness=p['thickness']+delta[pid]))
     for i in data['instances']:

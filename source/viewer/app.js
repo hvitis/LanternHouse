@@ -41,7 +41,7 @@ function profileShape(p){
 }
 const geometry={},edges={};
 for(const [pid,p] of Object.entries(parts)){
-  geometry[pid]=new THREE.ExtrudeGeometry(profileShape(p),{depth:p.thickness,bevelEnabled:false,curveSegments:p.outercircle?96:20});
+  geometry[pid]=p.sphere?new THREE.SphereGeometry(p.sphere,48,24).rotateX(Math.PI/2).translate(p.sphere,p.sphere,p.sphere):new THREE.ExtrudeGeometry(profileShape(p),{depth:p.thickness,bevelEnabled:false,curveSegments:p.outercircle?96:20});
   edges[pid]=new THREE.EdgesGeometry(geometry[pid],25);
 }
 const materials={};
@@ -53,9 +53,11 @@ const flagged={new:new THREE.MeshStandardMaterial({color:0x3fae6b,roughness:.7,p
   changed:new THREE.MeshStandardMaterial({color:0xf0b93a,roughness:.7,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1})};
 const edgeMaterial=new THREE.LineBasicMaterial({color:0x223838,transparent:true,opacity:.35});
 const pickMaterial=new THREE.MeshStandardMaterial({color:0xffc04d,emissive:0x6b3a00,roughness:.6});
+const searchMaterial=new THREE.MeshBasicMaterial({color:0xffe600,transparent:true,opacity:1,depthTest:false,depthWrite:false});
+const searchMatches=new Set(),ghostMaterials=new Map();let searchRestore=null;
 
 // ---------- assembly hierarchy: explode offset -> pivot / slide -> meshes ----------
-const LABEL={Fixed:'Fixed rear shell, plinth, floors and frame',WallRight:'Right opening wall shell',WallLeft:'Left opening wall shell',Roof:'Removable roof',RoofLocks:'Roof turn-button catches',Porch:'Permanent veranda',Drawer:'Hidden plinth drawer',Furniture:'Furniture for the 3D view',Figures:'Example family figures'};
+const LABEL={Fixed:'Fixed rear shell, plinth, floors and frame',WallRight:'Right opening wall shell',WallLeft:'Left opening wall shell',Roof:'Removable roof',RoofLocks:'Roof turn-button catches',Porch:'Permanent veranda',Drawer:'Hidden plinth drawer',Furniture:'Furniture for the 3D view',Figures:'Example clay figures',RoomDoors:'Room door leaves',Garden:'Garden scene (display only)'};
 const root=new THREE.Group();scene.add(root);
 const nodes={};
 for(const g of Object.keys(LABEL)){
@@ -84,13 +86,18 @@ for(const f of fasteners){
   pivot.add(inner);nodes.RoofLocks.inner.add(pivot);catches[tab]={pivot,inner};
 }
 function matrixOf(i){const [u,v,w,o]=[i.u,i.v,i.w,i.origin];return new THREE.Matrix4().set(u[0],v[0],w[0],o[0],u[1],v[1],w[1],o[1],u[2],v[2],w[2],o[2],0,0,0,1);}
-const meshes=[],lines=[],parentOf={};
+const meshes=[],lines=[],pieceLabels=[],parentOf={};
 for(const i of instances){
   if(!nodes[i.group])continue;   // jigs, test coupons and the loose accessory tray are not in the house
   const p=parts[i.part];const parent=doorOf[i.id]?doors[doorOf[i.id]].inner:catches[i.id]?catches[i.id].inner:nodes[i.group].inner;
   const mesh=new THREE.Mesh(geometry[i.part],material(i.color?{...p,color:i.color}:p));mesh.matrixAutoUpdate=false;mesh.matrix.copy(matrixOf(i));
-  mesh.userData={kind:'part',inst:i,part:p,base:mesh.material};parent.add(mesh);meshes.push(mesh);parentOf[i.id]=parent;
+  mesh.userData={kind:'part',inst:i,part:p,base:mesh.material,dxf:p.dxf?material({...p,color:p.dxf.color}):null};parent.add(mesh);meshes.push(mesh);parentOf[i.id]=parent;
   const line=new THREE.LineSegments(edges[i.part],edgeMaterial);line.matrixAutoUpdate=false;line.matrix.copy(mesh.matrix);parent.add(line);lines.push(line);line.userData.mesh=mesh;
+  if(!p.render_only){
+    const element=document.createElement('div');element.className='piece-id';element.textContent=i.part;
+    const tag=new CSS2DObject(element);mesh.geometry.computeBoundingBox();mesh.geometry.boundingBox.getCenter(tag.position);tag.visible=false;
+    mesh.add(tag);pieceLabels.push(tag);
+  }
 }
 // Thermo-clay Moomins: closed meshes from clay.py (base64 arrays), one per floor, placed by derived.figures.
 function decode(text,Type){const bin=atob(text),bytes=new Uint8Array(bin.length);for(let k=0;k<bin.length;k++)bytes[k]=bin.charCodeAt(k);return new Type(bytes.buffer);}
@@ -177,7 +184,7 @@ for(const h of hardwareObjects)if(h.userData.owners?.some(id=>atticIds.has(id)))
 
 // ---------- state, animation and controls ----------
 const travel=derived.drawer.travel;
-const state={walls:0,doors:0,drawer:0,lift:0,roof:'on',explode:0,cut:total+10,porch:true,furniture:true,figures:true,hardware:false,edges:true,xray:false,dims:true,highlight:false};
+const state={walls:0,doors:0,drawer:0,lift:0,roof:'on',explode:0,cut:total+10,porch:true,furniture:true,figures:true,hardware:false,edges:true,xray:false,dims:true,highlight:false,thickness:true};
 const target={walls:0,doors:0,drawer:0,lift:0,explode:0};
 const $=id=>document.getElementById(id);
 $('drawer').step='any';$('drawer').max=travel;$('cut').step='any';$('cut').max=total+10;$('cut').value=total+10;
@@ -192,12 +199,34 @@ function setRoof(mode){
 document.querySelectorAll('#roofSeg button').forEach(b=>b.addEventListener('click',()=>setRoof(b.dataset.roof)));
 $('openAll').addEventListener('click',()=>{target.walls=derived.views.open_angle;target.doors=90;target.drawer=travel;setRoof('lifted');});
 $('closeAll').addEventListener('click',()=>{target.walls=0;target.doors=0;target.drawer=0;target.explode=0;setRoof('on');});
-for(const [id,key] of [['showPorch','porch'],['showFurniture','furniture'],['showFigures','figures'],['showHardware','hardware'],['showEdges','edges'],['xray','xray'],['showDims','dims'],['highlight','highlight']])
-  $(id).addEventListener('change',e=>{state[key]=e.target.checked;if(key==='highlight')recolour();});
+for(const [id,key] of [['showPorch','porch'],['showFurniture','furniture'],['showFigures','figures'],['showHardware','hardware'],['showEdges','edges'],['xray','xray'],['showDims','dims']])
+  $(id).addEventListener('change',e=>{state[key]=e.target.checked;if(key==='xray')recolour();});
 for(const text of derived.changes??[]){const li=document.createElement('li');li.textContent=text;$('changes').appendChild(li);}
 
-function displayMaterial(mesh){const rev=mesh.userData.part?.revision;return state.highlight&&flagged[rev]?flagged[rev]:mesh.userData.base;}
-function recolour(){for(const m of meshes)if(m!==picked)m.material=displayMaterial(m);}
+const thicknessColours=[...new Map(Object.values(parts).filter(p=>p.dxf).map(p=>[p.dxf.layer,{...p.dxf,thickness:p.thickness}])).values()].sort((a,b)=>a.thickness-b.thickness);
+for(const c of thicknessColours){
+  const row=document.createElement('p'),swatch=document.createElement('span');swatch.className='key';swatch.style.background=c.color;
+  row.append(swatch,`${c.thickness} mm · ${c.layer}`);$('thicknessLegend').appendChild(row);
+}
+const colourNote=document.createElement('p');colourNote.textContent='Supplier cut file colors. Other items keep their usual colors.';$('thicknessLegend').appendChild(colourNote);
+function setColourMode(key,checked){
+  state[key]=checked;
+  if(checked){const other=key==='thickness'?'highlight':'thickness';state[other]=false;$(other==='thickness'?'showThickness':'highlight').checked=false;}
+  $('thicknessLegend').hidden=!state.thickness;recolour();
+}
+$('showThickness').addEventListener('change',e=>setColourMode('thickness',e.target.checked));
+$('highlight').addEventListener('change',e=>setColourMode('highlight',e.target.checked));
+function displayMaterial(mesh){
+  if(searchMatches.has(mesh))return searchMaterial;
+  const rev=mesh.userData.part?.revision;
+  const normal=state.thickness&&mesh.userData.dxf?mesh.userData.dxf:state.highlight&&flagged[rev]?flagged[rev]:mesh.userData.base;
+  if(searchMatches.size&&state.xray){
+    if(!ghostMaterials.has(normal)){const ghost=normal.clone();ghost.transparent=true;ghost.opacity=.12;ghost.depthWrite=false;ghostMaterials.set(normal,ghost);}
+    return ghostMaterials.get(normal);
+  }
+  return normal;
+}
+function recolour(){for(const m of meshes)m.material=m===picked&&!searchMatches.size?pickMaterial:displayMaterial(m);}
 
 const cutPlane=new THREE.Plane(new THREE.Vector3(0,0,-1),total);
 function apply(){
@@ -211,16 +240,19 @@ function apply(){
   nodes.Roof.explode.visible=!(state.roof==='off'||state.roof==='attic');
   for(const m of attic)m.visible=state.roof!=='attic'&&(m.userData.kind!=='fastener'||state.hardware);
   for(const [g,offset] of Object.entries(derived.views.exploded))if(nodes[g])nodes[g].explode.position.set(...offset.map(v=>v*state.explode/100));
-  nodes.Porch.explode.visible=state.porch;nodes.Furniture.explode.visible=state.furniture;nodes.Figures.explode.visible=state.figures;
+  nodes.Porch.explode.visible=state.porch;nodes.Furniture.explode.visible=state.furniture;nodes.Garden.explode.visible=state.furniture;nodes.Figures.explode.visible=state.figures;
   for(const h of hardwareObjects)if(!h.userData.owners?.some(id=>atticIds.has(id))||state.roof!=='attic')h.visible=state.hardware;
   for(const l of lines)l.visible=state.edges&&l.userData.mesh.visible;
   for(const o of dimObjects)o.visible=state.dims;
+  const showIds=$('showPieceIds').checked,labelPosition=new THREE.Vector3();
+  for(const tag of pieceLabels)tag.visible=(showIds||searchMatches.has(tag.parent))&&visibleChain(tag.parent)&&(state.cut>=total||tag.getWorldPosition(labelPosition).z<=state.cut+.01);
   for(const [key,m] of Object.entries(materials))if(key.endsWith(':wall')){m.transparent=state.xray;m.opacity=state.xray?.22:1;m.depthWrite=!state.xray;}
   cutPlane.constant=state.cut;renderer.clippingPlanes=state.cut>=total?[]:[cutPlane];
 }
 
 // ---------- picking ----------
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();let downAt=null,picked=null;
+recolour();
 function visibleChain(o){for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;}
 renderer.domElement.addEventListener('pointerdown',e=>{downAt=[e.clientX,e.clientY];});
 renderer.domElement.addEventListener('pointerup',e=>{
@@ -230,11 +262,11 @@ renderer.domElement.addEventListener('pointerup',e=>{
   const hit=ray.intersectObjects(meshes,false).find(h=>visibleChain(h.object)&&(state.cut>=total||h.point.z<=state.cut+.01));
   select(hit?hit.object:null);
 });
-addEventListener('keydown',e=>{if(e.key==='Escape')select(null);});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('dxfDialog').open){clearElementSearch();select(null);}});
 function select(mesh){
   const prev=picked;picked=mesh;if(prev)prev.material=displayMaterial(prev);const box=$('info');
   if(!mesh){box.style.display='none';return;}
-  mesh.material=pickMaterial;box.style.display='block';
+  mesh.material=searchMatches.has(mesh)?searchMaterial:pickMaterial;box.style.display='block';
   if(mesh.userData.kind==='fastener'){const f=mesh.userData.fastener;box.innerHTML=`<b>${f.type}</b> · ${f.diameter} x ${f.length} mm<div class="meta">${f.id}</div><div class="note">${f.note}</div>`;return;}
   if(mesh.userData.kind==='figure'){
     const f=mesh.userData.figure,c=mesh.userData.part.clay,colours=Object.entries(c.grams_by_colour).filter(([,g])=>g>=.5).map(([k,g])=>`${k} ${Math.round(g)} g`).join(', ');
@@ -253,6 +285,50 @@ function select(mesh){
     `<div class="meta">${p.thickness} mm · ${p.width.toFixed(1)} x ${p.height.toFixed(1)} mm outline · ${p.quantity} required<br>${i.label} · ${LABEL[i.group]??i.group} · ${p.category}</div>`+
     (p.note?`<div class="note">${p.note}</div>`:'');
 }
+
+// ---------- exact element search ----------
+function clearElementSearch(){
+  searchMatches.clear();
+  for(const mesh of meshes)mesh.renderOrder=0;
+  if(searchRestore){state.xray=searchRestore.xray;$('xray').checked=state.xray;searchRestore=null;}
+  select(null);recolour();$('elementId').value='';$('elementId').removeAttribute('aria-invalid');
+  $('searchStatus').textContent='Exact ID → X-ray, yellow highlight and camera focus.';
+}
+function findElement(){
+  const query=$('elementId').value.trim().toUpperCase();
+  if(!query){clearElementSearch();return;}
+  const exact=meshes.filter(m=>m.userData.inst?.id.toUpperCase()===query);
+  const matches=exact.length?exact:meshes.filter(m=>m.userData.part?.id.toUpperCase()===query);
+  if(!matches.length){
+    clearElementSearch();$('elementId').value=query;$('elementId').setAttribute('aria-invalid','true');
+    $('searchStatus').textContent=`No exact match for ${query}. Enter a full part or instance ID.`;return;
+  }
+  searchRestore??={xray:state.xray};searchMatches.clear();matches.forEach(m=>searchMatches.add(m));
+  state.xray=true;$('xray').checked=true;
+  state.cut=total+10;$('cut').value=state.cut;$('cutOut').textContent='off';
+  for(const mesh of matches){
+    const group=mesh.userData.inst?.group;
+    if(group==='Porch'){state.porch=true;$('showPorch').checked=true;}
+    if(group==='Furniture'||group==='Garden'){state.furniture=true;$('showFurniture').checked=true;}
+    if(group==='Figures'){state.figures=true;$('showFigures').checked=true;}
+    if(group==='Roof'||group==='RoofLocks'||attic.includes(mesh)){setRoof('on');state.lift=target.lift=0;}
+  }
+  apply();root.updateMatrixWorld(true);
+  matches.forEach(m=>{m.renderOrder=100;});
+  for(const m of meshes)if(!searchMatches.has(m))m.renderOrder=0;
+  select(matches[0]);recolour();
+  const box=new THREE.Box3();matches.forEach(m=>box.union(new THREE.Box3().setFromObject(m)));
+  const centre=box.getCenter(new THREE.Vector3()),radius=Math.max(5,box.getBoundingSphere(new THREE.Sphere()).radius);
+  const vertical=THREE.MathUtils.degToRad(camera.fov/2),horizontal=Math.atan(Math.tan(vertical)*camera.aspect);
+  const distance=Math.max(35,radius/Math.sin(Math.min(vertical,horizontal))*1.2);
+  const direction=camera.position.clone().sub(controls.target).normalize();if(direction.lengthSq()===0)direction.set(-1,-1,.6).normalize();
+  flight={from:camera.position.clone(),to:centre.clone().addScaledVector(direction,distance),fromT:controls.target.clone(),toT:centre,t:0};
+  $('elementId').removeAttribute('aria-invalid');
+  $('searchStatus').textContent=`${query} · ${matches.length} ${matches.length===1?'piece':'pieces'} highlighted in yellow. X-ray on.`;
+}
+$('elementSearch').addEventListener('submit',e=>{e.preventDefault();findElement();});
+$('elementId').addEventListener('input',findElement);
+$('clearSearch').addEventListener('click',clearElementSearch);
 
 // ---------- camera views ----------
 const VIEWS={iso:[-60,22],front:[-90,8],back:[90,8],left:[180,8],right:[0,8],top:[-90,89],veranda:[-75+(Number(config.veranda.facet.slice(1))-1)*30,16]};
@@ -278,6 +354,7 @@ camera.position.set(1300,-1700,1100);controls.target.set(0,0,total/2);view('iso'
 const clock=new THREE.Clock();
 renderer.setAnimationLoop(()=>{
   const dt=Math.min(clock.getDelta(),.05),k=1-Math.exp(-dt*6);
+  if($('dxfDialog').open)return;
   for(const key of ['walls','doors','drawer','lift','explode']){
     if(Math.abs(state[key]-target[key])>.05)state[key]+=(target[key]-state[key])*k;else state[key]=target[key];
     if(setters[key])setters[key](key==='drawer'?state[key]:Math.round(state[key]));

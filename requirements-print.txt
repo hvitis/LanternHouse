@@ -1,0 +1,4 @@
+# The 3D-print designs (source/prints/) are generated on the Mac with build123d, a Python CAD library on the
+# OpenCASCADE kernel. CI and the web page only read the published files in prints/, so they do not need this.
+-r requirements.txt
+build123d>=0.13,<0.14

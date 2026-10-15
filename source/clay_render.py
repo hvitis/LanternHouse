@@ -92,8 +92,8 @@ def render_view(name,view,step=.45,px=PX):
     (OUT/f'clay-{name}-{view}.json').write_text(json.dumps(meta))
     return path
 
-def family(names=('pappa','mamma','troll'),view='three-quarter',gap=6):
-    """The three figures side by side at one scale, standing on one ground line."""
+def family(names=('pappa','mamma','troll','snorkmaiden','snufkin','littlemy'),view='three-quarter',gap=6):
+    """The figures side by side at one scale, standing on one ground line."""
     ims=[Image.open(OUT/f'clay-{n}-{view}.png') for n in names];metas=[json.loads((OUT/f'clay-{n}-{view}.json').read_text()) for n in names]
     k=metas[0]['px_per_mm'];ground=max(m['ground_from_top_mm'] for m in metas)*k;below=max(im.height-m['ground_from_top_mm']*k for im,m in zip(ims,metas))
     sheet=Image.new('RGBA',(int(sum(im.width for im in ims)+gap*k*(len(ims)-1)),int(ground+below)),(0,0,0,0));x=0

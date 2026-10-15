@@ -15,38 +15,25 @@ def test_all_interchangeable_profiles_share_an_id(data):
 
 def test_shared_build_quantities_and_design_roles(data):
     parts=data['parts']
-    assert {pid:parts[pid]['quantity'] for pid in ('J01','P01','DM06','K2A')}=={
-        'J01':54,'P01':4,'DM06':4,'K2A':2,
+    assert {pid:parts[pid]['quantity'] for pid in ('J01','J02','J03','J04','P01','DM06','K2A')}=={
+        'J01':22,'J02':5,'J03':2,'J04':1,'P01':4,'DM06':len(data['config']['dormer']['over']),'K2A':2,
     }
     assert not {'DM07','K1A','K4A','K4B','K4C','K5A','K5B','PC01','PC02','PC03','V6A'} & parts.keys()
 
 
 def test_floor_seam_supports_orientation_and_quantities(data):
-    parts = data['parts']
-    instances = data['instances']
-    assert parts['FS04']['quantity'] == 6
-    assert parts['FS05']['quantity'] == 6
-    assert parts['FS04']['thickness'] == 4
-    assert parts['FS05']['thickness'] == 4
-    assert parts['FS04']['width'] == 4.0
-    assert parts['FS05']['width'] == 4.0
-    assert parts['FS04']['height'] > parts['FS05']['height']
-
-    by_floor = {}
-    seam_y = data['config']['fabrication']['seam_y']
-    for inst in instances:
-        if inst['part'] in ('FS04', 'FS05'):
-            z = round(inst['origin'][2], 1)
-            by_floor.setdefault(z, []).append(inst['part'])
-            p = parts[inst['part']]
-            ys = [inst['origin'][1] + inst['u'][1]*x + inst['v'][1]*y for x, y in p['outer']]
-            assert min(ys) < seam_y < max(ys), "Must cross seam perpendicularly"
-
-    assert len(by_floor) == 3
-    for z, plist in by_floor.items():
-        assert len(plist) == 4
-        assert plist.count('FS04') == 2
-        assert plist.count('FS05') == 2
+    # Under each of the three upper floor levels, four strips cross the finger-joint seam front to back.
+    parts=data['parts'];fab=data['config']['fabrication'];seam_y=fab['seam_y'];t,w=fab['floor_support']
+    by_floor={}
+    for inst in data['instances']:
+        p=parts[inst['part']]
+        if not p['name'].startswith('Floor seam support') or p['assembly_panel']=='F00':continue
+        assert p['thickness']==t and min(p['width'],p['height'])==pytest.approx(w)
+        xs=[inst['origin'][0]+inst['u'][0]*x+inst['v'][0]*y for x,y in p['outer']]
+        ys=[inst['origin'][1]+inst['u'][1]*x+inst['v'][1]*y for x,y in p['outer']]
+        if min(ys)<seam_y<max(ys):by_floor.setdefault(round(inst['origin'][2],1),set()).add(round((min(xs)+max(xs))/2))
+    assert len(by_floor)==3
+    assert all(xs=={-70,-40,40,70} for xs in by_floor.values()),by_floor
 
 
 @pytest.mark.parametrize('build_id,design_parts,size,quantity',[

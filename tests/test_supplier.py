@@ -31,6 +31,17 @@ def test_supplier_has_full_size_unannotated_vectors(job,tmp_path,lang):
     assert ('Załącznik' in reader.pages[0].extract_text() if lang=='pl' else 'Supplier' in reader.pages[0].extract_text())
     assert reader.trailer['/Root']['/Lang']==lang
 
+@pytest.mark.parametrize('lang',['pl','en'])
+def test_supplier_states_its_specification(job,tmp_path,lang):
+    # The requirements must be printed, not only defined in the locale files.
+    path,report=supplier.build(*job,{},lang,tmp_path/f'{lang}.pdf')
+    reader=PdfReader(path);tr=supplier.catalog(lang)
+    roles=[m['role'] for m in report['pages']]
+    assert roles[:4]==['specification','specification','checklist','hand-drilling']
+    spec=reader.pages[1].extract_text()
+    for key in ('status',):assert tr[key][:20] in reader.pages[0].extract_text()
+    assert tr['spec_title'] in spec and tr['production_only'][:25] in spec.replace('\n',' ')
+
 def test_polish_accents_survive_embedding(job,tmp_path):
     path,_=supplier.build(*job,{},'pl',tmp_path/'pl.pdf')
     text=''.join(p.extract_text() for p in PdfReader(path).pages)
@@ -47,7 +58,7 @@ def test_supplier_page2_summary_table(job,tmp_path):
     for lang in ('pl','en'):
         path,report=supplier.build(*job,{},lang,tmp_path/f'{lang}.pdf')
         reader=PdfReader(path)
-        page2=reader.pages[1].extract_text()
+        page2=reader.pages[next(m['page'] for m in report['pages'] if m['role']=='summary')-1].extract_text()
         if lang=='pl':
             assert 'Zestawienie grubości sklejki' in page2
             assert 'Grubość sklejki' in page2
@@ -62,7 +73,7 @@ def test_supplier_page2_summary_table(job,tmp_path):
             assert 'Total number of elements' in page2
             assert 'Total' in page2
             assert '3 mm' in page2
-        assert report['pages'][1]['role']=='summary'
+        assert [m['role'] for m in report['pages']].index('summary')==4   # after the cover, specification, checklist and hand-drilling list
 
 @pytest.mark.parametrize('change,error',[
     (lambda d,n:n['sheets'][0]['items'][0].update(y=408),'whole part'),
@@ -107,3 +118,24 @@ def test_blind_drilling_preserves_depth_and_face(job,tmp_path):
     path,report=supplier.build(data,nest,{},'en',tmp_path/'blind.pdf')
     operation=next(p for p in report['pages'] if p.get('operation')=='drill-bottom-d3.2-z1')
     assert pdf_paths(PdfReader(path).pages[operation['page']-1])==[('circle',pytest.approx([78,18,1.6],abs=.0001))]
+
+
+def test_single_cut_file_holds_only_through_cuts(job,tmp_path):
+    # The supplier asked for one vector file with only what is cut: every sheet, one layer per thickness.
+    recover=pytest.importorskip('ezdxf.recover')
+    import cut_file
+    data,nest=copy.deepcopy(job)
+    data['parts']['W04']={'id':'W04','name':'Fixed wall','thickness':6,'width':80,'height':420,'outer':[[0,0],[80,0],[80,420],[0,420]],
+        'cuts':[[[20,100],[60,100],[60,200],[20,200]]],'holes':[{'id':'H01','x':40,'y':300,'diameter':10.2,'depth':1.2,'purpose':'Steel disc recess'}],
+        'starters':[],'quantity':1,'retained_edges':[{'axis':'y','value':0},{'axis':'y','value':420}]}
+    nest['sheets'].append({'id':'PLY6-01','thickness':6,'width':297,'height':420,'window':[10,0,287,420],'items':[{'part':'W04','copy':1,'x':10,'y':0,'angle':0}]})
+    report=cut_file.build(data,nest,tmp_path/'cut.dxf')
+    doc,auditor=recover.readfile(tmp_path/'cut.dxf')
+    assert doc.dxfversion=='AC1009' and not auditor.has_errors and doc.header['$INSUNITS']==4
+    entities=list(doc.modelspace())
+    assert Counter((e.dxf.layer,e.dxftype()) for e in entities)==Counter({('CUT_3MM','POLYLINE'):2,('CUT_3MM','CIRCLE'):1,('CUT_6MM','POLYLINE'):2})   # no frames or text
+    assert all(e.is_closed for e in entities if e.dxftype()=='POLYLINE')   # the wall's factory blank ends are cut too
+    assert report['blind_operations_not_in_file']==[{'sheet':'PLY6-01','operation':'pocket-top-d10.2-z1.2','count':1}]   # a laser would cut it through
+    assert {s['id']:s['origin_mm'] for s in report['sheets']}=={'PLY3-01':[0,420+cut_file.THICKNESS_GAP],'PLY6-01':[0,0]}   # thinnest row on top
+    wall=next(e for e in entities if e.dxf.layer=='CUT_6MM' and len(e.vertices)==4 and e.vertices[0].dxf.location.x==10)
+    assert [tuple(v.dxf.location)[:2] for v in wall.vertices]==[(10,0),(90,0),(90,420),(10,420)]

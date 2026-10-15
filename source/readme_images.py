@@ -98,10 +98,10 @@ def sync_furniture_mesh(root: Path = ROOT, quiet: bool = False):
 
     mesh = json.loads(mesh_path.read_text())
     # Keep non-furniture meshes (house, fixtures, figures)
-    mesh = [m for m in mesh if m.get('group') != 'Furniture']
+    mesh = [m for m in mesh if m.get('group') not in ('Furniture', 'Garden')]
 
     parts = data['parts']
-    furn_instances = [i for i in data['instances'] if i['group'] == 'Furniture']
+    furn_instances = [i for i in data['instances'] if i['group'] in ('Furniture', 'Garden')]
 
     for inst in furn_instances:
         pid = inst['part']
@@ -131,7 +131,7 @@ def sync_furniture_mesh(root: Path = ROOT, quiet: bool = False):
             'id': inst['id'],
             'part': pid,
             'design_part': inst['design_part'],
-            'group': 'Furniture',
+            'group': inst['group'],
             'color': inst.get('color') or p['color'],
             'vertices': verts,
             'faces': faces
@@ -152,14 +152,14 @@ def rerender_readme_previews(root: Path = ROOT, quiet: bool = False):
     render.MESH = json.loads((root / 'output/previews/mesh.json').read_text())
     render.VIEWS = render.DATA['derived']['views']
 
-    house = lambda m: m['group'] not in ('Furniture', 'Figures')
+    house = lambda m: m['group'] not in ('Furniture', 'Figures', 'Garden')
     veranda_angle = -75 + (int(render.DATA['config']['veranda']['facet'][1:]) - 1) * 30
 
     if not quiet:
         print("Rerendering README views from updated model...")
     render.render('house-closed-veranda', house, size=(1800, 2400), view=render.camera(veranda_angle + 15))
     render.render('cover-house', house, size=(2000, 2600), view=render.camera(-25, 16))
-    render.render('house-open-furnished', mode='open', size=(2200, 2400))
+    render.render('house-open-furnished', lambda m: m['group'] != 'Garden', mode='open', size=(2200, 2400))
     render.render('house-exploded', house, mode='exploded', overlay=True, size=(2200, 2800))
 
     import clay_render

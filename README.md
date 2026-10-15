@@ -8,7 +8,7 @@
   <img src="docs/images/cover.jpg" width="380" alt="Book cover: the round blue tower with a red cone roof and a small veranda, standing in a summer meadow">
 </p>
 
-The house is a round blue tower, 838.4 mm tall, with a red spire roof, three floors and an attic. All plywood parts fit A3 stock (297 × 420 mm). CNC machining and calibrated A4 templates support company cutting and DIY work. The front walls swing open on real hinges, the roof lifts off, a permanent veranda stands on the side, and a drawer is hidden in the stone plinth. Three thermo-clay Moomins live on the three floors.
+The house is a round blue tower, 838.4 mm tall, with a red spire roof, three floors and an attic. All plywood parts fit A3 stock (297 × 420 mm). CNC machining and calibrated A4 templates support company cutting and DIY work. The front walls swing open on real hinges, the roof with its two dormers lifts off, a permanent veranda with a rope ladder stands on the side, a back door leads to the woodpile, and a drawer is hidden in the stone plinth. Six thermo-clay figures live in the house: the Moomin family, Snufkin, the Snork Maiden and Little My.
 
 <p align="center">
   <b><a href="https://hvitis.github.io/moominshouse/">Open the 3D model in your browser</a></b> &nbsp;·&nbsp;
@@ -26,17 +26,17 @@ The house is a round blue tower, 838.4 mm tall, with a red spire roof, three flo
 </table>
 
 <p align="center">
-  <img src="docs/images/clay-family.webp" width="520" alt="Clay figures of Moominpappa with a top hat, Moominmamma with a striped apron and handbag, and Moomintroll"><br>
-  <sub>The thermo-clay family, modelled as lumps of clay with volumes and grams per colour</sub>
+  <img src="docs/images/clay-family.webp" width="520" alt="Clay figures of Moominpappa with a top hat, Moominmamma with a striped apron and handbag, Moomintroll, the Snork Maiden, Snufkin and Little My"><br>
+  <sub>The thermo-clay family and friends, modelled as lumps of clay with volumes and grams per colour</sub>
 </p>
 
 ## Features
 
 - **A real build, not just a model.** Every part has a plywood thickness, an outline, its holes and its jigsaw starter holes, packed onto real sheet sizes. The book contains tiled 1:1 templates with a calibration square, hinge checking templates, a hardware shopping list and step-by-step assembly.
-- **Play features.** Two front wall shells open to 100°, where a magnet in a small garden post holds each one open; magnetic catches under the attic floor hold them shut. Two doors open outward. The roof lifts off after two turn-button catches are released. A drawer slides 205.3 mm out of the plinth. Each floor has two rooms.
+- **Play features.** Two front wall shells open to 100°, where a magnet sealed inside a small garden post holds each one open; catches under the attic floor hold them shut. Three entrance doors open outward and each floor has two rooms joined by a door on cotton-tape hinges. The roof lifts off after two turn-button catches are released. A captive drawer slides 200 mm out of the plinth. Optional LED lighting has its wire holes and a screw-closed battery hatch.
 - **One config drives everything.** Height, base, plinth, drawer, doors, veranda position and size, hinge hole patterns, plywood stock and colours all live in `source/config.json`.
-- **Checked automatically.** Every build checks for solid overlaps, samples the wall swing every 5° up to the 100° stop and sweeps both doors. It also checks drawer travel, roof lift, window clearance, that every clay figure passes upright through every doorway, cut-sheet spacing, starter holes, part and hardware counts, and the PDF print scale. A separate check rebuilds the house with the thinnest and thickest measured plywood. Any failed check stops the build.
-- **Clay figures.** Moominpappa, Moominmamma and Moomintroll are signed-distance "lumps" pressed together like real clay. The build computes each figure's volume, the grams of clay per colour, and the saving from a foil core.
+- **Checked automatically.** Every build checks for solid overlaps, samples the wall swing every 5° up to the 100° stop and sweeps all six doors. It also checks drawer travel to its stop, roof lift, window clearance, that every clay figure passes upright through every doorway and is too big to swallow, that every magnet is sealed in wood, that every piece belongs to one assembly step, cut-sheet spacing, part and hardware counts, and the PDF print scale. Separate checks rebuild the house with the thinnest and thickest measured plywood, follow the tolerance chain of each joint, and compute the tip-over force with the walls open. Any failed check stops the build.
+- **Clay figures.** Moominpappa, Moominmamma, Moomintroll, Snufkin, the Snork Maiden and Little My are signed-distance "lumps" pressed together like real clay. The build computes each figure's volume, the grams of clay per colour, and the saving from a foil core.
 - **Many output formats.** A native FreeCAD document, STEP solids (closed, open, exploded, one per build part), DXF profiles, sheet layouts as SVG, CNC operation files as SVG and DXF, PDFs and CSV shopping lists.
 
 ## Try it: the 3D viewer (no FreeCAD needed)
@@ -53,18 +53,25 @@ python3 -m venv .venv
 
 On Windows, use `py -3.12 -m venv .venv`, and run `.venv\Scripts\python` in place of `.venv/bin/python`.
 
-On the first start, `serve.py` builds `output/parts.json` from the model, which takes about 10 seconds. It then opens http://127.0.0.1:8765/, or the next free port. The viewer works offline, because three.js is vendored, and the server only listens on your own machine.
+On the first start, `serve.py` builds `output/parts.json` from the model, which takes about 10 seconds. It also prepares the supplier DXF. A matching production build supplies the layout immediately; a fresh checkout computes the layout, which can take several minutes. It then opens http://127.0.0.1:8765/, or the next free port. The viewer works offline, because three.js is vendored, and the server only listens on your own machine.
 
-Furniture appears only in the 3D viewer and renders. The build kit contains no furniture CAD plans, cutting sheets or printouts.
+Furniture and the garden scene appear only in the 3D viewer and renders. The build kit contains no furniture CAD plans, cutting sheets or printouts.
 
 In the viewer you can:
 
 - open the walls about their real hinge axes, swing the doors, lift or remove the roof, and slide the drawer out;
 - show or hide the veranda, the furniture, the clay figures, the screws and hinge axes, and the dimensions;
 - X-ray the walls, explode the assemblies, or cut the model above any height;
-- click any part to see its ID, size, quantity and assembly note, or a figure to see how much clay it needs.
+- click any part to see its ID, size, quantity and assembly note, or a figure to see how much clay it needs;
+- enable **Piece IDs** to show the build codes on the model;
+- search an exact part or instance ID to enable X-ray, highlight matching pieces in yellow and center the camera;
+- open **Settings → DXF** for the supplier drawing, with pan, zoom, thickness layers and a separate **Piece IDs** toggle. Open another DXF or download the displayed file.
 
 After you edit `source/config.json`, run `serve.py --rebuild` to see the change.
+
+## 3D-printable furniture
+
+The [prints page](https://hvitis.github.io/moominshouse/prints.html) shows furniture you can 3D print for the house. You can turn each piece in 3D, see its print checks (it fits the printer, needs no supports, has thick enough walls and is too big to swallow) and download STL, 3MF or STEP files. Each piece is a short Python file in `source/prints/`. On the Mac, `make studio` opens a live preview that rebuilds the part each time its file is saved or a measurement slider moves. `make prints` publishes the files for the site. See [3D-printable furniture](docs/PRINTING.md).
 
 ## Generate the build files
 
@@ -95,7 +102,7 @@ FREECAD_PYTHON=/Applications/FreeCAD.app/Contents/Resources/bin/python
 make all        # config check and tests, full rebuild, plywood thickness check
 ```
 
-`make` uses the macOS FreeCAD path; elsewhere pass yours, for example `make all FREECAD_PYTHON=squashfs-root/usr/bin/python`. `make help` lists the single steps (`check`, `build`, `tolerance`, `clean`, `viewer`, `site`). Without `make`, run `.venv/bin/python source/rebuild.py --freecad-python "$FREECAD_PYTHON"` and then `source/thickness_check.py` with FreeCAD's Python.
+`make` uses the macOS FreeCAD path; elsewhere pass yours, for example `make all FREECAD_PYTHON=squashfs-root/usr/bin/python`. `make help` lists the single steps (`check`, `build`, `tolerance`, `clean`, `viewer`, `site`, `stock`, `cutfile`). Without `make`, run `.venv/bin/python source/rebuild.py --freecad-python "$FREECAD_PYTHON"` and then `source/thickness_check.py` with FreeCAD's Python.
 
 The rebuild takes about two minutes and the thickness check about one. The rebuild first empties `output/`, so no file from an earlier build survives. It then runs the CAD build, nesting, renders, the book, the release checks and packaging, in that order, and stops at the first failed check. You get:
 
@@ -106,13 +113,20 @@ The rebuild takes about two minutes and the thickness check about one. The rebui
 | `output/dxf/` | One DXF per profile, full-size sheet layouts (`*-layout.svg`), and CNC operation files for every thickness (`*-cnc-*.svg`, `*-cnc-*.dxf`) |
 | `output/previews/` | CAD-derived renders and clay renders |
 | `output/reports/` | `release-validation.json` (every check), `cad-validation.json`, `thickness-tolerance.json`, `parts.csv`, `hardware.csv`, `stock.csv` |
+| `output/Moomin-House-Supplier-Cut.dxf` | Everything the supplier cuts in one DXF R12 file: cutting lines only, one layer per thickness |
 | `output/Moomin-House-Build-Kit.zip` | All of the above plus the source, in one package |
 
 Then read the [build guide](docs/BUILD-GUIDE.md) before you print anything. The 1:1 templates must be printed at 100 % and measured.
 
-For CNC machining, send `Moomin-House-Supplier.pdf` and the matching operation CSV, DXF, and SVG files. Native A3 production pages cover 3, 4, 6, and 8 mm plywood. Each page contains one operation without labels or a background. Separate reference pages identify the parts, machining faces, and depths. The complete book remains entirely A4 and includes an A4 supplier summary. Large individual parts use two A4 template pages with overlap. `Moomin-House-3mm-Hand-Templates.pdf` remains available for thin parts only. Add `--lang en` to `source/rebuild.py` for English supplier text.
+For CNC machining, read [docs/SUPPLIER-READINESS.md](docs/SUPPLIER-READINESS.md) first, then send `Moomin-House-Supplier.pdf` (it now opens with the specification and a checklist to confirm) and either `Moomin-House-Supplier-Cut.dxf` (every cutting line in one file, as most shops ask) or the matching operation CSV, DXF R12 and SVG files. Native A3 production pages cover the only two plywood thicknesses, 3 and 6 mm. Each page contains one operation without labels or a background. Separate reference pages identify the parts, machining faces, and depths. The complete book remains entirely A4 and includes an A4 supplier summary. Large individual parts use two A4 template pages with overlap. `Moomin-House-3mm-Hand-Templates.pdf` remains available for thin parts only. Add `--lang en` to `source/rebuild.py` for English supplier text.
 
-Fixed walls are 420 mm tall and retain the blank end edges. Opening walls are 418 mm tall. Four continuous 402 mm pillars pass through both intermediate floors. All floor plates use 6 mm plywood. The divided floors join over 4 mm thick, 4 mm wide strips. The round base uses four quarters, and the roof ring uses two halves. Positioning maps show the seams and supports. Check a physical floor-joint sample before assembly. The company must confirm cutters, hold-down, boundary cutting, and tolerances.
+`make build` writes the supplier cut file, `output/Moomin-House-Supplier-Cut.dxf`, and every `v*` release attaches it. `make cutfile` rewrites it in about a second from the last build's nesting. After a design or config change, run `make build` instead, so the DXF and the supplier PDF's sheet maps come from the same nesting.
+
+To choose which plywood to buy, run `make stock`. It asks for a supplier (or reuses one saved in `ops/suppliers/`), the sheet sizes, prices and packs it sells, the minimum distance between parts, the edge margin and the supplier's saw kerf. It then nests every plywood part of the house (no furniture, figures, garden, woodpile, hardware or screws) on many mixes of those sizes, including formats the supplier saws from a large board, and writes `output/pdf/Optymalne-wymiary-i-cennik-<supplier>.pdf`: the cheapest sizes and quantities per grade, the variants they beat, the price per m² and the sheet layouts. `ops/suppliers/sklejka-krakow.json` is a worked example.
+
+The default cutting layout uses **3 mm laser spacing** and **grade 2/2 birch plywood for every sheet**, in both 3 and 6 mm. The saved supplier profile prices grade 2 only. Router cutting requires wider lanes and a new nesting.
+
+Fixed walls are 420 mm tall and retain the blank end edges. Opening walls are 418 mm tall. Four continuous 402 mm pillars pass through both intermediate floors. All floor plates use 6 mm plywood. Each floor is a rear piece and two front pieces locked together on the house axis by a CNC puzzle joint. The ground floor joins over 3 mm thick, 4 mm wide strips, the upper floors' finger joints over 3 × 12 mm strips. The round base uses four quarters, and the roof ring uses two halves. Positioning maps show the seams and supports. Check a physical floor-joint sample before assembly. The company must confirm cutters, hold-down, boundary cutting, and tolerances.
 
 ## Change the design
 
@@ -124,7 +138,7 @@ Fixed walls are 420 mm tall and retain the blank end edges. Opening walls are 41
    .venv/bin/python -m pip install -r requirements-dev.txt
    make check
    ```
-5. Run `make all`, and read `output/reports/release-validation.json`. The checks tell you whether the walls still swing clear, the drawer still slides, the figures still fit the doors, and everything still fits the sheets. `thickness-tolerance.json` tells you whether real plywood within the measured band in `thickness_tolerance` would close any clearance.
+5. Run `make all`, and read `output/reports/release-validation.json` (and `make stackup` for the joint tolerance chains and the safety audit). The checks tell you whether the walls still swing clear, the drawer still slides, the figures still fit the doors, and everything still fits the sheets. `thickness-tolerance.json` tells you whether real plywood within the measured band in `thickness_tolerance` would close any clearance.
 
 [docs/PIPELINE.md](docs/PIPELINE.md) explains every stage, the data model, every config key, and how releases and the online viewer are published.
 
@@ -136,9 +150,10 @@ source/                  everything that generates the house
   config.schema.json     what every parameter means, its units and limits
   config_check.py        validates a config before building
   model.py               parts and placements (single source of truth)
-  architecture.py        veranda, entrances, dormer
+  architecture.py        veranda, entrances, dormers, battens, ladder, plinth details
   clay.py                thermo-clay figures
-  build_cad.py, nest.py  FreeCAD CAD + checks, sheet nesting      (FreeCAD Python)
+  build_cad.py           FreeCAD CAD + checks                     (FreeCAD Python)
+  nest.py, stock.py      A3 sheet nesting; plywood purchase planner (make stock)
   render.py, cover.py, book.py, verify.py, package.py             (normal Python)
   rebuild.py             empties output/ and runs the whole pipeline
   thickness_check.py     the house rebuilt with real, measured plywood  (FreeCAD Python)
@@ -164,13 +179,14 @@ LICENSE                  CC BY-NC-SA 4.0
 
 - [Build guide](docs/BUILD-GUIDE.md): what you are building, printing and cutting, stock and hardware, assembly, the clay figures and the checks.
 - [How the build works](docs/PIPELINE.md): runtimes, stages, data model, config reference and workflows.
+- [3D-printable furniture](docs/PRINTING.md): the designs, the live studio, the print checks and publishing.
 - [Ideas](docs/IDEAS.md): where the project could go next (Letter paper, a container build, a laser edition, presets).
 - [Publish on GitHub](docs/PUBLISHING.md): repository setup, GitHub Pages and browser checks.
 - [TODO](TODO.md): open improvements to the house itself.
 
 ## Safety
 
-This is a design for a hand-built wooden toy, not a certified toy. The CAD checks prove clearances, but not glue strength, stability or toy safety. Dry-fit it with your real plywood and hinges first. Round every exposed edge. For young children, keep the small accessories and the clay figures in a separate box for supervised play, and keep fingers clear of the hinge gaps. Bury the four catch and stop magnets in epoxy and check them before every play session: swallowed magnets are dangerous. Use only primer, paint and varnish declared to EN 71-3; the book names example products.
+This is a design for a hand-built wooden toy, not a certified toy. The CAD checks prove clearances, but not glue strength, stability or toy safety; [RISKS.md](RISKS.md) records every hazard found and what the design does about it. Dry-fit it with your real plywood and hinges first and work through the "Dry-fit and safety checks" page of the book. Round every exposed edge. Strap the house to the room wall with the anti-tip kit: free-standing, the open house tips at about 33 N pushed at the eave. The four magnets are sealed inside hardwood blocks; check that none ever shows. Use only primer, paint and varnish declared to EN 71-3; the book names example products.
 
 ## Status
 

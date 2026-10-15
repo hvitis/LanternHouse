@@ -14,6 +14,11 @@ on:
 permissions:
   contents: write
 
+# One release build per tag; a re-run replaces the assets of the same release.
+concurrency:
+  group: release-${{ inputs.tag_name || github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   release:
     name: Build deliverables and publish release
@@ -51,7 +56,7 @@ jobs:
       - name: Run fast checks & unit tests
         run: |
           python source/config_check.py
-          PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q
+          python -m pytest -q
 
       - name: Install system dependencies for FreeCAD
         run: |
@@ -98,16 +103,32 @@ jobs:
         run: |
           xvfb-run ./FreeCAD-squashfs/usr/bin/python source/thickness_check.py
 
+      - name: Keep the check reports when the build fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-reports-${{ inputs.tag_name || github.ref_name }}
+          path: |
+            output/reports/
+            output/nesting.json
+          if-no-files-found: ignore
+
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG_NAME="${{ inputs.tag_name || github.ref_name }}"
           echo "Publishing GitHub Release for tag: $TAG_NAME"
-
-          gh release create "$TAG_NAME" \
-            --title "Release $TAG_NAME" \
-            --generate-notes \
-            output/Moomin-House-Build-Kit.zip \
-            output/pdf/*.pdf \
-            output/pdf/*.csv
+          # Release notes from the build reports (file sizes, checks passed, plywood table).
+          python -c "import sys; sys.path.insert(0, 'source'); import release; print(release.notes('$TAG_NAME'))" > release-notes.md
+          ASSETS=(output/Moomin-House-Build-Kit.zip output/Moomin-House-Supplier-Cut.dxf output/pdf/*.pdf output/pdf/*.csv)
+          if gh release view "$TAG_NAME" > /dev/null 2>&1; then
+            echo "Release $TAG_NAME exists: replacing its assets."
+            gh release upload "$TAG_NAME" "${ASSETS[@]}" --clobber
+            gh release edit "$TAG_NAME" --notes-file release-notes.md
+          else
+            gh release create "$TAG_NAME" "${ASSETS[@]}" \
+              --title "Moomin House $TAG_NAME" \
+              --verify-tag \
+              --notes-file release-notes.md
+          fi

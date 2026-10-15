@@ -28,6 +28,10 @@ except Exception:
 def polygon(points):
     vs=[App.Vector(x,y,0) for x,y in points];return Part.makePolygon(vs+[vs[0]])
 def profile_shape(p):
+    if p.get('sphere'):   # a turned ball standing on its profile plane, with its dowel hole from below
+        r=p['sphere'];shape=Part.makeSphere(r,App.Vector(r,r,r))
+        for h in p['holes']:shape=shape.cut(Part.makeCylinder(h['diameter']/2,h['depth'] or 2*r,App.Vector(h['x'],h['y'],0)))
+        return shape
     outer=Part.Wire(Part.makeCircle(p['outercircle'][2],App.Vector(p['outercircle'][0],p['outercircle'][1],0))) if p.get('outercircle') else polygon(p['outer'])
     shape=Part.Face(outer).extrude(App.Vector(0,0,p['thickness']))
     for c in p['cuts']:shape=shape.cut(Part.Face(polygon(c)).extrude(App.Vector(0,0,p['thickness'])))
@@ -87,18 +91,15 @@ def clay_solid(f):
     solid.rotate(App.Vector(0,0,0),App.Vector(0,0,1),f['yaw']);solid.translate(App.Vector(f['x'],f['y'],f['z']))
     return solid,len(solid.Faces)
 def dxf(p,dest):
-    # Minimal standards-compliant ASCII DXF; closed polylines are exact CAD profiles.
-    lines=['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES']
-    def chain(points,layer):
-        lines.extend(['0','LWPOLYLINE','100','AcDbEntity','8',layer,'100','AcDbPolyline','90',str(len(points)),'70','1'])
-        for x,y in points:lines.extend(['10',f'{x:.8f}','20',f'{y:.8f}'])
-    def circle(x,y,r,layer):lines.extend(['0','CIRCLE','100','AcDbEntity','8',layer,'100','AcDbCircle','10',str(x),'20',str(y),'30','0','40',str(r)])
-    if p.get('outercircle'):circle(*p['outercircle'],'CUT_OUTER')
-    else:chain(p['outer'],'CUT_OUTER')
-    for c in p['cuts']:chain(c,'CUT_INNER')
-    for h in p['holes']:circle(h['x'],h['y'],h['diameter']/2,'DRILL_FINISHED')
-    for h in p['starters']:circle(h['x'],h['y'],h['diameter']/2,'DRILL_STARTER_WASTE')
-    lines.extend(['0','ENDSEC','0','EOF']);dest.write_text('\n'.join(lines)+'\n')
+    """One part's 1:1 profile as an R12 DXF: outer and inner cuts, finished holes and blade-entry starters on layers."""
+    from dxf_r12 import DXF
+    d=DXF()
+    if p.get('outercircle'):d.circle(*p['outercircle'],'CUT_OUTER')
+    else:d.polyline(p['outer'],'CUT_OUTER')
+    for c in p['cuts']:d.polyline(c,'CUT_INNER')
+    for h in p['holes']:d.circle(h['x'],h['y'],h['diameter']/2,'DRILL_FINISHED')
+    for h in p['starters']:d.circle(h['x'],h['y'],h['diameter']/2,'DRILL_STARTER_WASTE')
+    d.save(dest)
 
 def main():
     started=time.time();data=build();build_parts=fabrication_parts(data)
@@ -114,13 +115,22 @@ def main():
     library=doc.addObject('App::DocumentObjectGroup','ProfileLibrary');library.Label='Editable local profiles (hidden)'
     groups={}
     for group in sorted({i['group'] for i in data['instances'] if i['part'] in build_parts}|{'Fasteners','JointGuides','Figures'}):
-        groups[group]=doc.addObject('App::DocumentObjectGroup',group);groups[group].Label={'Furniture':'Optional furniture','Figures':'Thermo-clay family figures','Accessories':'Optional accessories','Drawer':'Hidden plinth drawer'}.get(group,group)
+        groups[group]=doc.addObject('App::DocumentObjectGroup',group);groups[group].Label={'Furniture':'Optional furniture','Figures':'Thermo-clay figures','Accessories':'Optional accessories','Drawer':'Hidden plinth drawer','RoomDoors':'Room door leaves','Garden':'Garden scene (display only)'}.get(group,group)
     native,shapes={},{ }
     for pid,p in data['parts'].items():
         if p.get('render_only'):
             shapes[pid]=profile_shape(p)
             continue
         print('Profile',pid,flush=True)
+        if p.get('sphere'):
+            final=doc.addObject('Part::Feature',pid+'_Turned');final.Shape=profile_shape(p);library.addObject(final)
+            final.Label=f'{pid} | {p["name"]} | D{2*p["sphere"]:g} | x{p["quantity"]}'
+            final.addProperty('App::PropertyString','PartID','Fabrication');final.PartID=pid
+            final.addProperty('App::PropertyInteger','RequiredQuantity','Fabrication');final.RequiredQuantity=p['quantity']
+            final.addProperty('App::PropertyString','AssemblyNote','Fabrication');final.AssemblyNote=p['note']
+            native[pid]=final;shapes[pid]=profile_shape(p);setcolor(final,p['color'],False)
+            dxf(p,ROOT/'output/dxf'/f'{pid}.dxf');shapes[pid].exportStep(str(ROOT/'output/cad/parts'/f'{pid}.step'))
+            continue
         sketch=doc.addObject('Sketcher::SketchObject',pid+'_Profile');sketch.Label=f'{pid} | {p["name"]} | editable outline'
         if p.get('outercircle'):
             x,y,r=p['outercircle'];idx=sketch.addGeometry(Part.Circle(App.Vector(x,y,0),App.Vector(0,0,1),r),False);sketch.addConstraint(Sketcher.Constraint('Block',idx))
@@ -192,12 +202,12 @@ def main():
         if obj.ViewObject:obj.ViewObject.Visibility=False
     doc.recompute();doc.saveAs(str(ROOT/'output/cad/MoominHouse.FCStd'))
     # Furniture exists only in the preview meshes and viewer data, never in CAD deliverables.
-    house=[world[i['id']] for i in data['instances'] if i['group'] not in ('Tools','Accessories','Furniture','Figures')]
+    house=[world[i['id']] for i in data['instances'] if i['group'] not in ('Tools','Accessories','Furniture','Figures','Garden')]
     Part.makeCompound(house).exportStep(str(ROOT/'output/cad/MoominHouse.step'))
     # Alternative open assembly and exploded assembly as real solid CAD exports.
     open_shapes=[];exploded=[];views=data['derived']['views']
     for inst in data['instances']:
-        if inst['group'] in ('Tools','Accessories','Furniture','Figures'):continue
+        if inst['group'] in ('Tools','Accessories','Furniture','Figures','Garden'):continue
         s=world[inst['id']].copy();e=s.copy();g=inst['group']
         if g in ('WallLeft','WallRight'):
             sign=1 if g=='WallRight' else -1;x=data['derived']['hinge_axes'][g][0]
@@ -354,7 +364,7 @@ def validate(data,shapes,world,figures):
             waste=Part.Face(polygon(p['cuts'][sh['cut']-1])).extrude(App.Vector(0,0,1));drill=Part.makeCylinder(sh['diameter']/2+2,1,App.Vector(sh['x'],sh['y'],0))
             if drill.cut(waste).Volume>.001:starter_errors.append(f'{pid}-{sh["id"]}')
     # Exact bounds: the default BoundBox follows the 0.8 mm display tessellation on curved faces.
-    box=Part.makeCompound([world[i['id']] for i in installed]).optimalBoundingBox(False,False)
-    return {'profile_count':len(fabrication_parts(data)),'render_only_profiles':len(shapes)-len(fabrication_parts(data)),'installed_instances':len(installed),'house_instances':sum(i['group'] not in ('Furniture','Figures') for i in installed),'optional_furniture_instances':sum(i['group'] in ('Furniture','Figures') for i in installed),'invalid_profiles':bad,'closed_assembly_bounds_mm':[box.XLength,box.YLength,box.ZLength],'collisions':collisions,'wall_swing':swing,'roof_lift_collisions':roof_lift,'door_sweep':door_sweep,'drawer_travel':{'travel_mm':dd['travel'],'checked_travel_mm':drawer_steps,'collisions':drawer_hits},'window_occlusion':occlusion,'starter_hole_errors':starter_errors,'windows_per_floor':data['derived']['windows_per_floor'],'wall_swing_configuration':'Permanent veranda, roof and optional furniture all installed while the walls swing.','physical_validation_required':['Measured plywood thickness','Actual hinge footprint and screw head seating','Continuous hinge movement between sampled angles','Glue bond strength, roof catches and tip resistance','Printer scale and test joints']}
+    box=Part.makeCompound([world[i['id']] for i in installed if i.get('group')!='Garden']).optimalBoundingBox(False,False)
+    return {'profile_count':len(fabrication_parts(data)),'render_only_profiles':len(shapes)-len(fabrication_parts(data)),'installed_instances':len(installed),'house_instances':sum(i['group'] not in ('Furniture','Figures','Garden') for i in installed),'optional_furniture_instances':sum(i['group'] in ('Furniture','Figures','Garden') for i in installed),'invalid_profiles':bad,'closed_assembly_bounds_mm':[box.XLength,box.YLength,box.ZLength],'collisions':collisions,'wall_swing':swing,'roof_lift_collisions':roof_lift,'door_sweep':door_sweep,'drawer_travel':{'travel_mm':dd['travel'],'checked_travel_mm':drawer_steps,'collisions':drawer_hits},'window_occlusion':occlusion,'starter_hole_errors':starter_errors,'windows_per_floor':data['derived']['windows_per_floor'],'wall_swing_configuration':'Permanent veranda, roof and optional furniture all installed while the walls swing.','physical_validation_required':['Measured plywood thickness','Actual hinge footprint and screw head seating','Continuous hinge movement between sampled angles','Glue bond strength, roof catches and tip resistance','Printer scale and test joints']}
 
 if __name__=='__main__':main()

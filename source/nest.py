@@ -1,4 +1,5 @@
-"""Jigsaw-aware polygon nesting. Run with FreeCAD's bundled Python (Shapely)."""
+"""Polygon nesting on A3 stock: true-shape placement on a free-space grid, searched over several part orders with the
+make stock packer (stock.py). Needs shapely and numpy only, so it runs in the project venv."""
 from __future__ import annotations
 import json, math, time
 import numpy as np
@@ -7,13 +8,14 @@ from shapely.geometry import Polygon, box
 from shapely import affinity
 from shapely.prepared import prep
 from shapely import contains_xy
+from model import BOUGHT
 
 ROOT=Path(__file__).resolve().parents[1]
 
 def new_sheet(t,sw,sh,rules):
     """Empty sheet. Parts go inside its window (x0, y0, x1, y1); free space is tracked on a grid of `cell` mm."""
     window=rules['window'](sw,sh);cell=rules['cell']
-    return {'thickness':t,'width':sw,'height':sh,'window':list(window),'spacing':rules['spacing'],'cell':cell,'laser':rules['laser'],'cnc':rules.get('cnc',False),'items':[],'placed':[],'buffer':None,
+    return {'thickness':t,'width':sw,'height':sh,'window':list(window),'spacing':rules['spacing'],'cell':cell,'laser':rules['laser'],'cnc':rules.get('cnc',False),'edge':rules.get('edge',10),'items':[],'placed':[],'buffer':None,
             'occupied':np.zeros((math.floor((window[3]-window[1])/cell),math.floor((window[2]-window[0])/cell)),dtype=bool)}
 
 def sheet_rules(cfg,t):
@@ -21,7 +23,7 @@ def sheet_rules(cfg,t):
     inside the printable window of one A4 page, so its 1:1 template prints on a single page."""
     if 'fabrication' in cfg:
         m=cfg['stock_margin']
-        return {'laser':False,'cnc':True,'spacing':cfg['nest_spacing'],'cell':1,'window':lambda w,h:(m,0,w-m,h)}
+        return cnc_rules(cfg['nest_spacing'],m)
     laser=cfg['laser']
     if t==laser['thickness']:
         m=laser['margin'];a4=laser['a4_window']
@@ -29,42 +31,72 @@ def sheet_rules(cfg,t):
     m=cfg['stock_margin'];return {'laser':False,'spacing':cfg['nest_spacing'],'cell':2,'window':lambda w,h:(m,m,w-m,h-m)}
 
 def try_place(pid,poly,s):
-    # Roof triangles nest head-to-tail; everything else is placed by its bounding box on the free-space grid.
+    # Roof triangles nest head-to-tail; everything else goes on the free-space grid (grid_place).
     if s.get('cnc'):
-        s['end_margin']=(420-poly.bounds[3])/2 if pid.startswith('W') and poly.bounds[3]>400 else 5 if pid=='P01' else 10
+        # Clamp/lane margin at the sheet's short ends: 10 mm (or the sheet's 'edge'), less for parts nearly as long as the sheet (walls keep
+        # the factory edges, battens and pillars get what is left); long parts are placed along the 420 mm side.
+        h=max(poly.bounds[2]-poly.bounds[0],poly.bounds[3]-poly.bounds[1]);s['end_margin']=max(0,min(s.get('edge',10),math.floor((s['height']-h)/2/s['cell'])*s['cell']))   # on the placement grid
     return place(poly,s) if pid in ('R01','R06') else grid_place(poly,s)
 
+def placement_order(unit):
+    """Largest bounding box first, then the largest outline. Thin rings and long C-shaped sections have little area
+    but span most of a sheet: placed early, smaller parts fill round them instead of each opening a sheet of its own
+    (two fewer 6 mm sheets than ordering by outline area)."""
+    a,b,c,d=unit[2].bounds;return (-(c-a)*(d-b),-unit[2].area)
+
+RESTARTS=22   # perturbed part orders tried besides the planner's own two; the plan with the fewest sheets wins
+
+def cnc_rules(spacing,margin):
+    """CNC sheet rules: side margins on the long edges, up to `margin` at the short ends (see try_place)."""
+    return {'laser':False,'cnc':True,'spacing':spacing,'cell':1,'edge':margin,'window':lambda w,h:(margin,0,w-margin,h)}
+
+def orders(units):
+    """The part orders to try: the planner's (largest box first; longest part first), then RESTARTS box orders with a
+    seeded random weight, so near-equal parts swap places. Seeds are fixed, so every build nests the same."""
+    import random, stock as planner
+    out=[sorted(units,key=order) for order in planner.ORDERS.values()]
+    for seed in range(RESTARTS):
+        rng=random.Random(seed);weight={u[:2]:rng.uniform(.6,1.4) for u in units}
+        out.append(sorted(units,key=lambda u:placement_order(u)[0]*weight[u[:2]]))
+    return out
+
+def pack_order(job):
+    """One first-fit nest in a given part order with make stock's packer, then its merge pass (the emptiest sheets
+    move into free space on the others) and its squeeze pass (the emptiest few sheets re-packed together)."""
+    import stock as planner
+    t,units,spacing,margin,primary,count,extra=job;rules=cnc_rules(spacing,margin);lookup={u[:2]:u for u in units}
+    def repack(part_units):return planner.pack(t,part_units,[],rules,primary,count,fallback=extra)
+    sheets=planner.squeeze(t,planner.merge(t,repack(units),lookup),lookup,repack)
+    return [{k:v for k,v in s.items() if k in ('thickness','width','height','window','spacing','cell','laser','cnc','edge','items','size')} for s in sheets]
+
+def best_plan(plans):
+    """Fewest sheets; among those the most concentrated packing (full sheets and one emptiest sheet)."""
+    def used(s):return sum(Polygon(i['outer']).area for i in s['items'])/(s['width']*s['height'])
+    return min(plans,key=lambda plan:(len(plan),-round(sum(used(s)**2 for s in plan),6)))
+
 def nest_set(data,selected,prefix,stock):
-    """Nest one part set: primary sheets first, then the smallest extra board that fits each overflow part."""
-    cfg=data['config'];sheets=[]
-    for t in (8,6,4,3):
-        units=[];rules=sheet_rules(cfg,t)
-        for pid,p in data['parts'].items():
-            if p['thickness']!=t or p['category'] in ('Purchased wood','Purchased packing') or not selected(p):continue
-            for q in range(p['quantity']):units.append((pid,q+1,Polygon(p['outer'])))
+    """Nest one part set per thickness with the make stock packer (stock.pack, merge and squeeze) in several part
+    orders, run in parallel, and keep the plan with the fewest sheets. Primary sheets first while their count lasts, then the
+    smallest extra board that holds each overflow part."""
+    import stock as planner
+    cfg=data['config'];sheets=[];jobs=[]
+    for t in sorted((float(k) for k in stock),reverse=True):
+        units=[(pid,q+1,Polygon(p['outer'])) for pid,p in data['parts'].items() if p['thickness']==t and p['category'] not in BOUGHT and selected(p) for q in range(p['quantity'])]
         if not units:continue
-        spec=stock[str(t)];units.sort(key=lambda u:(-u[2].area,-max(u[2].bounds[2:])))
-        ts=[]
-        for n,(pid,q,poly) in enumerate(units):
-            found=None
-            for si,s in enumerate(ts):
-                candidate=try_place(pid,poly,s)
-                if candidate:found=(si,candidate);break
-            if found is None:
-                primary=sum(s['kind']=='primary' for s in ts)<spec['count']
-                # Primary stock first while it lasts; parts too large for it fall back to the smallest extra board.
-                options=([('primary',spec['primary'])] if primary else [])+[('extra',size) for size in sorted(spec['extra'],key=lambda v:v[0]*v[1])]
-                for kind,(sw,sh) in options:
-                    s=new_sheet(t,sw,sh,rules);candidate=try_place(pid,poly,s)
-                    if candidate:s['kind']=kind;ts.append(s);found=(len(ts)-1,candidate);break
-                if found is None:raise ValueError(f'{pid} fits none of the {t} mm stock options {options}')
-            si,(angle,x,y,pp,bp)=found;s=ts[si]
-            s['items'].append({'part':pid,'copy':q,'angle':angle,'x':x,'y':y,'outer':list(map(list,pp.exterior.coords[:-1]))})
-            s['placed'].append(pp);s['buffer']=bp if s['buffer'] is None else s['buffer'].union(bp)
-            update_grid(s,pp)
-            if n%30==0:print(f'Nesting {prefix} {t} mm: {n+1}/{len(units)}, {len(ts)} sheets',flush=True)
-        for j,s in enumerate(ts,1):
-            s['id']=f'{prefix}{t}-{j:02}';s['existing_stock']=bool(spec.get('existing')) and s['kind']=='primary';s.pop('placed');s.pop('buffer');s.pop('occupied')
+        spec=stock[f'{t:g}'];primary=planner.skey(spec['primary']);extra=[planner.skey(size) for size in spec['extra']]
+        jobs+=[(t,order,cfg['nest_spacing'],cfg['stock_margin'],primary,spec['count'],extra) for order in orders(units)]
+    print(f'Nesting {prefix}: {len(jobs)} part orders over {len({j[0] for j in jobs})} thicknesses...',flush=True)
+    try:
+        from concurrent.futures import ProcessPoolExecutor
+        import os
+        with ProcessPoolExecutor(max(1,min(len(jobs),(os.cpu_count() or 2)-1))) as pool:plans=list(pool.map(pack_order,jobs))
+    except (OSError,ImportError,RuntimeError):plans=[pack_order(j) for j in jobs]   # no process pool here: one by one
+    for t in sorted({j[0] for j in jobs},reverse=True):
+        mine=[plan for job,plan in zip(jobs,plans) if job[0]==t];spec=stock[f'{t:g}']
+        chosen=best_plan(mine);print(f'Nesting {prefix} {t:g} mm: {len(chosen)} sheets (orders gave {sorted(len(p) for p in mine)})',flush=True)
+        for j,s in enumerate(chosen,1):
+            s['id']=f'{prefix}{t:g}-{j:02}';s['kind']='primary' if s.pop('size')==planner.skey(spec['primary']) else 'extra'
+            s['existing_stock']=bool(spec.get('existing')) and s['kind']=='primary'
             area=sum(Polygon(item['outer']).area for item in s['items']);s['outer_profile_utilization_percent']=round(area/(s['width']*s['height'])*100,1)
             net=0
             for item in s['items']:
@@ -92,7 +124,7 @@ def main():
     sheets=nest_set(data,lambda p:not p.get('render_only') and not p.get('optional'),'PLY',cfg['stock']['main'])
     optional=[]
     laser=cfg['laser']
-    result={'spacing_mm':cfg['nest_spacing'],'margin_mm':cfg['stock_margin'],'laser':laser,'sheets':sheets,'optional_sheets':optional,'validation':validate(sheets+optional),'existing_6mm_sheets':sum(s['existing_stock'] for s in sheets),'extra_6mm_sheets':sum(s['thickness']==6 and not s['existing_stock'] for s in sheets),'policy':'A3 plywood only, grouped by thickness. 12 mm nominal lanes, 10 mm edges; continuous pillars use 5 mm end margins. Fixed walls retain the full 420 mm blank length. Confirm cutter and hold-down requirements with the supplier. No nesting inside openings; furniture is view-only.'}
+    result={'spacing_mm':cfg['nest_spacing'],'margin_mm':cfg['stock_margin'],'laser':laser,'sheets':sheets,'optional_sheets':optional,'validation':validate(sheets+optional),'existing_6mm_sheets':sum(s['existing_stock'] for s in sheets),'extra_6mm_sheets':sum(s['thickness']==6 and not s['existing_stock'] for s in sheets),'policy':f'A3 plywood only, 3 and 6 mm, grouped by thickness. Parts placed by their true shape; for each thickness the fewest sheets of {RESTARTS+2} part orders (make stock packer and merge). {cfg["nest_spacing"]:g} mm lanes, {cfg["stock_margin"]:g} mm edges; long parts get what is left of the end margin. Fixed walls retain the full 420 mm blank length. Confirm cutter and hold-down requirements with the supplier. No nesting inside openings; furniture is view-only.'}
     (ROOT/'output/nesting.json').write_text(json.dumps(result,indent=2))
     for s in sheets+optional:
         svg(s,data)
@@ -101,42 +133,76 @@ def main():
             import cnc
             s['operations']=cnc.export(data,s,ROOT/'output/dxf')
     (ROOT/'output/nesting.json').write_text(json.dumps(result,indent=2))
-    print('Sheets:',{t:sum(s['thickness']==t for s in sheets) for t in (8,6,4,3)},'optional:',{t:sum(s['thickness']==t for s in optional) for t in (4,3)},flush=True)
+    print('Sheets:',{f'{t:g} mm':sum(s['thickness']==t for s in sheets) for t in sorted({s['thickness'] for s in sheets},reverse=True)},flush=True)
+
+MASK_CELLS=200_000   # sheets up to this many grid cells (A3 has 116 000) place parts by their true footprint
+CANDIDATES=40   # grid positions per orientation checked against the real outlines, lowest first
+HALF_DIAGONAL=math.sqrt(2)/2
+_footprints={}
+
+def footprint(p,g):
+    """The grid cells a part covers with its bounding box's lower-left corner on a cell corner: every cell whose centre
+    lies within half a cell diagonal of the outline, so every point of the part is in one of them."""
+    key=(p.wkb,g)
+    if key not in _footprints:
+        if len(_footprints)>4000:_footprints.clear()
+        a,b,c,d=p.bounds;kw=max(1,math.ceil((c-a)/g-1e-9));kh=max(1,math.ceil((d-b)/g-1e-9))
+        xx,yy=np.meshgrid(a+(np.arange(kw)+.5)*g,b+(np.arange(kh)+.5)*g)
+        _footprints[key]=contains_xy(p.buffer(g*HALF_DIAGONAL,join_style=2),xx,yy)
+    return _footprints[key]
+
+def free_offsets(s,m):
+    """Offsets (row, column) where footprint m covers no occupied cell, by FFT cross-correlation with the occupied
+    grid. Offsets that would push m past the grid are left out, so the correlation never wraps round."""
+    occ=s['occupied'];H,W=occ.shape;kh,kw=m.shape
+    if kh>H or kw>W:return None
+    if s.get('spectrum') is None:s['spectrum']=np.fft.rfft2(occ.astype(np.float32))
+    overlap=np.fft.irfft2(s['spectrum']*np.conj(np.fft.rfft2(m.astype(np.float32),occ.shape)),occ.shape)
+    return overlap[:H-kh+1,:W-kw+1]<.5
 
 def grid_place(poly,s):
-    occupied=s['occupied'];g=s['cell'];x0,y0,x1,y1=s['window'];integ=np.pad(occupied.astype(np.int32).cumsum(0).cumsum(1),((1,0),(1,0)))
+    """The lowest, then leftmost position on the free-space grid, over the quarter turns. On small sheets the part is
+    matched by its true footprint, so it can sit in the hollow of a ring or beside a quarter circle; on large boards,
+    where that search is slow, by its bounding box. Every candidate is then checked against the real outlines."""
+    occupied=s['occupied'];g=s['cell'];x0,y0,x1,y1=s['window'];shape=bool(s.get('cnc')) and occupied.size<=MASK_CELLS
+    integ=None if shape else np.pad(occupied.astype(np.int32).cumsum(0).cumsum(1),((1,0),(1,0)))
     best=None
     for angle,p in orientations(poly):
-        if angle>=180:continue
-        # Laser sheets pack to the exact cell; jigsaw sheets keep one spare cell of slack.
-        slack=0 if s['laser'] or s.get('cnc') else 1
-        _,_,w,h=p.bounds;kw=math.ceil(w/g-1e-9)+slack;kh=math.ceil(h/g-1e-9)+slack
-        if kw>occupied.shape[1] or kh>occupied.shape[0]:continue
-        sums=integ[kh:,kw:]-integ[:-kh,kw:]-integ[kh:,:-kw]+integ[:-kh,:-kw]
-        ys,xs=np.where(sums==0)
+        _,_,w,h=p.bounds
+        if angle>=180 and (not shape or p.area>.98*w*h):continue   # a half turn only helps a shape that is not a box
+        if shape:
+            ok=free_offsets(s,footprint(p,g))
+            if ok is None:continue
+            ys,xs=np.where(ok)
+        else:
+            # Laser sheets pack to the exact cell; jigsaw sheets keep one spare cell of slack.
+            slack=0 if s['laser'] or s.get('cnc') else 1
+            kw=math.ceil(w/g-1e-9)+slack;kh=math.ceil(h/g-1e-9)+slack
+            if kw>occupied.shape[1] or kh>occupied.shape[0]:continue
+            ys,xs=np.where(integ[kh:,kw:]-integ[:-kh,kw:]-integ[kh:,:-kw]+integ[:-kh,:-kw]==0)
         if s.get('cnc'):
             margin=s.get('end_margin',10)
             keep=(y0+ys*g>=margin-1e-6)&(y0+ys*g+h<=s['height']-margin+1e-6)
             ys,xs=ys[keep],xs[keep]
-        if len(xs)==0:continue
-        # Arrays are row-major, giving a repeatable bottom-left placement.
-        x,y=x0+int(xs[0])*g,y0+int(ys[0])*g
-        pp=affinity.translate(p,x,y)
-        if pp.bounds[2]>x1+.01 or pp.bounds[3]>y1+.01:continue
-        if any(pp.distance(old)<s['spacing']-.02 for old in s['placed']):continue
-        score=(y+h,x+w)
-        if best is None or score<best[0]:best=(score,(angle,x,y,pp,pp.buffer(s['spacing']/2,join_style=2)))
+        for k in np.lexsort((xs,ys))[:CANDIDATES]:   # repeatable bottom-left order
+            x,y=x0+int(xs[k])*g,y0+int(ys[k])*g;pp=affinity.translate(p,x,y)
+            if pp.bounds[2]>x1+.01 or pp.bounds[3]>y1+.01:continue
+            if any(pp.distance(old)<s['spacing']-.02 for old in s['placed']):continue
+            score=(y+h,x+w)
+            if best is None or score<best[0]:best=(score,(angle,x,y,pp,pp.buffer(s['spacing']/2,join_style=2)))
+            break
     return best[1] if best else None
 
 def update_grid(s,p):
     g=s['cell'];x0,y0,_,_=s['window']
-    # A cell is taken when its centre is closer than spacing + half its diagonal (plus margin) to a placed part.
-    buffered=p.buffer(s['spacing']+g*(.75 if s['laser'] else math.sqrt(2)),join_style=2);a,b,c,d=buffered.bounds
+    # A cell is taken when its centre is closer than spacing + half its diagonal to a placed part: then a footprint
+    # (or bounding box) that only covers free cells keeps the full spacing.
+    buffered=p.buffer(s['spacing']+g*(.75 if s['laser'] else HALF_DIAGONAL),join_style=2);a,b,c,d=buffered.bounds
     nx,ny=s['occupied'].shape[1],s['occupied'].shape[0]
     ix=max(0,math.floor((a-x0)/g));iy=max(0,math.floor((b-y0)/g));jx=min(nx,math.ceil((c-x0)/g)+1);jy=min(ny,math.ceil((d-y0)/g)+1)
     if ix>=jx or iy>=jy:return
     xx,yy=np.meshgrid(x0+np.arange(ix,jx)*g+g/2,y0+np.arange(iy,jy)*g+g/2)
-    s['occupied'][iy:jy,ix:jx] |= contains_xy(buffered,xx,yy)
+    s['occupied'][iy:jy,ix:jx] |= contains_xy(buffered,xx,yy);s['spectrum']=None
 
 def orientations(poly):
     for angle in (0,90,180,270):
@@ -188,28 +254,25 @@ def svg(sheet,data):
 
 def laser_files(sheet,data):
     """Laser-ready layout of one sheet, in mm: SVG with red hairline cuts (blue part IDs are optional engraving)
-    and a DXF (same minimal form as the part DXFs) with CUT and ENGRAVE_IDS layers."""
-    w,h=sheet['width'],sheet['height']
+    and an R12 DXF with CUT and ENGRAVE_IDS layers."""
+    from dxf_r12 import DXF
+    w,h=sheet['width'],sheet['height'];d=DXF()
     text=[f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}mm" height="{h}mm" viewBox="0 0 {w} {h}">',
           f'<!-- {sheet["id"]}: {w:g} x {h:g} x {sheet["thickness"]:g} mm plywood. Red = cut (hairline). Blue = part IDs, optional light engraving; delete if not wanted. -->',
-          '<g id="cut" fill="none" stroke="#FF0000" stroke-width="0.01">']
-    dxf=['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES'];labels=[]
+          '<g id="cut" fill="none" stroke="#FF0000" stroke-width="0.01">'];labels=[]
     for item in sheet['items']:
         p=data['parts'][item['part']]
         for loop in [p['outer']]+p['cuts']:
             pts=[local_point(p,item,*v) for v in loop]
-            text.append('<polygon points="'+' '.join(f'{x:.4f},{h-y:.4f}' for x,y in pts)+'"/>')
-            dxf+=['0','LWPOLYLINE','100','AcDbEntity','8','CUT','62','1','100','AcDbPolyline','90',str(len(pts)),'70','1']
-            for x,y in pts:dxf+=['10',f'{x:.4f}','20',f'{y:.4f}']
+            text.append('<polygon points="'+' '.join(f'{x:.4f},{h-y:.4f}' for x,y in pts)+'"/>');d.polyline(pts,'CUT')
         for hh in p['holes']:
             x,y=local_point(p,item,hh['x'],hh['y']);r=hh['diameter']/2
-            text.append(f'<circle cx="{x:.4f}" cy="{h-y:.4f}" r="{r}"/>');dxf+=['0','CIRCLE','100','AcDbEntity','8','CUT','62','1','100','AcDbCircle','10',f'{x:.4f}','20',f'{y:.4f}','30','0','40',str(r)]
+            text.append(f'<circle cx="{x:.4f}" cy="{h-y:.4f}" r="{r}"/>');d.circle(x,y,r,'CUT')
         x,y=local_point(p,item,p['width']/2,p['height']/2);size=min(2.5,p['width']/4,p['height']/4)
         labels.append(f'<text x="{x:.3f}" y="{h-y+size/3:.3f}" text-anchor="middle" font-family="sans-serif" font-size="{size:.2f}">{item["part"]}</text>')
-        dxf+=['0','TEXT','100','AcDbEntity','8','ENGRAVE_IDS','62','5','100','AcDbText','10',f'{x:.4f}','20',f'{y:.4f}','30','0','40',f'{size:.2f}','1',item['part'],'72','1','11',f'{x:.4f}','21',f'{y:.4f}','31','0','100','AcDbText']
+        d.text(x,y,size,item['part'])
     text+=['</g>','<g id="engrave-ids" fill="#0000FF" stroke="none">']+labels+['</g>','</svg>']
-    dxf+=['0','ENDSEC','0','EOF']
     (ROOT/'output/dxf'/f'{sheet["id"]}-laser.svg').write_text('\n'.join(text))
-    (ROOT/'output/dxf'/f'{sheet["id"]}-laser.dxf').write_text('\n'.join(dxf)+'\n')
+    d.save(ROOT/'output/dxf'/f'{sheet["id"]}-laser.dxf')
 
 if __name__=='__main__':main()

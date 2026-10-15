@@ -2,7 +2,8 @@
   "name": "moominshouse-viewer-checks",
   "private": true,
   "scripts": {
-    "test:viewer": "node tests/viewer-smoke.mjs"
+    "test:viewer": "node tests/viewer-smoke.mjs",
+    "test:prints": "node tests/prints-smoke.mjs"
   },
   "devDependencies": {
     "playwright": "1.63.0"

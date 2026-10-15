@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="3D-printable furniture for the Moomin House: turn each design in 3D, see its print checks and download STL, 3MF or STEP files.">
+<title>Moomin House prints</title>
+<style>
+  :root{--ink:#284849;--teal:#197F98;--rust:#B56535;--line:#d6ded4;--panel:#fbfaf6;--muted:#6b7f7f;--pass:#2f8a57;--warn:#a86b12;--fail:#c0392b}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#eef2ee;color:var(--ink);font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+  #view{position:fixed;inset:0}
+  #panel{position:fixed;top:12px;left:12px;width:320px;max-height:calc(100% - 24px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:0 4px 18px rgba(40,72,73,.12)}
+  h1{font-size:17px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:11px;margin-bottom:10px}
+  .sub .live{display:inline-block;font-weight:600;color:#fff;background:var(--teal);border-radius:8px;padding:0 6px;margin-right:4px}
+  .sub .live.busy{background:var(--rust)}
+  h2{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin:14px 0 6px}
+  #parts{display:grid;gap:4px}
+  #parts button{display:grid;grid-template-columns:12px 1fr auto;align-items:center;gap:8px;text-align:left;padding:7px 9px}
+  #parts small{color:var(--muted);font-variant-numeric:tabular-nums}
+  button{font:inherit;font-size:12px;padding:5px 6px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:6px;cursor:pointer}
+  button:hover{border-color:var(--teal)}
+  button.on{border-color:var(--teal);box-shadow:inset 0 0 0 1px var(--teal)}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--muted)}
+  .dot.pass{background:var(--pass)}.dot.warn{background:var(--warn)}.dot.fail,.dot.error{background:var(--fail)}
+  #title{font-size:15px;margin:14px 0 4px}
+  .prose p{margin:0 0 6px;color:#3c5859}
+  #facts{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:8px 0 0}
+  #facts dt{color:var(--muted)}#facts dd{margin:0;font-variant-numeric:tabular-nums}
+  #checks{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+  #checks li{display:grid;grid-template-columns:18px 1fr;gap:4px}
+  #checks .mark{font-weight:700;text-align:center}
+  #checks .pass .mark{color:var(--pass)}#checks .warn .mark{color:var(--warn)}#checks .fail .mark{color:var(--fail)}
+  #checks .detail{display:block;color:var(--muted);font-size:11.5px}
+  #downloads{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  #downloads a{display:block;text-align:center;text-decoration:none;color:#fff;background:var(--teal);border-radius:6px;padding:7px 4px;font-weight:600}
+  #downloads a small{display:block;font-weight:400;opacity:.85;font-size:10.5px}
+  #downloads a:hover{background:#136a80}
+  #notes{color:var(--muted);font-size:11.5px;margin:8px 0 0}
+  .slider{display:grid;grid-template-columns:96px 1fr 58px;align-items:center;gap:6px;margin:5px 0}
+  .slider output{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+  input[type=range]{width:100%;accent-color:var(--teal)}
+  input[type=checkbox]{accent-color:var(--teal)}
+  .slider.changed span{font-weight:600}
+  #params table{border-collapse:collapse;width:100%}
+  #params td{padding:2px 0;border-bottom:1px solid #eef0ea}#params td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+  #reset{margin-top:6px;width:100%}
+  #error{margin:8px 0;padding:8px 10px;border:1px solid #e8b4ad;background:#fdf1ef;border-radius:6px;color:#7d2418;font:11.5px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+  .views{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+  label.row{display:flex;align-items:center;gap:8px;margin:6px 0 0}
+  .key{display:inline-block;width:10px;height:10px;border-radius:2px;background:#d8473a;vertical-align:-1px}
+  .foot{margin:14px 0 0;font-size:12px}.foot a{color:var(--teal)}
+  #loading{position:fixed;inset:0;display:grid;place-items:center;font-size:15px;color:var(--muted);pointer-events:none}
+  #hint{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;color:var(--muted);font-size:11px;background:rgba(251,250,246,.85);padding:4px 10px;border-radius:12px;pointer-events:none}
+  @media (max-width:700px){#view{top:calc(45% + 24px)}#panel{width:auto;right:12px;max-height:45%}#hint{width:max-content;max-width:calc(100% - 24px);text-align:center}}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+</head>
+<body>
+<div id="view"></div>
+<div id="loading" role="status" aria-live="polite">Loading the prints…</div>
+<noscript><p>The 3D view needs JavaScript. Enable JavaScript and reload this page.</p><style>#loading,#panel,#hint{display:none}</style></noscript>
+<script>
+  function showViewerError() {
+    let status = document.getElementById('loading');
+    if (!status) { status = document.createElement('div'); status.id = 'loading'; document.body.appendChild(status); }
+    status.setAttribute('role', 'alert');
+    status.textContent = 'The 3D view could not load. Reload the page and make sure your browser supports WebGL.';
+  }
+  addEventListener('error', showViewerError);
+  addEventListener('unhandledrejection', showViewerError);
+</script>
+<aside id="panel">
+  <h1>Moomin House prints</h1>
+  <div class="sub" id="sub"></div>
+  <nav id="parts" aria-label="Designs"></nav>
+  <section id="part" hidden>
+    <h2 id="title"></h2>
+    <div id="about" class="prose"></div>
+    <div id="error" role="alert" hidden></div>
+    <dl id="facts"></dl>
+    <h2>Download</h2>
+    <div id="downloads"></div>
+    <p id="notes"></p>
+    <h2>Print checks</h2>
+    <ul id="checks"></ul>
+    <h2 id="designTitle">How it is designed</h2>
+    <div id="design" class="prose"></div>
+    <h2 id="paramsTitle">Measurements</h2>
+    <div id="params"></div>
+    <button id="reset" hidden>Back to the design's values</button>
+    <h2>View</h2>
+    <div class="views">
+      <button data-view="iso">3/4</button><button data-view="front">Front</button><button data-view="side">Side</button>
+      <button data-view="back">Back</button><button data-view="top">Top</button><button data-view="under">Underside</button>
+    </div>
+    <label class="row"><input type="checkbox" id="showOverhang" checked> Show overhangs <span class="key"></span> (need supports)</label>
+    <label class="row"><input type="checkbox" id="showBed" checked> Printer bed</label>
+  </section>
+  <p class="foot" id="houseLink"><a href="./index.html">← The whole house in 3D</a></p>
+</aside>
+<div id="hint">Drag to orbit · right-drag or shift-drag to pan · scroll to zoom</div>
+<script type="module" src="./prints.js"></script>
+</body>
+</html>

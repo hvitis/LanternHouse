@@ -101,27 +101,28 @@ def main():
     for pattern in ('*.png','*.json'):
         for old in (ROOT/'output/previews').glob(pattern):
             if old.name!='mesh.json':old.unlink()
-    house=lambda m:m['group'] not in ('Furniture','Figures')
+    house=lambda m:m['group'] not in ('Furniture','Figures','Garden')
     panel=lambda m:DATA['parts'].get(m['part'],{}).get('assembly_panel') or m.get('design_part',m['part'])
     render('house-closed',house,size=(1800,2400))
     veranda_angle=-75+(int(DATA['config']['veranda']['facet'][1:])-1)*30
     render('house-closed-veranda',house,size=(1800,2400),view=camera(veranda_angle+15))
     render('cover-house',house,size=(2000,2600),view=camera(-25,16))
     render('house-open',house,mode='open',size=(2200,2400))
-    render('house-open-furnished',mode='open',size=(2200,2400))
+    render('house-open-furnished',lambda m:m['group']!='Garden',mode='open',size=(2200,2400))
+    render('garden',lambda m:m['group'] not in ('Furniture','Figures'),size=(2400,2000))
     render('house-exploded',house,mode='exploded',overlay=True,size=(2200,2800))
     render('frame',lambda m:m['group']=='Fixed' and m['part'] not in [f'W{i:02}' for i in range(1,13)] and not m['part'].startswith('D'),overlay=True)
-    render('walls-rear',lambda m:m['group']=='Fixed' and (m['part'].startswith(('W','A02','J01'))),overlay=True)
+    render('walls-rear',lambda m:m['group']=='Fixed' and (m['part'].startswith(('W','A02','J0'))),overlay=True)
     render('wall-right',lambda m:m['group']=='WallRight',overlay=True,size=(1800,2300))
     render('wall-left',lambda m:m['group']=='WallLeft',overlay=True,size=(1800,2300))
     render('plinth-drawer',lambda m:m['group']=='Drawer' or panel(m) in ('B01','F00','PL1','DG1','DB1','A04','ES1') or (m['part']=='ET1' and m['group']=='Fixed'),mode='open',overlay=True)
-    render('rooms',lambda m:panel(m) in ('F00','F01','F02','PT1','PT2','P01','A04','L01'),overlay=True)
+    render('rooms',lambda m:panel(m) in ('F00','F01','F02','PT1','PT2','P01','A04'),overlay=True)
     render('roof',lambda m:m['group']=='Roof',overlay=True)
     render('locks',lambda m:m['group']=='RoofLocks' or panel(m)=='F02',overlay=True)
     render('catches',lambda m:m['group'] in ('WallRight','WallLeft') or panel(m) in ('MC1','GP1','F02','F00','B01'),mode='open',overlay=True)
     render('porch',lambda m:m['group']=='Porch',overlay=True)
     render('roof-underside',lambda m:m['group']=='Roof',overlay=True,view=[[.866,.5,0],[.25,-.433,.866],[.433,-.75,-.5]])
-    for (name,prefixes),z in zip([('kitchen',('K','GL','GR')),('living',('V','K4','L1','SS','LC','BK')),('bedroom',('U','L2','ST','BK')),('attic',('N','AC','SB'))],DATA['derived']['floor_tops']):
+    for (name,prefixes),z in zip([('kitchen',('K2','K7','GL','GR')),('living',('V','K4','KS','LG','L1','SS','LC','BK')),('bedroom',('U','L2','ST','BA','BK')),('attic',('N','AC','SB','AB2','AD'))],DATA['derived']['floor_tops']):
         render(name,lambda m,p=prefixes,zz=z: m['group']=='Furniture' and any(m.get('design_part',m['part']).startswith(prefix) for prefix in p) and min(v[2] for v in m['vertices'])>=zz-.1 and max(v[2] for v in m['vertices'])<zz+DATA['config']['floor_pitch'])
     import clay_render
     clay_render.main()

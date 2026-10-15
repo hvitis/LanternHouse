@@ -15,7 +15,7 @@ def main():
         vp=ET.SubElement(views,'ViewProvider',name=name,expanded='0',treeRank='-1',Extensions='True')
         ET.SubElement(vp,'Extensions',Count='0')
         props=ET.SubElement(vp,'Properties',Count='1',TransientCount='0')
-        item=inst.get(name);visible=bool(item and item['group'] not in ('Tools','Accessories')) or name in ('Fixed','WallLeft','WallRight','Porch','Roof','RoofLocks','Furniture','Figures','Drawer') or name in figures
+        item=inst.get(name);visible=bool(item and item['group'] not in ('Tools','Accessories')) or name in ('Fixed','WallLeft','WallRight','Porch','Roof','RoofLocks','Furniture','Figures','Drawer','RoomDoors','Garden') or name in figures
         prop=ET.SubElement(props,'Property',name='Visibility',type='App::PropertyBool',status='1');ET.SubElement(prop,'Bool',value=str(visible).lower())
         if typ.startswith('Part::'):
             hexval=(item.get('color') or data['parts'][item['part']]['color']) if item else '#BD8B5D'

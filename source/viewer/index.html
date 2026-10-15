@@ -25,6 +25,11 @@
   button:hover{border-color:var(--teal)}
   button.on{background:var(--teal);border-color:var(--teal);color:#fff}
   .actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+  #elementSearch{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:5px}
+  #elementId{min-width:0;width:100%;font:inherit;padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);text-transform:uppercase}
+  #elementId:focus{outline:2px solid var(--teal);outline-offset:1px}
+  #elementId[aria-invalid=true]{border-color:var(--rust)}
+  #searchStatus{font-size:11px;color:var(--muted);margin:5px 0 8px}
   #info{position:fixed;right:12px;bottom:12px;width:320px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:0 4px 18px rgba(40,72,73,.12);display:none}
   #info b{font-size:14px}
   #info .meta{color:var(--muted);font-size:12px;margin:2px 0 6px}
@@ -33,10 +38,34 @@
   #hint{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;color:var(--muted);font-size:11px;background:rgba(251,250,246,.85);padding:4px 10px;border-radius:12px;pointer-events:none}
   .dim{font:600 11px/1.2 system-ui,sans-serif;color:#126a84;background:rgba(255,255,255,.88);border:1px solid #9cc9d6;border-radius:4px;padding:1px 5px;white-space:nowrap;pointer-events:none}
   .dim.mark{color:#284849;border-color:#c8d0c8}
+  .piece-id{font:600 10px/1.2 system-ui,sans-serif;color:#183b44;background:rgba(255,255,255,.92);border:1px solid #92aeb5;border-radius:3px;padding:2px 4px;white-space:nowrap;pointer-events:none}
   .key{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px}
   .key.new{background:#3fae6b}.key.changed{background:#f0b93a}
+  #thicknessLegend{margin:4px 0 8px 24px;font-size:11px;color:var(--muted)}
+  #thicknessLegend .key{border:1px solid rgba(0,0,0,.25);margin-right:5px}
+  #thicknessLegend p{margin:3px 0}
   #changes{margin:0;padding-left:16px;font-size:11.5px;color:var(--ink)}#changes li{margin:2px 0}
   #loading{position:fixed;inset:0;display:grid;place-items:center;font-size:15px;color:var(--muted)}
+  #openDxf{width:100%;text-align:left;padding:9px 10px}
+  #openPrints{display:block;font-size:12px;padding:9px 10px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:6px;text-decoration:none}
+  #openPrints:hover{border-color:var(--teal)}
+  #dxfDialog{width:calc(100% - 32px);height:calc(100% - 32px);max-width:1600px;max-height:none;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink)}
+  #dxfDialog::backdrop{background:rgba(15,30,35,.6)}
+  #dxfDialog[open]{display:flex;flex-direction:column}
+  .dxf-header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+  .dxf-header h2{font-size:16px;letter-spacing:0;text-transform:none;color:var(--ink);margin:0;flex:1}
+  .dxf-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:10px 16px}
+  .dxf-toolbar button{min-height:34px;padding:6px 12px}
+  #dxfLayers{display:flex;flex-wrap:wrap;gap:12px;margin-left:auto}
+  #dxfLayers label{display:flex;align-items:center;gap:5px;font-size:12px}
+  #dxfLayers .key{border:1px solid #52666b}
+  #dxfViewport{position:relative;flex:1;min-height:180px;background:#101c23;overflow:hidden}
+  #dxfViewport canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab;outline-offset:-3px}
+  #dxfViewport canvas:active{cursor:grabbing}
+  #dxfStatus{margin:0;padding:8px 16px;font-size:12px;overflow-wrap:anywhere}
+  #dxfHelp{padding:0 16px 10px;color:var(--muted);font-size:11px}
+  #dxfZoom{min-width:52px;text-align:center;font-variant-numeric:tabular-nums}
+  @media (max-width:700px){#dxfDialog{width:calc(100% - 12px);height:calc(100% - 12px)}.dxf-toolbar{padding:8px;gap:4px}.dxf-toolbar button{padding:6px 9px}#dxfLayers{width:100%;margin:4px 0}#dxfHelp{font-size:10px}.dxf-header{padding:10px}}
   @media (max-width:700px){#view{top:calc(45% + 24px)}#panel{width:auto;right:12px;max-height:45%}#info{left:12px;width:auto}#hint{width:max-content;max-width:calc(100% - 24px);text-align:center}}
 </style>
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
@@ -63,6 +92,13 @@
   <h1>Moomin House 3D</h1>
   <div class="sub" id="stats"></div>
 
+  <h2><label for="elementId">Find element ID</label></h2>
+  <form id="elementSearch" role="search">
+    <input id="elementId" type="search" placeholder="W01 or W01-01" autocomplete="off" spellcheck="false" aria-describedby="searchStatus">
+    <button type="submit">Find</button><button id="clearSearch" type="button">Clear</button>
+  </form>
+  <p id="searchStatus" role="status" aria-live="polite">Exact ID → X-ray, yellow highlight and camera focus.</p>
+
   <h2>Open</h2>
   <div class="slider"><span>Front walls</span><input id="walls" type="range" min="0" max="110" value="0"><output id="wallsOut">0°</output></div>
   <div class="slider"><span>Front doors</span><input id="doors" type="range" min="0" max="90" value="0"><output id="doorsOut">0°</output></div>
@@ -78,12 +114,15 @@
 
   <h2>Show</h2>
   <label class="row"><input type="checkbox" id="showPorch" checked> Veranda</label>
-  <label class="row"><input type="checkbox" id="showFurniture" checked> Furniture (view only)</label>
+  <label class="row"><input type="checkbox" id="showFurniture" checked> Furniture &amp; scenery (view only)</label>
   <label class="row"><input type="checkbox" id="showFigures" checked> Thermo-clay Moomins (one per floor)</label>
   <label class="row"><input type="checkbox" id="showHardware"> Screws, bolts and hinge axes</label>
   <label class="row"><input type="checkbox" id="showEdges" checked> Plywood edges</label>
   <label class="row"><input type="checkbox" id="xray"> X-ray walls</label>
   <label class="row"><input type="checkbox" id="showDims" checked> Dimensions</label>
+  <label class="row"><input type="checkbox" id="showPieceIds"> Piece IDs</label>
+  <label class="row"><input type="checkbox" id="showThickness" checked aria-controls="thicknessLegend"> DXF colors by thickness</label>
+  <div id="thicknessLegend"></div>
   <label class="row"><input type="checkbox" id="highlight"> Highlight changes: <span class="key new"></span> new <span class="key changed"></span> changed</label>
 
   <h2>Inspect</h2>
@@ -95,11 +134,29 @@
     <button data-view="iso">3/4</button><button data-view="front">Front</button><button data-view="back">Back</button><button data-view="top">Top</button>
     <button data-view="left">Left</button><button data-view="right">Right</button><button data-view="veranda">Veranda</button><button data-view="fit">Fit</button>
   </div>
+  <h2>Settings</h2>
+  <button id="openDxf" aria-haspopup="dialog" aria-controls="dxfDialog">DXF · open 2D drawing ↗</button>
+  <h2>3D prints</h2>
+  <a id="openPrints" href="./prints.html">Printable furniture · STL, 3MF, STEP →</a>
   <h2>What changed</h2>
   <ul id="changes"></ul>
 </aside>
 <div id="info"></div>
 <div id="hint">Drag to orbit · right-drag or shift-drag to pan · scroll to zoom · click a part to inspect it · Esc clears</div>
+<dialog id="dxfDialog" aria-labelledby="dxfTitle">
+  <header class="dxf-header"><h2 id="dxfTitle">DXF drawing</h2><button id="closeDxf" aria-label="Close DXF drawing">Close ✕</button></header>
+  <div class="dxf-toolbar" aria-label="Drawing controls">
+    <button id="dxfZoomOut" aria-label="Zoom out">−</button><output id="dxfZoom" aria-label="Drawing zoom">100%</output><button id="dxfZoomIn" aria-label="Zoom in">+</button>
+    <button id="dxfFit">Fit drawing</button><button id="dxfOpen">Open DXF…</button><button id="dxfDownload" disabled>Download DXF</button>
+    <input id="dxfFile" type="file" accept=".dxf" hidden>
+    <label class="row"><input id="dxfPieceIds" type="checkbox"> Piece IDs</label>
+    <div id="dxfLayers" aria-label="Drawing layers"></div>
+  </div>
+  <div id="dxfViewport" aria-busy="true"></div>
+  <p id="dxfStatus" role="status" aria-live="polite">Loading the supplier drawing…</p>
+  <div id="dxfHelp">Drag to pan · scroll or pinch to zoom · + / − to zoom · F to fit · arrow keys to pan · Esc to return to 3D</div>
+</dialog>
 <script type="module" src="./app.js"></script>
+<script type="module" src="./dxf-viewer.js"></script>
 </body>
 </html>

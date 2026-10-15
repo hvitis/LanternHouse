@@ -12,9 +12,10 @@ from reportlab.lib.utils import simpleSplit, ImageReader
 from PIL import Image, ImageOps
 from pypdf import PdfReader, PdfWriter
 from pypdf.generic import NameObject, TextStringObject
+from model import BOUGHT
 
 ROOT=Path(__file__).resolve().parents[1]
-DEFAULTS={'revision':'SUP-002','material':'birch_plywood_raw','include_optional':False,'engraving':'none','maximum_sheet_mm':[297,420],'stock_sizes_mm':[[297,420]],'cutting_tolerance_mm':None,'thickness_tolerance_mm':None}
+DEFAULTS={'revision':'SUP-004','material':'birch_plywood_raw','grade':'2/2','include_optional':False,'engraving':'none','maximum_sheet_mm':[297,420],'stock_sizes_mm':[[297,420]],'cutting_tolerance_mm':None,'thickness_tolerance_mm':None}
 REGULAR='MoominSans';BOLD='MoominSans-Bold'
 
 def fonts():
@@ -42,7 +43,7 @@ def sheets_for(data,nest,options):
     for sheet in sheets:
         if any(data['parts'][item['part']].get('render_only') for item in sheet['items']):raise ValueError('View-only furniture cannot appear in supplier cutting sheets')
         if any(data['parts'][item['part']]['thickness']!=sheet['thickness'] for item in sheet['items']):raise ValueError('Mixed sheet thickness')
-    expected=Counter({pid:p['quantity'] for pid,p in data['parts'].items() if not p.get('render_only') and p.get('category') not in ('Purchased wood','Purchased packing') and (options['include_optional'] or not p.get('optional'))})
+    expected=Counter({pid:p['quantity'] for pid,p in data['parts'].items() if not p.get('render_only') and p.get('category') not in BOUGHT and (options['include_optional'] or not p.get('optional'))})
     if Counter(item['part'] for sheet in sheets for item in sheet['items'])!=expected:raise ValueError('Supplier sheets omit or duplicate required parts')
     validate_one_piece(data,sheets,options)
     return sorted(sheets,key=lambda sheet:(sheet['thickness'],sheet['id']))
@@ -120,12 +121,42 @@ def build(data,nest,cfg,lang='pl',output=None):
         img_w,img_h=(330,440) if show_license else (360,480)
         img_x=(width-img_w)/2;img_y=225 if show_license else (height-img_h)/2-15
         c.drawImage(ImageReader(bw_house),img_x,img_y,width=img_w,height=img_h,mask='auto')
+    text(tr['status'],40,height-96,10,True)
     if show_license:
         c.setStrokeColorRGB(.78,.78,.78);c.setLineWidth(.6);c.line(40,205,width-40,205)
         text(tr['copyright_title'],40,190,8.5,bold=True);y_copy=176
         for block in tr['copyright_notice'].split('\n'):
             y_copy=paragraph(block,y_copy,7.5)+3
     finish()
+    # The requirements the cutting company works to: material, process, tooling, edges, faces and packing.
+    CN=cfg.get('cnc',{});hand=[h for sheet in sheets for h in cnc.features(data,sheet)[1]];hand_page=4
+    bands=', '.join(f'{t} mm {v[0]:+g} / {v[1]:+g}' for t,v in cfg.get('thickness_tolerance',{}).items()) or tr['pending']
+    start(tr['spec_title'],'specification');y=height-112
+    layout={'spacing':nest.get('spacing_mm',cfg.get('nest_spacing',3)),'margin':nest.get('margin_mm',cfg.get('stock_margin',10))}
+    items=[(tr['material'],tr.get(options['material'],options['material'])+'. '+tr['grade'].format(grade=options['grade'])),(tr['thickness'],tr['thickness_spec'].format(bands=bands)),
+           (tr['process'],tr['cnc_process']+' '+tr['a3_stock']),('CNC / router',tr['tooling'].format(tool=CN.get('tool_diameter',3),radius=CN.get('tool_diameter',3)/2)),
+           ('',tr['kerf']),('',tr['spacing'].format(**layout)),('',tr['grain']),('',tr['retained_edges']),('',tr['machining_faces'].format(min_drill=CN.get('min_drill',2),page=hand_page)),
+           ('',tr['one_piece']),(tr['cut_tolerance'],f'{options["cutting_tolerance_mm"]} mm' if options['cutting_tolerance_mm'] else tr['pending']+' (±0.2 mm '+tr['proposed']+')'),
+           (tr['engraving'],tr['no_engraving']),('',tr['packing']),('',tr['no_substitution']),('',tr['production_only'])]
+    for head,body in items:
+        if head:text(head,40,y,9,True);y-=12
+        y=paragraph(body,y,8.5)+2
+    text(tr['contact'],40,max(y-6,60),9)
+    finish()
+    start(tr['checklist_title'],'checklist');y=height-112
+    for n,item in enumerate(tr['checklist'],1):y=paragraph(f'{n}. {item.format(grade=options["grade"],**layout)}',y,9)
+    y-=10;text(tr['files_title'],40,y,11,True);y-=20
+    for item in tr['files']:y=paragraph('• '+item,y,8.5)
+    finish()
+    # Features intentionally left for the customer, grouped so the list stays short.
+    words=tr['hand_words'];groups=Counter((h['part'],words.get(h['feature'],h['feature']),h['diameter'],round(h['depth'],2),words.get(h['face'],h['face']),words[h['reason_code']].format(min_drill=CN.get('min_drill',2))) for h in hand)
+    rows=sorted(groups.items())
+    for first in range(0,max(1,len(rows)),30):
+        start(tr['hand_title'],'hand-drilling');y=paragraph(tr['hand_note'],height-112,9)-6
+        text('ID / '+tr['feature']+' / D x z mm / '+tr['face']+' / '+tr['count']+' / '+tr['reason'],40,y,8.5,True);y-=18
+        for (pid,feat,d,z,face,why),n in rows[first:first+30]:
+            text(f'{pid}   {feat}   D{d:g} x {z:g}   {face}   x{n}',40,y,8.5);text(why,300,y,7.5);y-=16
+        finish()
     start(tr['summary_title'],'summary');y=paragraph(tr['summary_desc'],height-112)
     thicknesses=sorted(set(s['thickness'] for s in sheets))
     x0,w1,w2,w3=40,155,180,180
@@ -219,7 +250,7 @@ def build(data,nest,cfg,lang='pl',output=None):
     csvpath=path.with_suffix('.csv')
     with csvpath.open('w',newline='') as f:
         w=csv.DictWriter(f,fieldnames=list(operation_records[0]));w.writeheader();w.writerows(operation_records)
-    report={'language':lang,'revision':options['revision'],'title':tr['title'],'pdf':path.name,'csv':csvpath.name,'pages':pages,'sheets':sheet_meta,'operations':operation_records,'quantities':dict(quantities),'house_pieces':sum(quantities.values()),'optional_pieces':0,'status':'supplier_confirmation_required','engraving':'none','one_piece_check':True,'required_stock_sizes_mm':options['stock_sizes_mm'],'maximum_sheet_mm':options['maximum_sheet_mm'],'geometry_sha256':hashlib.sha256(json.dumps([cnc.operations(data,s) for s in sheets],sort_keys=True).encode()).hexdigest()}
+    report={'language':lang,'revision':options['revision'],'title':tr['title'],'pdf':path.name,'csv':csvpath.name,'pages':pages,'sheets':sheet_meta,'operations':operation_records,'quantities':dict(quantities),'house_pieces':sum(quantities.values()),'optional_pieces':0,'status':'supplier_confirmation_required','engraving':'none','material':options['material'],'grade':options['grade'],'spacing_mm':layout['spacing'],'margin_mm':layout['margin'],'one_piece_check':True,'hand_drilling':[dict(h) for sheet in sheets for h in cnc.features(data,sheet)[1]],'required_stock_sizes_mm':options['stock_sizes_mm'],'maximum_sheet_mm':options['maximum_sheet_mm'],'geometry_sha256':hashlib.sha256(json.dumps([cnc.operations(data,s) for s in sheets],sort_keys=True).encode()).hexdigest()}
     return path,report
 
 

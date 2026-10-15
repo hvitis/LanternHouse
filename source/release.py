@@ -1,4 +1,4 @@
-"""Publish a GitHub release with the generated PDFs and the build kit attached, using the GitHub CLI (gh).
+"""Publish a GitHub release with the generated PDFs, the supplier cut DXF and the build kit attached, using the GitHub CLI (gh).
 
     .venv/bin/python source/release.py v5 --dry-run    # check everything and print the release, upload nothing
     .venv/bin/python source/release.py v5 --draft      # create a draft release to review on GitHub
@@ -14,6 +14,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'output'
 PDFS=['Complete','Instructions','Cutting-Templates','Dimensioned-Parts','Decor','Clay-Family','3mm-Hand-Templates','Supplier']
 KIT=OUT/'Moomin-House-Build-Kit.zip'
+CUT=OUT/'Moomin-House-Supplier-Cut.dxf'   # everything the supplier cuts, in one file
 
 def git(*args):
     return subprocess.run(['git',*args],cwd=ROOT,capture_output=True,text=True).stdout.rstrip()
@@ -27,7 +28,7 @@ def repo_url():
 def sha256(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 
 def assets():
-    return [OUT/'pdf'/f'Moomin-House-{name}.pdf' for name in PDFS]+[KIT]
+    return [OUT/'pdf'/f'Moomin-House-{name}.pdf' for name in PDFS]+[CUT,KIT]
 
 def problems():
     """Every reason the current output/ must not be released; empty when it is ready."""
@@ -59,7 +60,9 @@ def notes(tag):
     nest=json.loads((OUT/'nesting.json').read_text())
     sys.path.insert(0,str(ROOT/'source'));from package import stock_table
     pdf_pages={**pages['pdfs'],'Moomin-House-Complete.pdf':pages['complete_pages']}
-    rows=[f'| `{p.name}` | {pdf_pages[p.name]} pages | {p.stat().st_size/1024/1024:.1f} MB |' if p.name in pdf_pages else f'| `{p.name}` | everything: PDFs, STEP, FCStd, DXF, laser files, renders, reports and source | {p.stat().st_size/1024/1024:.1f} MB |' for p in assets()]
+    contents={CUT.name:'every cutting path for the supplier in one DXF R12 file: mm, one layer per plywood thickness, no frames or text',
+              KIT.name:'everything: PDFs, STEP, FCStd, DXF, laser files, renders, reports and source'}
+    rows=[f'| `{p.name}` | {f"{pdf_pages[p.name]} pages" if p.name in pdf_pages else contents[p.name]} | {p.stat().st_size/1024/1024:.1f} MB |' for p in assets()]
     url=repo_url();guide=f'[the build guide]({url}/blob/{tag}/docs/BUILD-GUIDE.md)' if url else 'the build guide (docs/BUILD-GUIDE.md)'
     return '\n'.join([
         f'Built from {git("rev-parse","--short","HEAD")} with FreeCAD {cad.get("freecad_version","?")}. All {len(checks)} release checks passed.','',

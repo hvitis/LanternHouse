@@ -6,15 +6,16 @@
 
 The viewer builds every solid in the browser from output/parts.json, the same profiles and
 placements the CAD export uses. If that file is missing (a fresh clone), or with --rebuild, it is
-generated from source/model.py, which needs numpy and shapely, not FreeCAD. Only the viewer folder and
-that one data file are served, on the local machine unless --host says otherwise.
+generated from source/model.py, which needs numpy and shapely, not FreeCAD. The DXF uses matching production
+nesting when available, otherwise computes the layout. Only viewer assets, model data, DXF and label positions
+are served, on the local machine unless --host says otherwise.
 """
 import argparse, errno, http.server, json, mimetypes, sys, time, webbrowser
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 VIEWER=(ROOT/'source/viewer').resolve()
-DATA={'/data/parts.json':ROOT/'output/parts.json'}
+DATA={'/data/parts.json':ROOT/'output/parts.json','/data/house.dxf':ROOT/'output/viewer/house.dxf','/data/dxf-labels.json':ROOT/'output/viewer/dxf-labels.json'}
 mimetypes.add_type('text/javascript','.js')
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -42,10 +43,10 @@ def build_data(path):
     print('Building output/parts.json from source/model.py (no FreeCAD needed)...',flush=True)
     data=model_data();path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(data,indent=2))
 
-def bind(host,port,tries=50):
+def bind(host,port,tries=50,handler=Handler):
     """Start on the requested port and step up to the next free one if it is taken."""
     for candidate in range(port,port+tries):
-        try:return http.server.ThreadingHTTPServer((host,candidate),Handler),candidate
+        try:return http.server.ThreadingHTTPServer((host,candidate),handler),candidate
         except OSError as error:
             if error.errno!=errno.EADDRINUSE:raise
     raise SystemExit(f'No free port between {port} and {port+tries-1}.')
@@ -56,6 +57,11 @@ def main():
     p.add_argument('--rebuild',action='store_true',help='regenerate output/parts.json from source/model.py before serving (run source/rebuild.py again before making PDFs)')
     args=p.parse_args()
     if args.rebuild or not DATA['/data/parts.json'].exists():build_data(DATA['/data/parts.json'])
+    from viewer_dxf import preview
+    drawing=preview(json.loads(DATA['/data/parts.json'].read_text()))
+    cut=DATA['/data/house.dxf'];cut.parent.mkdir(parents=True,exist_ok=True)
+    cut.write_text(drawing['dxf'],encoding='utf-8')
+    DATA['/data/dxf-labels.json'].write_text(json.dumps(drawing['labels']),encoding='utf-8')
     server,port=bind(args.host,args.port);url=f'http://{args.host}:{port}/'
     if port!=args.port:print(f'Port {args.port} is busy; using the next free port {port}.')
     print(f'Moomin House 3D viewer: {url}  (Ctrl+C to stop)',flush=True)

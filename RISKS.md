@@ -1,207 +1,134 @@
-# Moomin House: Comprehensive Risk Assessment & Safety Engineering Report
+# Moomin House: Risk Assessment & Mitigation Record
 
-This document records the structural, mechanical, chemical, and child safety risks identified for the CNC birch plywood Moomin House. It incorporates findings from **CalculiX Finite Element Analysis (FEA)**, structural timber analytics (**Eurocode 5 / EN 1995-1-1**), and international toy safety compliance directives (**EN 71-1, EN 71-3, ASTM F963, and 16 CFR 1500/1501**) with specific emphasis on usage by a **3-year-old child**.
+This document records the structural, mechanical, chemical and child-safety risks of the CNC birch-plywood Moomin House, with emphasis on use by a **3-year-old**, and what revision 7 (2026-10-15) did about each. The original findings came from CalculiX FEA (`make stress`), Eurocode 5 hand checks and the toy-safety standards EN 71-1, EN 71-3, ASTM F963 and 16 CFR 1500/1501.
 
----
+Every mitigation below is in the model and checked on each build: `make check` (model tests), `make all` (CAD collision, swing, door, drawer and roof-lift checks, release checks), `make stackup` (`source/stackup.py`, joint tolerance chains; `source/risk_audit.py`, tip-over, small parts, magnets) and `make stress` (FEA and fastener checks). Physical checks the CAD cannot make are a printed page in the instructions ("Dry-fit and safety checks").
 
-## 1. Executive Summary
-
-| Risk Category | Total Identified | Critical (🔴) | High (🟡) | Medium (🔵) |
-| :--- | :---: | :---: | :---: | :---: |
-| **Child Safety & Biomechanical (3yo Usage)** | 8 | 5 | 2 | 1 |
-| **Structural & Hardware Stress (FEA / Timber)** | 7 | 4 | 2 | 1 |
-| **Total Identified Hazards** | **15** | **9** | **4** | **2** |
+> **Status:** this is a CAD-verified design, not a certified toy. Revision 7 removes or reduces every hazard listed; five residual risks remain and are marked **Residual**, and one open item (RISK-26).
 
 ---
 
-## 2. Child Safety & Regulatory Hazards (3-Year-Old Play)
+## 1. Summary
 
-### 🔴 RISK-01: High-Power Neodymium Magnet Ingestion & Bowel Perforation
-- **Affected Parts / Code**: `MC1` (catch block), `GP1` (stop post), `config.json` (`magnets.magnet: [8.0, 3.0]`, `magnets.disc: [10.0, 1.0]`).
-- **Standard Violated**: **EN 71-1 Clause 4.23**, **ASTM F963 Section 4.38** (Magnetic Toys).
-- **Physical Mechanism**:
-  - The model uses $\varnothing 8 \times 3\text{ mm}$ N35 neodymium magnets bonded with epoxy in shallow wooden pockets.
-  - The calculated magnetic flux index is **$\approx 452\text{ kG}^2\cdot\text{mm}^2$**, which is **$9\times$ higher than the legal maximum limit ($50\text{ kG}^2\cdot\text{mm}^2$)** for ingestible magnets.
-  - Seasonal humidity shifts cause plywood to expand and contract, degrading epoxy bonds. Toddlers chew surfaces and pick at seams with teeth.
-- **Consequence**: Swallowing two magnets (or one magnet and one steel disc) causes them to attract through intestinal folds. The intense compression pinches blood flow, leading to tissue necrosis, gastrointestinal perforation, peritonitis, septic shock, and fatal internal injury.
-- **Required Remediation**:
-  - Eliminate loose or surface-epoxied high-power magnets.
-  - If magnetic latching is required, magnets must be **fully enclosed inside permanently ultrasonic-welded or mechanically locked, non-accessible wooden/plastic housings** that pass EN 71-1 drop ($850\text{ mm}$), torque ($0.34\text{ N}\cdot\text{m}$), and tension ($90\text{ N}$) abuse tests.
-  - Recommended alternative: Wooden friction detents or child-safe low-force spring catches.
-
----
-
-### 🔴 RISK-02: Overturning & Tower Tip-Over Crush Hazard
-- **Affected Parts / Code**: Full house assembly (`height = 838.4 mm`, `tower_diameter = 326.7 mm`, `base_diameter = 522.7 mm`, total mass $\approx 7.0\text{–}8.5\text{ kg}$).
-- **Standard Violated**: **ASTM F963 Section 4.15** (Stability), **ISO 8124-1**.
-- **Physical Mechanism**:
-  - The house stands $84\text{ cm}$ tall—nearly the full height of a standing 3-year-old ($90\text{–}95\text{ cm}$).
-  - When the two $1.2\text{ kg}$ wall shells swing open to $100^\circ$, the center of gravity shifts forward.
-  - A toddler weighs $14\text{–}15\text{ kg}$ and frequently uses furniture to pull themselves up to stand. A horizontal pull of $35\text{ N}$ at the attic window or upper wall ($Z \approx 700\text{ mm}$) creates an overturning moment of $24.5\text{ N}\cdot\text{m}$, exceeding the base resisting moment ($15.1\text{ N}\cdot\text{m}$).
-- **Consequence**: The $8\text{ kg}$ solid wood house overturns and collapses onto the child, causing concussions, facial fractures, or blunt impact trauma.
-- **Required Remediation**:
-  - Supply a rear wall-anchoring anti-tip safety bracket.
-  - Widen the ground plinth footprint or install weighted low-profile steel ballast plates in the plinth base.
+| Risk | Was | Now | Residual |
+| :--- | :---: | :---: | :--- |
+| RISK-01 Magnet ingestion | 🔴 | 🔵 | Steel discs are flush-bedded, not enclosed |
+| RISK-02 Tip-over | 🔴 | 🟡 | Free-standing it tips at 28.6 N at the eave; strap required |
+| RISK-03 8 mm pinch gap | 🔴 | ✅ | — |
+| RISK-04 Pointed finial | 🔴 | ✅ | — |
+| RISK-05 Small parts | 🔴 | 🔵 | 28 glued pieces would be small parts if pulled off |
+| RISK-06 Fragile window bars | 🟡 | ✅ | — |
+| RISK-07 Clay figures | 🟡 | 🔵 | Baked polymer clay can still chip |
+| RISK-08 Drawer pull-out | 🔵 | ✅ | — |
+| RISK-09 Floor seam collapse | 🔴 | ✅ | — |
+| RISK-10 Wall hinge screws | 🔴 | ✅ | — |
+| RISK-11 Pillar slot notches | 🔴 | ✅ | — |
+| RISK-12 Roof turn-button | 🔴 | ✅ (FEA rerun) | — |
+| RISK-13 Door hinge screws | 🟡 | ✅ | — |
+| RISK-14 Stop-post end grain | 🟡 | ✅ | — |
+| RISK-15 Drawer jamming | 🔵 | ✅ | — |
+| RISK-16 … RISK-26 (new, section 5) | — | see below | — |
 
 ---
 
-### 🔴 RISK-03: $8\text{ mm}$ Finger Trapping & Crushing Shear Zone
-- **Affected Parts / Code**: `PT1` / `PT2` (`partition.front_gap = 8.0 mm`), `W01`–`W12` closing seams.
-- **Standard Violated**: **EN 71-1 Clause 4.10** (Moving Parts & Finger Entrapment).
-- **Physical Mechanism**:
-  - Under toy safety standards, moving components must **not** create accessible gaps between **$5.0\text{ mm}$ and $12.0\text{ mm}$** if moving parts have substantial closing force or momentum.
-  - The $8.0\text{ mm}$ gap between the internal room divider wall and the closing outer wall shell falls precisely into the dangerous pinch envelope.
-- **Consequence**: A child resting their fingers on the divider frame while slamming the outer shell shut will suffer finger bone fractures or severe crush lacerations.
-- **Required Remediation**:
-  - Redesign partition gap to either **$\le 3.0\text{ mm}$ (finger exclusion)** or **$\ge 15.0\text{ mm}$ (free clearance)**.
-  - Install soft elastomer/silicone edge dampers along the closing facet perimeter.
+## 2. Child safety (3-year-old play)
+
+### RISK-01: Neodymium magnet ingestion — 🔴 → 🔵
+- **Was:** four D8 × 3 N35 magnets bedded in epoxy in shallow pockets (flux index far above the 50 kG²·mm² limit of EN 71-1 4.23 / ASTM F963 4.38); epoxy alone holding them in.
+- **Now:** every magnet sits in solid hardwood (MC1 catch blocks, GP1 posts), dropped into a blind bore from the **hidden** face against a **1 mm skin of wood** on the working face, and a glued D8 hardwood dowel plug closes the bore behind it (`config magnets.skin`, `.bore`, `.plug`). No magnet surface is exposed and none can be picked out without breaking the block. The plain steel discs now sit opposite (F02 underside, wall outer faces), so a magnet is never on a moving thin plate.
+- **Verified:** `test_every_magnet_is_enclosed_in_solid_wood`, release check "Every magnet enclosed in solid wood", risk audit `magnets_enclosed`.
+- **Residual:** the four steel discs (D10 × 1) are flush-bedded in epoxy. A disc alone is a small part but not a magnet hazard while the magnets stay enclosed. Pull-test them at dry fit (instructions page).
+
+### RISK-02: Tip-over with the walls open — 🔴 → 🟡
+- **Was:** the base touched the table only along its support cross, so it tipped about lines at 0.71 of the radius; no anchoring.
+- **Now:** eight BP1 rim pads under the base edge (footprint edge 231 mm from the centre of gravity instead of about 180 mm), two steel ballast bars inside the plinth (0.75 kg), and an AB1 hardwood anchor block inside the fixed shell for an AT1 furniture anti-tip strap to the room wall.
+- **Measured (risk audit, walls open, roof on):** 6.2 kg, centre of gravity 200 mm up. It tips free-standing at **28.6 N pushed at the eave (494 mm)**, **20.1 N at 700 mm** (15.6 N without the rim pads). The 3 mm parts (RISK-25) took 1.05 kg off: with 6 mm walls it was 7.25 kg, 33 N and 23.5 N. Two 150 × 40 × 15 mm ballast bars instead of × 8 bring it back to 31.8 N at the eave (6.86 kg), with 3 × 20 mm screws in place of 3 × 12.
+- **Residual:** the RISK target (35 N at 700 mm, free-standing) would need about 4.6 kg more ballast. The book therefore makes the **anti-tip strap mandatory** for floor play and adds a 35 N tip test to the dry-fit page.
+
+### RISK-03: 8 mm finger pinch gap — 🔴 → ✅
+- **Now:** the divider front gap is **16 mm** (`partition.front_gap`), outside the 5–12 mm crush range of EN 71-1 4.10; the doorway moved back with it so its front post stays 12.6 mm wide. The closed front seam stays at about 1 mm (finger exclusion).
+- **Verified:** `test_room_divider_front_gap_is_outside_the_pinch_range`, release check, stack-up chain "Opening wall past the floor edges".
+
+### RISK-04: Pointed roof finial — 🔴 → ✅
+- **Now:** FN01 is a smooth **D35 turned beech ball** on a D6 dowel (`config finial`); the cone is 7 mm lower so the overall height stays 838.4 mm.
+- **Verified:** `test_finial_is_a_blunt_ball`, release check.
+
+### RISK-05: Choking hazards from small parts — 🔴 → 🔵
+- **Now:** glued door handles removed (recessed finger slot cut in each door); the loose miniature accessory set removed; window bars replaced by one 44 × 78 mm surround per window; chimney cap enlarged to 33.6 mm; the roof-pivot nuts locked with permanent threadlocker; the drawer is captive.
+- **Audit:** `risk_audit.py` lists every fabricated piece that would fit the EN 71-1 small-parts cylinder if pulled off (28 profiles: hidden blocks, shims, stair treads, balusters, caps). All are glued over their whole face or hidden; the only loose pieces, the clay figures, do not fit.
+- **Residual:** pull-test glued trim with 90 N at dry fit and recheck regularly (instructions).
+
+### RISK-06: Fragile window bars — 🟡 → ✅
+- **Now:** each window is four panes cut in the wall with a **solid 4 mm cross of wall** between them; the cream WF1 surround's cross is glued straight onto it, so no bar is unsupported. PET glazing inside. The same in the dormers (DM01 front + DM06 frame).
+
+### RISK-07: Clay figures (toxicity, fragility) — 🟡 → 🔵
+- **Now:** the book specifies a phthalate-free oven clay whose maker states EN 71 conformity, full baking, an EN 71-3 varnish and a five-drop test from 85 cm (discard any figure that chips); arms and ears stay pressed to the body. Every figure (six now) is checked against the small-parts cylinder (`clay.small_part`) and the doorways.
+- **Residual:** polymer clay stays more brittle than turned wood. For a child who chews toys, turn the figures in beech instead (shapes in the book are a guide).
+
+### RISK-08: Drawer pulled out onto feet — 🔵 → ✅
+- **Now:** captive stop. A D6 hardwood dowel (DS1), pushed up through B01 after the drawer is in, rides in a slot in the drawer bottom; the drawer stops at 200 mm with 56 mm still in its guides. The CAD drawer check runs to the stop.
 
 ---
 
-### 🔴 RISK-04: Eye Impalement & Puncture from Pointed Roof Finial
-- **Affected Parts / Code**: `FN01` (`source/model.py`, apex at $Z = 838.4\text{ mm}$).
-- **Standard Violated**: **EN 71-1 Clause 4.12** (Sharp Points & Protrusions).
-- **Physical Mechanism**:
-  - The spire tapers to a sharp wooden tip ($R < 1.5\text{ mm}$) positioned at $84\text{ cm}$ height—directly at eye level for a standing, seated, or kneeling toddler.
-- **Consequence**: Stumbling, falling, or bending forward over the house risks ocular puncture, corneal tearing, or facial puncture wounds.
-- **Required Remediation**:
-  - Replace the tapered finial spire with a **smooth spherical wooden ball ($\varnothing \ge 35\text{ mm}$)** or a soft, deformable silicone finial.
+## 3. Structure, fasteners and FEA
+
+### RISK-09: Floor seam collapse — 🔴 → ✅
+- **Now:** both F01 and F02 halves join by CNC finger joints with 0.1 mm fit clearance and cutter relief in every inside corner (a router could not have assembled the old zero-clearance, sharp-cornered joint), plus four 6 × 12 mm strips under each seam (were 4 × 4). Each floor's front is now two pieces locked on the house axis by a CNC puzzle joint; stress test 4 loads one front piece on its half of the seam alone: 8.6 MPa against 19.7 MPa allowable.
+
+### RISK-10: Wall hinge screw pull-out — 🔴 → ✅
+- **Now:** 2.5 × 12 mm wood screws through the 3 mm wall with 7 mm of thread in hardwood A02 blocks, into D1.8 pilots (the previous drawing bored the blocks D2.5, which a 2.5 mm wood screw cannot grip). The screw is the longest stock length whose tip stays inside the 8 mm block, and the bolt option (M2.5 × 16 with a dome cap nut) keeps 3 mm of thread for the nut; both follow the wall thickness. Stress test 3 computes the capacity from the model: 129.2 N against 75.2 N (SF 1.72) for a 0.29 kg shell taken as 0.72 kg (with 6 mm walls: 2.5 × 16 screws, 147.7 N against 82 N, SF 1.8).
+
+### RISK-11: Pillar slot notch splitting — 🔴 → ✅
+- **Now:** R2 dogbone relief at all four corners of every pillar slot (stress test 5: SF 3.0).
+
+### RISK-12: Roof turn-button fracture — 🔴 → ✅
+- **Now:** each turn-button is two plies glued face to face, a 6 mm E08 under a 3 mm E09 (9 mm; the design uses only 3 and 6 mm sheets), with a 22 mm neck round the pivot tapering to 16 mm so it still clears the ring when turned; a D12 fender washer on each face; M3 × 30 pivot; one packing washer fewer keeps the 26.5 mm stack (3.5 mm of thread for the cap nut, checked across both plies' thickness bands by the stack-up).
+- **FEA (`make stress`, same 32 N load at the tab tip):** 3 mm: 53.9 MPa, SF 0.37 → 6 mm: 15.7 MPa, SF 1.26 (a 26–30 mm neck does not help: 16–16.5 MPa) → 8 mm: 9.6 MPa, SF 2.04 → 6 + 3 mm glued (9 mm): 7.9 MPa, SF 2.49 (pass).
+
+### RISK-13: Door hinge screw pull-out — 🟡 → ✅
+- **Now:** 2.0 × 10 mm screws into 16 mm hardwood A03 strips; hole positions are now computed from the hinge axis (the old code placed them right only for 12 mm strips). Stress test 8: 76.8 N against 40 N per screw (SF 1.9).
+
+### RISK-14: Stop-post end-grain stripping — 🟡 → ✅
+- **Now:** each GP1 stands on two D4 dowels in blind B01 holes beside the SC3 screw, glued, with a felt dot on its face; the screw only holds it down. Stress test 7: 77 N dowel capacity against 39 N (SF 2.0).
+
+### RISK-15: Drawer stick-slip jamming — 🔵 → ✅
+- **Now:** waxed runners and slot; the stop dowel in its slot also centres the drawer; at the stop 56 mm stay in the guides. Stress test 9: jamming ratio 0.36 (< 0.7).
 
 ---
 
-### 🔴 RISK-05: Choking Hazards from Detachable Small Parts
-- **Affected Parts / Code**: Door handles `E02` ($13.1 \times 7.5 \times 3.0\text{ mm}$), M3 washers and nuts (`FS-RoofPivot`), miniature balusters `C09`, shims `A06`, window bars `D01`/`D02`.
-- **Standard Violated**: **16 CFR 1501**, **EN 71-1 Clause 4.11** (Small Parts Test Cylinder $\varnothing 31.7 \times 57.1\text{ mm}$).
-- **Physical Mechanism**:
-  - Door handles are small surface-glued wooden rectangles ($13\text{ mm}$ long). Toddler biting or pulling with $> 50\text{ N}$ force will shear the glue line.
-  - If the roof captive bolt is unscrewed, small M3 washers ($\varnothing 6\text{ mm}$) and nuts become loose.
-- **Consequence**: Inhalation or ingestion of small parts leading to airway obstruction and asphyxiation.
-- **Required Remediation**:
-  - Eliminate glued surface door handles; machine recessed finger pulls or through-tenoned handles.
-  - Use captive, tamper-proof architectural hardware with permanent high-strength threadlocker.
-  - Ensure all loose furniture pieces have minimum dimensions $\ge 35\text{ mm}$ in all axes.
+## 4. Verification commands
+
+| Command | What it proves |
+| :--- | :--- |
+| `make check` | config rules, geometry invariants, magnets enclosed, dormers inside one panel, shells lifted, gap and finial rules, figures |
+| `make all` | solid overlaps, wall swing 0–100°, six door sweeps, drawer to its stop, roof lift with catches released, windows clear of the veranda, 53 release checks, every piece in exactly one assembly step |
+| `make stackup` | eleven tolerance chains at both ends of every thickness band; tip-over, small parts and magnet audit |
+| `make tolerance` | the whole house rebuilt at the thinnest and thickest measured plywood |
+| `make stress` | FEA of E08 and E03, Eurocode 5 fastener and joint checks, tip-over |
 
 ---
 
-### 🟡 RISK-06: Splintering & Mouth Laceration from Fragile Window Bars
-- **Affected Parts / Code**: `D01`, `D02` ($3.6\text{ mm}$ wide, $3.0\text{ mm}$ thick birch veneer strips).
-- **Standard Violated**: **EN 71-1 Clause 4.1** (Material Cleanliness & Integrity).
-- **Physical Mechanism**:
-  - $3.6 \times 3.0\text{ mm}$ strips are brittle and snap under $< 15\text{ N}$ finger pressure.
-  - Fracture along veneer grain creates sharp, needle-like splinters.
-- **Consequence**: Mouth and hand lacerations, embedded wood splinters.
-- **Required Remediation**:
-  - CNC-rout window frames as single unified cutouts directly in the $6\text{ mm}$ wall panels rather than gluing thin applied bars.
+## 5. New risks found in this review
 
----
+| ID | Risk | Status |
+| :--- | :--- | :--- |
+| RISK-16 | **Release build blocked by the model itself:** bookcases intersected the room dividers and each other, and the furniture contact audit still listed deleted furniture. Both failed the CAD checks in CI. | Fixed: bookcase builder rewritten; audit derives its families from the model |
+| RISK-17 | **Dividers jam with thick floors:** they were exactly floor-to-ceiling; a 6.4 mm floor left −0.4 mm. | Fixed: 1 mm top play (`partition.top_gap`); stack-up chain |
+| RISK-18 | **Finger joints not machinable as drawn:** zero clearance and sharp inside corners on a router. | Fixed: 0.1 mm clearance, R1.5 relief |
+| RISK-19 | **Supplier PDF had no specification:** material, tolerances, process and edge rules were defined but never printed. | Fixed: specification, checklist, hand-drilling and file pages |
+| RISK-20 | **DXF strictness:** R12 header with R2000 entities; strict importers reject the files. | Fixed: clean R12 writer, strict-read test |
+| RISK-21 | **Underside machining and sub-2 mm drills** in the CNC files, which most shops will not do. | Fixed: drilled from the top or listed for the customer |
+| RISK-22 | **Fixed walls rely on factory sheet ends** (420 mm, retained edges): out-of-square or short blanks tilt the roof. | **Open:** confirm 420.0 ± 0.3 square blanks or use 440 mm stock (TODO 23) |
+| RISK-23 | **True 6 mm birch** can be hard to buy in A3; 6.5 / 9 mm boards fall outside the bands. 4 and 8 mm are no longer used: the design takes 3 and 6 mm only. | **Open:** measure; change config before cutting |
+| RISK-24 | **Opening shells rubbing the plinth** (TODO 2). | Fixed: shells hang 1 mm above F00 |
+| RISK-25 | **3 mm tower walls.** To save 6 mm plywood (17 → 11 A3 sheets, 3 mm 6 → 13, about 12 % of the plywood cost) the twelve walls, the room dividers, the corner braces, the drawer sides and back and the drawer back stop are 3 mm; the R05 roof jigs are 2 mm card. A 3 mm panel is 8 times less stiff in bending, its edge glue lines are half as thick and the house is 0.93 kg lighter. | Mitigated, see below |
+| RISK-26 | **No floor ledges in the kit.** The twelve L01 rear floor ledges were removed: both F01 levels (and F02 besides its pillar tops) rest on metal supports fitted after production, which the model neither contains nor checks. | **Open:** set the supports so the floor undersides land at the drawn heights (the stack-up chains assume them), and load-test each floor at dry fit |
 
-### 🟡 RISK-07: Toxicity & Fragility of Oven-Hardening Polymer Clay Figures
-- **Affected Parts / Code**: `source/clay.py` (Moomintroll, Moominmamma, Moominpappa).
-- **Standard Violated**: **EN 71-3** (Chemical Migration), **EN 71-1** (Drop & Impact Test).
-- **Physical Mechanism**:
-  - Home-baked polymer clay figures (e.g. PVC-based FIMO/Sculpey) are brittle when dropped on tile or hardwood floors, fracturing into small sharp shards.
-  - Non-certified polymer clays may contain plasticizers and phthalates unsuitable for children who chew toys.
-- **Consequence**: Ingestion of plastic shards; toxic chemical exposure during mouthing.
-- **Required Remediation**:
-  - Replace clay figures with **solid turned hardwood (beech/maple)** finished with non-toxic saliva-proof beeswax/oil, or **molded food-grade silicone**.
+### RISK-25: 3 mm tower walls — mitigation and residual risk
+- **Corner braces:** the 54 two-wall 6 mm gussets became 30 braces of 3 mm plywood. A J01 rib lies across a whole facet and 29.4 mm onto both neighbours (140 mm of glue line), so one rib holds two corners and ties a shell's facets into one stiff section; per height there are four ribs and one J02 bracket for the fixed shell's odd corner. The long legs keep each corner's glue-line moment capacity (the sum of t × L² / 6 over the braces holding it) at 0.98–1.08 of the six 6 mm gussets with 20 mm legs; 20 mm legs at 3 mm would have halved it. The low braces raised over the ground-floor doors (J03, J04) keep 20 mm legs, clear of the windows beside the doors. Stress test 6: glue shear SF 13.7.
+- **Drawer:** the box sides, back and back stop only slide and stop the drawer, so they are 3 mm (`thickness.detail`); the bottom, its stop slot and the DS1 dowel follow the 6 mm wider, 3 mm longer inside, and the 6 mm guide walls still end flush behind the back stop. The stone DR4 front and the DG1 guide walls, which carry F00, stay 6 mm. Stress test 9: jamming ratio unchanged (SF 1.94).
+- **Other fixes:** the veranda deck, skirts, joists and stair stringers, which used the wall thickness, stay 6 mm (`thickness.structure`); the door threshold height follows the deck, not the wall; hinge screws follow the wall (RISK-10). Display furniture moved 2.3 mm clear of a rib.
+- **Verified:** all CAD collision, wall-swing, door and drawer checks, 54 release checks, the thickness band rebuild, eleven stack-up chains (new: rib in its divider notch, 0.7–1.3 mm play) and all ten stress tests pass.
+- **Residual:** the window crosses are 4 × 3 mm until the WF1 surround is glued over them; the latch-side stile beside the W12 main door is 17.6 × 3 mm, held by the seam batten, the raised rib and the threshold; 3 mm panels warp more in storage, so keep them flat and glue the ribs soon after cutting. Tip-over: see RISK-02.
 
----
-
-### 🔵 RISK-08: Plinth Drawer Foot Impact & Trapping
-- **Affected Parts / Code**: `B02`, `B03` ($205.3\text{ mm}$ travel, no retention stop).
-- **Standard Violated**: **EN 71-1 Clause 4.15**.
-- **Physical Mechanism**:
-  - The drawer pulls out $205\text{ mm}$ without a captive stop. An energetic pull removes the drawer entirely from the base.
-- **Consequence**: Heavy wooden drawer loaded with accessories falls directly onto toddler's toes.
-- **Required Remediation**:
-  - Install a captive wooden stop dowel inside the plinth cavity preventing complete pull-out.
-
----
-
-## 3. Structural, Fastener & FEA Stress Hotspots
-
-The following structural red spots were pinpointed using **FreeCAD FEM** and **CalculiX (`ccx`)** static stress analysis under realistic usage scenarios:
-
-```
-[Roof Lifting Force: 32 N] ──> E08 Turn-Button (Stress: 53.9 MPa > 19.7 MPa) ──> 🔴 SNAP/TEAR-OUT (SF 0.37)
-[Child Lean on Wall: 25 N] ──> HG-Wall Top Screw (Tension: 82.0 N > 31.0 N)  ──> 🔴 PULL-OUT (SF 0.38)
-[Floor Rim Push: 40 N]    ──> F01 Seam Batten (Bending: 356 MPa > 19.7 MPa)  ──> 🔴 SEAM COLLAPSE (SF 0.06)
-[Floor Notch Tension]     ──> P01 Pillar Slots (Kt = 3.2, Notch: 16.6 MPa)   ──> 🔴 GRAIN SPLITTING (SF 0.19)
-```
-
-### 🔴 RISK-09: Floor Seam Collapse Under Cantilever Live Load
-- **Affected Parts**: `F01` (front floor), `F01B` (rear floor), `fabrication.floor_support: [4, 4]`.
-- **FEA Result**: Bending stress on $4 \times 4\text{ mm}$ support strip: **$356.2\text{ MPa}$** (Allowable: $19.7\text{ MPa}$, **Safety Factor: $0.06$**).
-- **Physical Mechanism**: When front walls are swung open, `F01` cantilevers forward without perimeter wall support. A child pressing down on the front rim ($40\text{ N}$) causes the tiny $4 \times 4\text{ mm}$ glue strip to snap instantly, collapsing the floor.
-- **Remediation**: Replace $4 \times 4\text{ mm}$ strip with a **$6 \times 25\text{ mm}$ continuous birch plywood reinforcement batten** tied into the `P01` pillars, or CNC mill interlocking puzzle joints between `F01` and `F01B`.
-
----
-
-### 🔴 RISK-10: Wall Hinge Fastener Prying & Screw Pull-Out
-- **Affected Parts**: `HG-WallRight` / `HG-WallLeft`, `SC1` wood screws ($\varnothing 2.0 \times 12\text{ mm}$), `A02` backing block.
-- **Stress Result**: Top hinge prying tension: **$82.0\text{ N}$** (Allowable pullout: $31.0\text{ N}$, **Safety Factor: $0.38$**).
-- **Physical Mechanism**: A $12\text{ mm}$ screw through $1\text{ mm}$ hinge $+ 0.9\text{ mm}$ shim $+ 6\text{ mm}$ wall penetrates only $4.1\text{ mm}$ into backing block `A02`, leaving only $2.1\text{ mm}$ of effective full thread. Under door sagging and dynamic toddler tugging, the screw strips out.
-- **Remediation**: Upgrade to **$\varnothing 2.5 \times 16\text{ mm}$ wood screws** or **M2.5 through-machine screws with dome cap nuts** on the interior.
-
----
-
-### 🔴 RISK-11: Pillar Cutout Notch Stress Concentration & Delamination
-- **Affected Parts**: `F01B`, `F02B`, `F00B` (rectangular slots for `P01` pillars).
-- **Stress Result**: Notch stress: **$16.6\text{ MPa}$** (Allowable cross-grain tension: $3.2\text{ MPa}$, **Safety Factor: $0.19$**).
-- **Physical Mechanism**: Sharp $90^\circ$ inside corners from CNC routing produce stress concentration ($K_t \approx 3.2$). Cross-grain tension exceeds the inter-veneer tensile limit, causing fatigue cracks to propagate along the wood grain.
-- **Remediation**: Add CNC **dogbone relief fillets ($R \ge 2.0\text{ mm}$)** on all 4 corners of every slot.
-
----
-
-### 🔴 RISK-12: Roof Turn-Button Fracture When Lifted by Roof
-- **Affected Parts**: `E08` ($3\text{ mm}$ birch plywood turn-button).
-- **FEA Result**: Peak von Mises stress: **$53.9\text{ MPa}$** (Allowable: $19.7\text{ MPa}$, **Safety Factor: $0.37$**).
-- **Physical Mechanism**: Lifting the $7\text{ kg}$ house by the roof without releasing the turn-buttons concentrates $32\text{ N}$ vertical shear per button across a thin $3\text{ mm}$ net section around the $\varnothing 3.2\text{ mm}$ bolt.
-- **Remediation**: Increase thickness from **$3.0\text{ mm}$ to $6.0\text{ mm}$**, widen the neck from $16\text{ mm}$ to $22\text{ mm}$, and fit a wide $\varnothing 12\text{ mm}$ steel washer under the screw head.
-
----
-
-### 🟡 RISK-13: Miniature Door Hinge Screw Pull-Out
-- **Affected Parts**: Entrance doors `E01`, `SC2` screws ($\varnothing 1.6 \times 8\text{ mm}$), backing strip `A03`.
-- **Stress Result**: Pullout tension: **$86.2\text{ N}$** (Allowable: $47.3\text{ N}$, **Safety Factor: $0.55$**).
-- **Physical Mechanism**: A toddler pushing or pulling the open door beyond $90^\circ$ levers against the miniature $1.6\text{ mm}$ screws, pulling them out of the narrow $8\text{ mm}$ strip.
-- **Remediation**: Increase screw size to **$\varnothing 2.0 \times 10\text{ mm}$** and widen strip `A03` from $12\text{ mm}$ to $16\text{ mm}$.
-
----
-
-### 🟡 RISK-14: Garden Stop Post End-Grain Screw Stripping
-- **Affected Parts**: `GP1` garden stop post, `SC3` screw ($\varnothing 3.0 \times 16\text{ mm}$).
-- **Stress Result**: Impact prying tension: **$54.0\text{ N}$** (End-grain fatigue capacity: $59.8\text{ N}$, **Safety Factor: $1.11$**).
-- **Physical Mechanism**: A single screw driven upward into the end grain of a wooden post loses $55\%$ of its holding capacity under Eurocode 5. Repeated magnetic latching impacts strip the end-grain fibers.
-- **Remediation**: CNC pocket a **$4\text{ mm}$ deep mortise** in base `B01` to capture the post foot in solid wood shear.
-
----
-
-### 🔵 RISK-15: Plinth Drawer Stick-Slip Jamming
-- **Affected Parts**: `B02`, `B03` (travel: $205.3\text{ mm}$, width: $149.3\text{ mm}$, aspect ratio: $1.38$).
-- **Physical Mechanism**: High travel-to-width ratio ($> 1.0$) combined with bare birch-on-birch friction ($\mu \approx 0.38$) causes the drawer to jam when pulled off-center with one hand.
-- **Remediation**: Add a central T-guide runner and apply beeswax or UHMWPE tape to runner interfaces.
-
----
-
-## 4. Prioritized Action & Verification Plan
-
-```
-PHASE 1: FATAL HAZARD ELIMINATION (Before any child contact)
-├── [ ] Remove all exposed/epoxied neodymium magnets (RISK-01)
-├── [ ] Design anti-tip floor plate / wall strap (RISK-02)
-├── [ ] Round roof apex into a smooth sphere; eliminate sharp spire (RISK-04)
-└── [ ] Redesign partition gap from 8 mm to <= 3 mm or >= 15 mm (RISK-03)
-
-PHASE 2: STRUCTURAL INTEGRITY & DURABILITY
-├── [ ] Replace 4x4 mm floor seam strip with 6x25 mm plywood batten (RISK-09)
-├── [ ] Add R2.0 mm dogbone fillets to all CNC pillar cutouts (RISK-11)
-├── [ ] Upgrade E08 roof turn-buttons from 3 mm to 6 mm plywood (RISK-12)
-└── [ ] Replace 12 mm wall hinge screws with 16 mm screws (RISK-10)
-
-PHASE 3: FINISH, CHEMICAL & DETAIL UPGRADES
-├── [ ] Remove fragile 3.6x3 mm window bars; rout solid frames (RISK-06)
-├── [ ] Replace polymer clay figures with turned beech wood or silicone (RISK-07)
-├── [ ] Recess door handles directly into door profiles (RISK-05)
-└── [ ] Sand all CNC plywood edges to minimum R1.5 mm radius
-```
+See [docs/SUPPLIER-READINESS.md](docs/SUPPLIER-READINESS.md) for the manufacturing review.
