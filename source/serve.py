@@ -15,7 +15,7 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 VIEWER=(ROOT/'source/viewer').resolve()
-DATA={'/data/assembly.json':ROOT/'output/viewer/assembly.json','/data/parts.json':ROOT/'output/parts.json','/data/house.dxf':ROOT/'output/viewer/house.dxf','/data/dxf-labels.json':ROOT/'output/viewer/dxf-labels.json'}
+DATA={'/data/assembly.json':ROOT/'output/viewer/assembly.json','/data/parts.json':ROOT/'output/parts.json','/data/house.dxf':ROOT/'output/viewer/house.dxf','/data/dxf-labels.json':ROOT/'output/viewer/dxf-labels.json','/data/checklist-pl.pdf':ROOT/'output/viewer/checklist-pl.pdf','/data/checklist-en.pdf':ROOT/'output/viewer/checklist-en.pdf'}
 PRINTS=(ROOT/'prints').resolve()   # the published 3D prints, for prints.html
 mimetypes.add_type('text/javascript','.js')
 

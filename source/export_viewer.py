@@ -11,6 +11,7 @@ import argparse, json, shutil
 from pathlib import Path
 
 import assembly
+import checklist_pdf
 import print_mesh
 from serve import ROOT, VIEWER, model_data
 from viewer_dxf import preview as viewer_cut_file
@@ -34,6 +35,10 @@ def export(dest, reuse_data=False):
     # CI restores these files only for an exact match of the model inputs.
     # Read them before replacing the export; web assets always come from source.
     data_files=('parts.json','house.dxf','dxf-labels.json')
+    cached_pdfs={}
+    if reuse_data and (dest/'data/checklist-pl.pdf').is_file() and (dest/'data/checklist-en.pdf').is_file():
+        cached_pdfs['pl']=(dest/'data/checklist-pl.pdf').read_bytes()
+        cached_pdfs['en']=(dest/'data/checklist-en.pdf').read_bytes()
     if reuse_data and all((dest/'data'/name).is_file() for name in data_files):
         print('Reusing cached viewer model and DXF.',flush=True)
         payload,cut_dxf,label_payload=((dest/'data'/name).read_text(encoding='utf-8') for name in data_files)
@@ -58,6 +63,14 @@ def export(dest, reuse_data=False):
     (dest/'data/assembly.json').write_text(assembly_payload,encoding='utf-8')
     (dest/'data/house.dxf').write_text(cut_dxf,encoding='utf-8')
     (dest/'data/dxf-labels.json').write_text(label_payload,encoding='utf-8')
+    if 'pl' in cached_pdfs:
+        (dest/'data/checklist-pl.pdf').write_bytes(cached_pdfs['pl'])
+    else:
+        checklist_pdf.generate(dest/'data/checklist-pl.pdf', lang='pl', manifest_data=json.loads(assembly_payload))
+    if 'en' in cached_pdfs:
+        (dest/'data/checklist-en.pdf').write_bytes(cached_pdfs['en'])
+    else:
+        checklist_pdf.generate(dest/'data/checklist-en.pdf', lang='en', manifest_data=json.loads(assembly_payload))
     export_prints(dest/'prints')
     size=sum(p.stat().st_size for p in dest.rglob('*') if p.is_file())
     print(f'Static viewer written to {dest} ({size/1024/1024:.1f} MB)')

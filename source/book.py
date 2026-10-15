@@ -433,9 +433,9 @@ def manual():
     y=table(c,rows[:6],M,638,[42,255,43,45,130],['Code','Type / example search wording','Used','Buy','Placement'],8)
     para(c,f'Example shop searches: "wood screw 2.5 x {SC1["length"]:g} countersunk"; "small butt hinge 25 mm"; "M3 x 30 pan head screw". Select a matching driver bit and countersunk hinge holes. Hinge footprints vary: compare your actual hardware with the printed checking page before drilling.',M,y-23,size=9,leading=14)
     b.end()
-    b.page('Washers, nuts and supplies','Roof pivots, magnets and finishing materials')
+    b.page('Packing, magnets and supplies','Hardware and finishing materials')
     y=table(c,rows[6:14],M,716,[42,255,43,45,130],['Code','Specification','Used','Buy','Placement'],8)
-    para(c,'Also buy: about 500 ml PVA wood glue; permanent (high-strength) threadlocker for the M3 cap nuts; about 5 m of 15-20 mm cotton seam tape; removable paper-template adhesive; slow-setting 2-part epoxy for the magnets, plugs and steel discs; clear craft glue for the PET; and primer, water-based paints and a clear finish that are all declared to EN 71-3 (two pages on).',M,y-26,size=10)
+    para(c,'Also buy: about 500 ml PVA wood glue; about 5 m of 15-20 mm cotton seam tape; removable paper-template adhesive; slow-setting 2-part epoxy for the magnets, plugs and steel discs; clear craft glue for the PET; and primer, water-based paints and a clear finish that are all declared to EN 71-3 (two pages on).',M,y-26,size=10)
     b.end()
     b.page('Dowels, glazing and safety kit','Bought items that make the house safer to play with')
     y=table(c,rows[14:],M,716,[42,255,43,45,130],['Code','Specification','Used','Buy','Placement'],8)
@@ -562,6 +562,7 @@ def manual():
     y=table(c,rows,M,284,[45,235,235],['Pair','A04 left/front corner X,Y','Post left/front corner X,Y'],9)
     para(c,f'Feet: 24 x24 x12, screwed to F00 from below, bottom Z{G0:g}. P01 pillars: {DER["pillars"]["width"]:g} x{PT:g} footprint, {DER["pillars"]["length"]:g} long, bottom Z{G0+12:g}, top Z{TOPS[3]-6:g}. Both F01 levels have four matching through-openings. No floor ledges are cut: support both F01 levels and F02 on small metal angle brackets fitted after production, with their tops at the floor undersides {zl([t-6 for t in TOPS[1:]])}. The optional LED wire passes up through D{CFG["lighting"]["wire_hole"]:g} holes behind the left rear pillar.',M,y-18,size=9,leading=13)
     b.end()
+    dmr=CFG['dormer']
     texts=assembly.content(DATA)['chapters']
     assert set(texts)==set(steplib.KEYS),set(texts)^set(steplib.KEYS)
     per,_,_=steplib.assign(DATA)

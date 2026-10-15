@@ -20,7 +20,7 @@ def test_export_contains_model_and_only_public_assets(site, data):
     published=json.loads((export_viewer.ROOT/'prints/manifest.json').read_text(encoding='utf-8'))['parts']
     prints={f'prints/{f["path"]}' for entry in published.values() for f in entry['files'].values()}
     assert {str(p.relative_to(site)) for p in site.rglob('*') if p.is_file()}=={
-        *export_viewer.ASSETS,'data/assembly.json','data/parts.json','data/house.dxf','data/dxf-labels.json','HOUSE-LICENSE.txt','.nojekyll',export_viewer.MARKER,
+        *export_viewer.ASSETS,'data/assembly.json','data/parts.json','data/house.dxf','data/dxf-labels.json','data/checklist-pl.pdf','data/checklist-en.pdf','HOUSE-LICENSE.txt','.nojekyll',export_viewer.MARKER,
         'prints/manifest.json',*prints,
     }
 

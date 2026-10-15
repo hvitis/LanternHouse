@@ -4,7 +4,7 @@ import {OrbitControls} from './vendor/OrbitControls.js';
 import {geometryOf,matrixOf} from './geometry.js';
 import {hingeRadians,drawerOffset} from './motion.js';
 
-export function createInstructionScene(host,data,onInspect,onPlayback){
+export function createInstructionScene(host,data,onInspect,onPlayback,onProgress){
   const renderer=new THREE.WebGLRenderer({antialias:true});
   renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setClearColor(0xeef2ee);
   host.append(renderer.domElement);renderer.domElement.setAttribute('aria-label','Assembly model. Drag to orbit and pinch or scroll to zoom.');
@@ -15,6 +15,7 @@ export function createInstructionScene(host,data,onInspect,onPlayback){
   const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(-700,-1100,1600);scene.add(light);
   const current=new THREE.MeshStandardMaterial({color:0xffcb28,roughness:.7,side:THREE.DoubleSide});
   const context=new THREE.MeshStandardMaterial({color:0xb1c4c5,roughness:.9,transparent:true,opacity:.35,depthWrite:false,side:THREE.DoubleSide});
+  const highlightMat=new THREE.MeshStandardMaterial({color:0x00e5ff,roughness:.3,emissive:0x003b55,side:THREE.DoubleSide});
   const geometry=new Map(),pieces=new Map(),byId=new Map(data.instances.map(i=>[i.id,i]));
   const edgeMaterial=new THREE.LineBasicMaterial({color:0x203c6f,transparent:true,opacity:.5});
   for(const inst of data.instances){
@@ -27,6 +28,7 @@ export function createInstructionScene(host,data,onInspect,onPlayback){
   }
   const guides=new THREE.Group();scene.add(guides);
   let step,shownProgress=null,progress=1,playing=false,active=true,last=performance.now(),close=false;
+  let isolated=false,highlightedPart=null;
   const reduce=matchMedia('(prefers-reduced-motion: reduce)');
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();let down;
   renderer.domElement.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];});
@@ -43,25 +45,37 @@ export function createInstructionScene(host,data,onInspect,onPlayback){
     if(box.isEmpty())box.setFromCenterAndSize(new THREE.Vector3(0,0,100),new THREE.Vector3(400,400,200));
     return box;
   }
-  function fit(focused=false){
+  function fit(focused=false,customDir=null){
     close=focused;scene.updateMatrixWorld(true);
     const box=bounds(focused),centre=box.getCenter(new THREE.Vector3()),radius=Math.max(15,box.getBoundingSphere(new THREE.Sphere()).radius);
     const fov=THREE.MathUtils.degToRad(camera.fov/2),horizontal=Math.atan(Math.tan(fov)*camera.aspect);
     const distance=radius/Math.sin(Math.min(fov,horizontal))*1.15;
-    const direction=new THREE.Vector3(-.6,-1,.65).normalize();camera.position.copy(centre).addScaledVector(direction,distance);controls.target.copy(centre);controls.update();
+    const dirVector=customDir?new THREE.Vector3(...customDir):(step?.view?new THREE.Vector3(...step.view):new THREE.Vector3(-.6,-1,.65));
+    const direction=dirVector.normalize();
+    camera.position.copy(centre).addScaledVector(direction,distance);controls.target.copy(centre);controls.update();
   }
   function clearGuides(){
     for(const obj of [...guides.children]){guides.remove(obj);obj.geometry?.dispose();obj.material?.dispose();}
   }
-  function setStep(next){
-    step=next;playing=false;progress=1;shownProgress=null;onPlayback(false);onInspect(null);
+  function updateVisibility(){
+    if(!step)return;
     const installed=new Set(step.context),focus=new Set(step.focus),added=new Set(step.installs);
     for(const [id,piece] of pieces){
-      piece.group.position.set(0,0,0);piece.group.rotation.set(0,0,0);piece.mesh.matrix.copy(matrixOf(byId.get(id)));piece.edge.matrix.copy(piece.mesh.matrix);piece.group.visible=installed.has(id)||focus.has(id)||added.has(id);
-      // Temporary tools stay out of the assembled house, except during preparation.
+      const isStepPart=focus.has(id)||added.has(id);
+      const isContext=installed.has(id);
+      piece.group.visible=isStepPart||(!isolated&&isContext);
       if(byId.get(id).group==='Tools'&&step.chapter!=='prepare')piece.group.visible=false;
-      piece.mesh.material=focus.has(id)?current:context;
+      const isPartMatch=highlightedPart&&byId.get(id).part===highlightedPart;
+      piece.mesh.material=isPartMatch?highlightMat:(isStepPart?current:context);
     }
+    host.dataset.visible=String([...pieces.values()].filter(p=>p.group.visible).length);
+  }
+  function setStep(next){
+    step=next;playing=false;progress=1;shownProgress=null;onPlayback(false);onInspect(null);onProgress?.(1);
+    for(const [id,piece] of pieces){
+      piece.group.position.set(0,0,0);piece.group.rotation.set(0,0,0);piece.mesh.matrix.copy(matrixOf(byId.get(id)));piece.edge.matrix.copy(piece.mesh.matrix);
+    }
+    updateVisibility();
     clearGuides();
     for(const joint of step.joints){
       if(!joint.outline?.length)continue;
@@ -72,15 +86,30 @@ export function createInstructionScene(host,data,onInspect,onPlayback){
       const origin=new THREE.Vector3(...f.origin),axis=new THREE.Vector3(...f.axis).normalize();
       const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([origin,origin.clone().addScaledVector(axis,f.length)]),new THREE.LineBasicMaterial({color:0x20699f,depthTest:false}));guides.add(line);
     }
-    host.dataset.step=step.id;host.dataset.visible=String([...pieces.values()].filter(p=>p.group.visible).length);fit();
+    host.dataset.step=step.id;fit();
   }
   function playback(){
-    if(!step||(!step.installs.length&&!step.motion)||reduce.matches){progress=1;playing=false;onPlayback(false);return;}
+    if(!step||(!step.installs.length&&!step.motion)||reduce.matches){progress=1;playing=false;onPlayback(false);onProgress?.(1);return;}
     if(playing){playing=false;onPlayback(false);return;}
     if(progress>=1)progress=0;
     playing=true;last=performance.now();onPlayback(true);
   }
   function replay(){progress=1;playing=false;playback();}
+  function setProgress(val){
+    progress=Math.max(0,Math.min(1,val));playing=false;onPlayback(false);onProgress?.(progress);
+  }
+  function setIsolated(val){isolated=Boolean(val);updateVisibility();fit(close);return isolated;}
+  function toggleIsolated(){return setIsolated(!isolated);}
+  function highlightPart(partId){highlightedPart=partId;updateVisibility();}
+  function setView(viewType){
+    const dirs={
+      iso:[-.6,-1,.65],
+      front:[0,-1,.1],
+      top:[0,-.01,1],
+      step:step?.view??[-.6,-1,.65]
+    };
+    fit(close,dirs[viewType]??dirs.step);
+  }
   const observer=new ResizeObserver(()=>{
     const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;
     renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();if(step)fit(close);
@@ -88,7 +117,7 @@ export function createInstructionScene(host,data,onInspect,onPlayback){
   renderer.setAnimationLoop(()=>{
     const now=performance.now(),dt=Math.min((now-last)/1000,.05);last=now;
     if(!active||document.hidden)return;
-    if(playing){progress=Math.min(1,progress+dt/2);if(progress===1){playing=false;onPlayback(false);}}
+    if(playing){progress=Math.min(1,progress+dt/2);onProgress?.(progress);if(progress===1){playing=false;onPlayback(false);}}
     if(step&&shownProgress!==progress){
       shownProgress=progress;
       const ease=1-progress*progress*(3-2*progress),sweep=Math.sin(progress*Math.PI);
@@ -109,5 +138,5 @@ export function createInstructionScene(host,data,onInspect,onPlayback){
     }
     controls.update();renderer.render(scene,camera);host.dataset.ready='true';host.dataset.playing=String(playing);
   });
-  return {setStep,playback,replay,fit,setActive(value){active=value;if(!value){playing=false;onPlayback(false);}},dispose(){observer.disconnect();renderer.setAnimationLoop(null);controls.dispose();renderer.dispose();clearGuides();for(const g of geometry.values())g.dispose();}};
+  return {setStep,playback,replay,setProgress,fit,setView,setIsolated,toggleIsolated,highlightPart,setActive(value){active=value;if(!value){playing=false;onPlayback(false);}},dispose(){observer.disconnect();renderer.setAnimationLoop(null);controls.dispose();renderer.dispose();clearGuides();for(const g of geometry.values())g.dispose();}};
 }

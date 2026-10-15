@@ -42,21 +42,30 @@ try {
     await page.locator('#instructionStart').waitFor();
     assert.equal(await page.locator('#instructionView canvas').count(),0,'Scene is lazy until Start');
     assert.match(await page.locator('#instructionTotal').innerText(),new RegExp(String(guide.steps.length)));
+    assert.equal(await page.locator('#instructionLang').innerText(),'EN','Default language toggle displays EN button in Polish mode');
+    assert.match(await page.locator('#instructionDownloadPdf').getAttribute('href'),/checklist-pl\.pdf$/);
     await page.locator('[data-supply="pva"]').check();
     await page.locator('#instructionStart').click();
     await page.locator('#instructionView[data-ready="true"]').waitFor();
-    assert.match(await page.locator('#instructionCount').innerText(),/Step 1 of/);
-    assert.match(await page.locator('#instructionFieldHints').innerText(),/No field-tested hints/);
+    assert.match(await page.locator('#instructionCount').innerText(),/Krok 1 z|Step 1 of/);
+    assert.match(await page.locator('#instructionFieldHints').innerText(),/Brak sprawdzonych w praktyce|No field-tested hints/);
     await page.locator('#instructionComplete').click();
-    assert.match(await page.locator('#instructionProgressText').innerText(),/^1 of/);
+    assert.match(await page.locator('#instructionProgressText').innerText(),/^(1 z|1 of)/);
     await page.locator('#instructionNext').click();
-    assert.match(await page.locator('#instructionProgressText').innerText(),/^1 of/,'Browsing must not complete work');
+    assert.match(await page.locator('#instructionProgressText').innerText(),/^(1 z|1 of)/,'Browsing must not complete work');
     const viewed=await page.locator('#instructionStepSelect').inputValue();
     await page.reload();await page.locator('#instructionBuild').waitFor();
     assert.equal(await page.locator('#instructionStepSelect').inputValue(),viewed);
-    assert.match(await page.locator('#instructionProgressText').innerText(),/^1 of/);
+    assert.match(await page.locator('#instructionProgressText').innerText(),/^(1 z|1 of)/);
+    // Test language switch toggle
+    await page.locator('#instructionLang').click();
+    assert.match(await page.locator('#instructionCount').innerText(),/Step 3 of/);
+    assert.equal(await page.locator('#instructionLang').innerText(),'PL');
+    await page.locator('#instructionLang').click();
+    assert.match(await page.locator('#instructionCount').innerText(),/Krok 3 z/);
+    assert.equal(await page.locator('#instructionLang').innerText(),'EN');
     await page.locator('#instructionStepSelect').selectOption('windows-trim');
-    assert.match(await page.locator('#instructionRepeat').innerText(),/Repeat × 17/);
+    assert.match(await page.locator('#instructionRepeat').innerText(),/(Powtórz|Repeat) × 17/);
     await page.locator('#instructionView[data-step="windows-trim"][data-ready="true"]').waitFor();
     const savedBefore=await page.evaluate(key=>localStorage.getItem(key),storageKey);
     await page.locator('#instructionPlay').click();
@@ -83,7 +92,7 @@ try {
     for(const step of guide.steps){
       await page.locator('#instructionStepSelect').selectOption(step.id);
       await page.locator('#instructionView[data-step="'+step.id+'"]').waitFor();
-      assert.equal(await page.locator('#instructionStepTitle').innerText(),step.title);
+      assert.equal(await page.locator('#instructionStepTitle').innerText(),step.title_pl || step.title);
     }
     await page.locator('#instructionComplete').click();
     assert.equal(await page.locator('#instructionNext').isDisabled(),true);
@@ -115,12 +124,12 @@ try {
   const noModel=await browser.newPage();
   await noModel.route('**/data/parts.json',route=>route.fulfill({status:404,body:'Missing'}));
   await noModel.goto(origin+prefix+'#instructions');await noModel.locator('#instructionStart').click();
-  await noModel.waitForFunction(()=>document.getElementById('instructionSceneStatus').textContent.includes('could not load'));
-  await noModel.locator('#instructionNext').click();assert.match(await noModel.locator('#instructionCount').innerText(),/Step 2 of/);await noModel.close();
+  await noModel.waitForFunction(()=>document.getElementById('instructionSceneStatus').textContent.includes('could not load') || document.getElementById('instructionSceneStatus').textContent.includes('Nie można załadować'));
+  await noModel.locator('#instructionNext').click();assert.match(await noModel.locator('#instructionCount').innerText(),/(Step|Krok) 2/);await noModel.close();
   const noStorage=await browser.newPage();
   await noStorage.addInitScript(()=>{Storage.prototype.getItem=()=>{throw new DOMException('Blocked','SecurityError');};Storage.prototype.setItem=()=>{throw new DOMException('Blocked','SecurityError');};});
   await noStorage.goto(origin+prefix+'#instructions');await noStorage.locator('#instructionStart').click();
-  await noStorage.locator('#instructionNext').click();assert.match(await noStorage.locator('#instructionCount').innerText(),/Step 2 of/);await noStorage.close();
+  await noStorage.locator('#instructionNext').click();assert.match(await noStorage.locator('#instructionCount').innerText(),/(Step|Krok) 2/);await noStorage.close();
   console.log('Corrupt storage, updated instructions, reduced motion, missing model and unavailable storage passed');
 } finally {
   await browser?.close();await new Promise(resolve=>server.close(resolve));

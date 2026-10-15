@@ -119,9 +119,14 @@ button.on{background:var(--teal);border-color:var(--teal);color:#fff}.actions{di
 .workspace-tabs{overflow-x:auto;scrollbar-width:thin}.workspace-tabs button{flex-shrink:0;white-space:nowrap}
 #instructionsPanel{display:flex;flex-direction:column;overflow:hidden}
 .instruction-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 28px;border-bottom:1px solid var(--line)}
+.instruction-header-controls{display:flex;align-items:center;gap:12px}
+.lang-switch-button{background:white;border:1px solid var(--line);border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--navy);cursor:pointer;transition:all .15s;line-height:1}
+.lang-switch-button:hover{background:var(--banner);border-color:var(--teal);color:var(--teal)}
 .instruction-notices{padding:0 28px}.instruction-notices p:empty{display:none}.instruction-notices p{margin:8px 0}
 #instructionLoad{padding:24px}#instructionPrep{padding:24px 28px;overflow:auto;min-height:0}
 .preparation-intro{display:flex;justify-content:space-between;gap:28px;max-width:1100px;margin:auto}.preparation-intro h2{font:24px Georgia,serif;margin-bottom:12px}.preparation-intro p{max-width:680px}.start-build{min-width:210px;max-width:280px;padding-top:16px}
+.download-pdf-button{display:block;margin-top:10px;padding:10px 14px;border:1px solid var(--line);border-radius:6px;background:white;color:var(--navy);font-size:12px;font-weight:600;text-decoration:none;text-align:center;transition:all .15s}
+.download-pdf-button:hover{background:var(--banner);border-color:var(--teal);color:var(--teal)}
 button.primary{background:var(--teal);border-color:var(--teal);color:white;font-weight:650;padding:12px 18px}button.primary:hover{background:var(--navy)}
 #instructionChecklist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:1100px;margin:24px auto}
 #instructionChecklist fieldset{min-width:0;border:1px solid var(--line);border-radius:10px;padding:12px 18px;background:white}
@@ -139,16 +144,39 @@ button.primary{background:var(--teal);border-color:var(--teal);color:white;font-
 #instructionStepTitle{font:26px/1.2 Georgia,serif;margin:0 0 16px}.instruction-copy h3{font-size:12px;margin:18px 0 8px}.instruction-copy ul{padding-left:20px;line-height:1.7}.instruction-copy li{margin-bottom:6px;overflow-wrap:anywhere}.instruction-copy details{border-top:1px solid var(--line);padding:12px 0}.instruction-copy summary{cursor:pointer;font-weight:600}.instruction-copy p{line-height:1.7}
 .instruction-repeat{background:var(--banner);color:var(--navy);padding:8px 12px;border-radius:6px;font-weight:650}.instruction-check{border-top:1px solid var(--line);margin-top:10px;padding-bottom:8px}.instruction-check p{margin:6px 0}.instruction-navigation{display:grid;grid-template-columns:1fr 1fr;gap:8px}.instruction-navigation .primary{grid-column:1/-1}.instruction-secondary{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.instruction-secondary button{font-size:11px}
 #instructionDone{padding:12px;background:#e0efdf;border-radius:6px}
+.instruction-scrub-box{display:flex;align-items:center;min-width:80px;max-width:130px;flex:1}
+.instruction-scrub-box input[type="range"]{width:100%;accent-color:var(--teal);cursor:pointer;height:6px}
+#instructionIsolate.active{background:var(--teal);border-color:var(--teal);color:white}
+.instruction-view-angles{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.instruction-view-angles button{border:0;border-right:1px solid var(--line);border-radius:0;padding:6px 10px;font-size:11px}
+.instruction-view-angles button:last-child{border-right:0}
+.instruction-status-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;padding:4px 20px 10px;gap:8px}
+.instruction-status-bar p{margin:0;font-size:11px;color:#52696a}
+.instruction-keys-hint kbd{background:#e3e8e5;border:1px solid #cbd5cf;border-radius:3px;padding:1px 4px;font-family:inherit;font-size:10px;color:var(--navy)}
+.instruction-part-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px;border-radius:4px;cursor:pointer;transition:background .15s}
+.instruction-part-item:hover{background:#e8f4f4}
+.instruction-part-item.highlighted-part{background:#e0f2fe;border-left:3px solid #0284c7;padding-left:8px}
+.dxf-jump-btn{background:transparent;border:1px solid #b8cbd3;border-radius:12px;padding:2px 8px;font-size:10px;color:#20699f;cursor:pointer;flex-shrink:0;min-height:auto}
+.dxf-jump-btn:hover{background:#20699f;color:white;border-color:#20699f}
 @media(max-width:1000px){.tabs-note{display:none}#instructionBuild{grid-template-columns:minmax(0,1fr) 340px}.instruction-header h1{font-size:24px}}
 @media(max-width:760px){
  .instruction-header{padding:14px 16px}.instruction-header h1{font-size:23px}.instruction-header .view-badge{display:none}.instruction-header .eyebrow{font-size:8px}.instruction-notices{padding:0 16px}
  #instructionPrep{padding:16px}.preparation-intro{display:block}.start-build{max-width:none;padding:0}.start-build button{width:100%}#instructionChecklist{grid-template-columns:1fr;gap:16px}
  #instructionBuild{display:flex;flex-direction:column;overflow:auto}.instruction-stage{flex:none;height:42dvh;min-height:280px}.instruction-copy{overflow:visible;border-left:0;border-top:1px solid var(--line);padding:20px 16px;flex:none}
- .instruction-stage-heading{padding:10px 16px;font-size:11px}.instruction-view-tools{gap:6px;padding:6px 12px 0}.instruction-view-tools button{padding:8px;font-size:11px;min-height:40px}#instructionSceneStatus{font-size:10px;padding:4px 12px 8px}
+ .instruction-stage-heading{padding:10px 16px;font-size:11px}.instruction-view-tools{gap:6px;padding:6px 12px 0}.instruction-view-tools button{padding:8px;font-size:11px;min-height:40px}#instructionSceneStatus{font-size:10px;padding:4px 0 8px}.instruction-status-bar{padding:4px 12px 8px}.instruction-keys-hint{display:none}.instruction-scrub-box{min-width:60px}
  #instructionStepTitle{font-size:25px}.instruction-copy button{min-height:44px}.instruction-copy select{font-size:16px}#instructionInspect{left:12px;bottom:105px;max-width:calc(100% - 24px);font-size:11px}
 }
 
-.instruction-field-hints{margin:20px 0 8px;padding:12px 16px;border:1px dashed #b9c9b5;border-radius:8px;background:#f0f2e9}.instruction-field-hints h3{margin:0 0 8px;color:var(--navy);letter-spacing:1px}.instruction-field-hints h3 small{display:block;font-weight:400;letter-spacing:0;color:#52696a;margin-top:4px}.instruction-field-hints p{font-size:12px;margin:6px 0}
-
-.instruction-rail{display:grid;grid-template-rows:minmax(0,1fr) auto;min-height:0;min-width:0;border-left:1px solid var(--line)}.instruction-rail .instruction-copy{border-left:0}.instruction-rail .instruction-field-hints{margin:0;padding:12px 24px;border-radius:0;border:0;border-top:1px dashed #b9c9b5;max-height:170px;overflow:auto}.instruction-field-hints h3 small{display:inline;margin-left:8px}
-@media(max-width:760px){.instruction-rail{display:block;flex:none;border:0}.instruction-rail .instruction-field-hints{padding:16px;max-height:none}}
+.instruction-rail{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0;min-width:0;border-left:1px solid var(--line);background:white}
+.instruction-action-bar{padding:14px 20px 12px;border-bottom:1px solid var(--line);background:#fafcfa;display:flex;flex-direction:column;gap:8px}
+.instruction-action-bar .primary{width:100%;font-size:13px;padding:12px 16px;cursor:pointer}
+.instruction-nav-arrows{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.instruction-nav-arrows button{font-size:12px;font-weight:600;padding:8px 12px;min-height:38px}
+.instruction-rail .instruction-copy{border-left:0}
+.instruction-rail .instruction-field-hints{margin:0;padding:12px 24px;border-radius:0;border:0;border-top:1px dashed #b9c9b5;max-height:170px;overflow:auto}
+.instruction-field-hints h3 small{display:inline;margin-left:8px}
+@media(max-width:760px){
+  .instruction-rail{display:block;flex:none;border:0}
+  .instruction-action-bar{position:sticky;top:0;z-index:20;background:#fafcfa;box-shadow:0 2px 8px rgba(0,0,0,0.06);padding:10px 16px}
+  .instruction-rail .instruction-field-hints{padding:16px;max-height:none}
+}
