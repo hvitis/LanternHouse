@@ -1,5 +1,5 @@
 {
-  "name": "FDM printer, 0.4 mm nozzle, 220 × 220 × 250 mm",
+  "name": "Creality Ender 3, stock: 0.4 mm nozzle, 220 × 220 × 250 mm, PLA",
   "bed": [220, 220, 250],
   "bed_margin": 5,
   "nozzle": 0.4,
@@ -8,7 +8,7 @@
   "max_overhang": 45,
   "min_base_area": 40,
   "wall_samples": 600,
-  "shell": 1.2,
-  "infill": 0.15,
+  "shell": 0.8,
+  "infill": 0.2,
   "material": {"name": "PLA", "density": 1.24}
 }

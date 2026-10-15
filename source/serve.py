@@ -7,8 +7,8 @@
 The viewer builds every solid in the browser from output/parts.json, the same profiles and
 placements the CAD export uses. If that file is missing (a fresh clone), or with --rebuild, it is
 generated from source/model.py, which needs numpy and shapely, not FreeCAD. The DXF uses matching production
-nesting when available, otherwise computes the layout. Only viewer assets, model data, DXF and label positions
-are served, on the local machine unless --host says otherwise.
+nesting when available, otherwise computes the layout. Only viewer assets, model data, DXF and label positions,
+and the published 3D prints in prints/ (for prints.html) are served, on the local machine unless --host says otherwise.
 """
 import argparse, errno, http.server, json, mimetypes, sys, time, webbrowser
 from pathlib import Path
@@ -16,12 +16,16 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 VIEWER=(ROOT/'source/viewer').resolve()
 DATA={'/data/parts.json':ROOT/'output/parts.json','/data/house.dxf':ROOT/'output/viewer/house.dxf','/data/dxf-labels.json':ROOT/'output/viewer/dxf-labels.json'}
+PRINTS=(ROOT/'prints').resolve()   # the published 3D prints, for prints.html
 mimetypes.add_type('text/javascript','.js')
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def translate_path(self,path):
         clean=path.split('?',1)[0].split('#',1)[0]
         if clean in DATA:return str(DATA[clean])
+        if clean.startswith('/prints/'):
+            target=(PRINTS/clean[len('/prints/'):]).resolve()
+            return str(target) if PRINTS in target.parents else str(VIEWER/'missing')
         target=(VIEWER/(clean.lstrip('/') or 'index.html')).resolve()
         # Never serve anything outside the viewer folder.
         return str(target) if target==VIEWER or VIEWER in target.parents else str(VIEWER/'missing')

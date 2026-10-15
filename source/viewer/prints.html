@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="3D-printable furniture for the Moomin House: turn each design in 3D, see its print checks and download STL, 3MF or STEP files.">
 <title>Moomin House prints</title>
 <style>
-  :root{--ink:#284849;--teal:#197F98;--rust:#B56535;--line:#d6ded4;--panel:#fbfaf6;--muted:#6b7f7f;--pass:#2f8a57;--warn:#a86b12;--fail:#c0392b}
+  :root{--ink:#284849;--teal:#20699f;--rust:#B56535;--line:#d6ded4;--panel:#fbfaf6;--muted:#6b7f7f;--pass:#2f8a57;--warn:#a86b12;--fail:#c0392b}
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:#eef2ee;color:var(--ink);font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
   #view{position:fixed;inset:0}
@@ -51,10 +51,29 @@
   label.row{display:flex;align-items:center;gap:8px;margin:6px 0 0}
   .key{display:inline-block;width:10px;height:10px;border-radius:2px;background:#d8473a;vertical-align:-1px}
   .foot{margin:14px 0 0;font-size:12px}.foot a{color:var(--teal)}
-  #loading{position:fixed;inset:0;display:grid;place-items:center;font-size:15px;color:var(--muted);pointer-events:none}
+  #loading{position:fixed;inset:0;display:grid;place-items:center;padding:24px;text-align:center;font-size:15px;color:var(--muted);pointer-events:none}
   #hint{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;color:var(--muted);font-size:11px;background:rgba(251,250,246,.85);padding:4px 10px;border-radius:12px;pointer-events:none}
   @media (max-width:700px){#view{top:calc(45% + 24px)}#panel{width:auto;right:12px;max-height:45%}#hint{width:max-content;max-width:calc(100% - 24px);text-align:center}}
+  /* Embedded in the workbench, the print studio keeps its own state and downloads. */
+  html.embedded #view{left:304px}
+  html.embedded #panel{top:0;left:0;bottom:0;width:304px;max-height:none;border:0;border-right:1px solid var(--line);border-radius:0;box-shadow:none;padding:24px 22px}
+  html.embedded #panel h1{font:normal 23px/1.2 Georgia,serif;letter-spacing:-.5px;margin-bottom:8px}
+  html.embedded #houseLink{display:none}
+  html.embedded #hint{left:calc(50% + 152px);bottom:18px}
+  html.embedded #parts{margin:18px 0}
+  html.embedded #parts button{padding:10px 9px}
+  html.embedded #parts button.on{background:#e6eeea}
+  @media(max-width:760px){
+    html.embedded #view{left:0;top:0;bottom:50%}
+    html.embedded #panel{top:50%;right:0;width:auto;max-height:none;border:0;border-top:1px solid var(--line);padding:18px 20px}
+    html.embedded #hint{left:50%;bottom:calc(50% + 10px);font-size:9px;white-space:nowrap}
+    html.embedded #parts{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:12px 0}
+    html.embedded #parts button{grid-template-columns:8px minmax(0,1fr);gap:5px;font-size:10px;padding:8px 5px}
+    html.embedded #parts small{display:none}
+    html.embedded #panel h1{font-size:20px}
+  }
 </style>
+<script>if(new URLSearchParams(location.search).has('embedded'))document.documentElement.classList.add('embedded');</script>
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body>
@@ -62,11 +81,15 @@
 <div id="loading" role="status" aria-live="polite">Loading the prints…</div>
 <noscript><p>The 3D view needs JavaScript. Enable JavaScript and reload this page.</p><style>#loading,#panel,#hint{display:none}</style></noscript>
 <script>
-  function showViewerError() {
+  // prints.js throws errors with a `visitor` message when it knows what went wrong; anything else is shown
+  // with its technical message, so a report of it says more than "it did not load".
+  function showViewerError(event) {
+    const error = event.reason ?? event.error;
     let status = document.getElementById('loading');
     if (!status) { status = document.createElement('div'); status.id = 'loading'; document.body.appendChild(status); }
     status.setAttribute('role', 'alert');
-    status.textContent = 'The 3D view could not load. Reload the page and make sure your browser supports WebGL.';
+    status.textContent = error?.visitor ??
+      `The 3D view could not load (${error?.message ?? event.message ?? 'unknown error'}). Reload the page and make sure your browser supports WebGL.`;
   }
   addEventListener('error', showViewerError);
   addEventListener('unhandledrejection', showViewerError);
@@ -97,6 +120,7 @@
     </div>
     <label class="row"><input type="checkbox" id="showOverhang" checked> Show overhangs <span class="key"></span> (need supports)</label>
     <label class="row"><input type="checkbox" id="showBed" checked> Printer bed</label>
+    <label class="row"><input type="checkbox" id="showDims" checked> Show measurements</label>
   </section>
   <p class="foot" id="houseLink"><a href="./index.html">← The whole house in 3D</a></p>
 </aside>

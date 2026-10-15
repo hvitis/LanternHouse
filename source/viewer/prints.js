@@ -3,11 +3,17 @@
 // design reloads it, and the sliders rebuild the part on the Mac.
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
+import {CSS2DRenderer,CSS2DObject} from './vendor/CSS2DRenderer.js';
 
 const $=id=>document.getElementById(id);
 const host=$('view'),query=new URLSearchParams(location.search);
 async function fetchJSON(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`${url}: HTTP ${r.status}`);return r.json();}
-let manifest=await fetchJSON('./prints/manifest.json');
+let manifest;
+try{manifest=await fetchJSON('./prints/manifest.json');}
+catch(error){   // the page is here but the prints are not: usually a viewer server started before prints/ existed
+  throw Object.assign(new Error(error.message),{visitor:`The list of prints did not load (${error.message}). `+
+    'If you opened this from the house viewer on your own computer, stop it and start it again (make viewer), or open the live studio (make studio).'});
+}
 const live=Boolean(manifest.live);
 const fmt=v=>String(+(+v).toFixed(2));
 function el(tag,props={},...children){
@@ -18,7 +24,9 @@ function el(tag,props={},...children){
 
 // ---------- scene ----------
 const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0xeef2ee);host.appendChild(renderer.domElement);
+renderer.setPixelRatio(Math.min(devicePixelRatio,matchMedia('(pointer: coarse)').matches?1.5:2));renderer.setClearColor(0xeef2ee);host.appendChild(renderer.domElement);
+const labels=new CSS2DRenderer();labels.setSize(Math.max(1,host.clientWidth),Math.max(1,host.clientHeight));
+Object.assign(labels.domElement.style,{position:'absolute',top:'0',left:'0',pointerEvents:'none'});host.appendChild(labels.domElement);
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(30,1,.5,5000);camera.up.set(0,0,1);   // Z-up, millimetres, like the house
 const controls=new OrbitControls(camera,renderer.domElement);
@@ -44,6 +52,60 @@ const surface=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.75,me
 const edgeMaterial=new THREE.LineBasicMaterial({color:0x223838,transparent:true,opacity:.35});
 const marker=new THREE.Mesh(new THREE.SphereGeometry(1,20,10),new THREE.MeshBasicMaterial({color:0xd8473a,depthTest:false}));
 marker.renderOrder=2;marker.visible=false;scene.add(marker);
+const dimGroup=new THREE.Group();scene.add(dimGroup);
+const dimLine=new THREE.LineBasicMaterial({color:0x197f98});
+const dimExt=new THREE.LineDashedMaterial({color:0x197f98,dashSize:3,gapSize:2});
+
+function updateDimensions(entry,geom){
+  dimGroup.clear();
+  if(!geom)return;
+  geom.computeBoundingBox();
+  const b=geom.boundingBox;if(!b)return;
+  const min=b.min,max=b.max;
+  const sx=max.x-min.x,sy=max.y-min.y,sz=max.z-min.z;
+  const offset=Math.max(6,Math.max(sx,sy)*0.12);
+
+  function addDim(p1,p2,val){
+    const v1=new THREE.Vector3(...p1),v2=new THREE.Vector3(...p2);
+    const dir=v2.clone().sub(v1).normalize();
+    const across=Math.abs(dir.z)>0.9?new THREE.Vector3(1,0,0):new THREE.Vector3(0,0,1);
+    const tickLen=2.5;
+    const pts=[v1,v2,v1.clone().addScaledVector(across,-tickLen),v1.clone().addScaledVector(across,tickLen),v2.clone().addScaledVector(across,-tickLen),v2.clone().addScaledVector(across,tickLen)];
+    const g=new THREE.BufferGeometry().setFromPoints(pts);g.setIndex([0,1,2,3,4,5]);
+    dimGroup.add(new THREE.LineSegments(g,dimLine));
+
+    const mid=v1.clone().add(v2).multiplyScalar(0.5);
+    const textDiv=document.createElement('div');
+    textDiv.style.cssText='color:#197f98;background:rgba(251,250,246,0.92);padding:1px 5px;border-radius:4px;font:bold 11px/1.3 system-ui;border:1px solid #c2d5d8;pointer-events:none;white-space:nowrap;box-shadow:0 1px 4px rgba(40,72,73,0.1);';
+    textDiv.textContent=`${fmt(val)} mm`;
+    const tag=new CSS2DObject(textDiv);
+    tag.position.copy(mid);
+    dimGroup.add(tag);
+  }
+
+  function addExt(from,to){
+    const eg=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...from),new THREE.Vector3(...to)]);
+    const el=new THREE.Line(eg,dimExt);el.computeLineDistances();dimGroup.add(el);
+  }
+
+  // 1. Width (along X in front of the model)
+  const yFront=min.y-offset;
+  addExt([min.x,min.y,0],[min.x,yFront-2,0]);
+  addExt([max.x,min.y,0],[max.x,yFront-2,0]);
+  addDim([min.x,yFront,0],[max.x,yFront,0],sx);
+
+  // 2. Depth (along Y on the right)
+  const xRight=max.x+offset;
+  addExt([max.x,min.y,0],[xRight+2,min.y,0]);
+  addExt([max.x,max.y,0],[xRight+2,max.y,0]);
+  addDim([xRight,min.y,0],[xRight,max.y,0],sy);
+
+  // 3. Height (along Z on the right corner)
+  const yBack=max.y+offset;
+  addExt([max.x,max.y,min.z],[xRight+2,yBack,min.z]);
+  addExt([max.x,max.y,max.z],[xRight+2,yBack,max.z]);
+  addDim([xRight,yBack,min.z],[xRight,yBack,max.z],sz);
+}
 
 function parseSTL(buffer){
   const view=new DataView(buffer),count=buffer.byteLength>=84?view.getUint32(80,true):-1;
@@ -51,8 +113,30 @@ function parseSTL(buffer){
   const position=new Float32Array(count*9);
   for(let i=0;i<count;i++)for(let k=0;k<9;k++)position[i*9+k]=view.getFloat32(84+i*50+12+k*4,true);
   const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(position,3));
-  geometry.computeVertexNormals();   // corners are not shared, so every face is flat, as the printer sees it
+  geometry.setAttribute('normal',new THREE.BufferAttribute(creasedNormals(position,30),3));
   return geometry;
+}
+
+// Shade curved surfaces smoothly and keep edges sharper than `crease` degrees crisp: each corner takes the
+// area-weighted normal of the faces round it that lie within the crease angle of its own face.
+function creasedNormals(position,crease){
+  const faces=position.length/9,face=new Float32Array(faces*3),normals=new Float32Array(position.length),groups=new Map();
+  const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();
+  for(let f=0;f<faces;f++){
+    a.fromArray(position,f*9);b.fromArray(position,f*9+3).sub(a);c.fromArray(position,f*9+6).sub(a);
+    b.cross(c).toArray(face,f*3);   // length = twice the area, so larger faces weigh more
+    for(let k=0;k<3;k++){
+      const i=f*3+k,key=`${position[i*3]},${position[i*3+1]},${position[i*3+2]}`;
+      const group=groups.get(key);if(group)group.push(i);else groups.set(key,[i]);
+    }
+  }
+  const limit=Math.cos(crease*Math.PI/180),own=new THREE.Vector3(),other=new THREE.Vector3(),sum=new THREE.Vector3();
+  for(const group of groups.values())for(const i of group){
+    own.fromArray(face,(i/3|0)*3);sum.set(0,0,0);const length=own.length()||1;
+    for(const j of group){other.fromArray(face,(j/3|0)*3);if(own.dot(other)>=limit*length*(other.length()||1))sum.add(other);}
+    sum.normalize().toArray(normals,i*3);
+  }
+  return normals;
 }
 
 // The same rule as print_mesh.overhanging: leaning out more than the printer's limit (plus 1°), off the bed.
@@ -73,10 +157,11 @@ function paint(geometry,colour,limit,showOverhang){
 // ---------- camera ----------
 const DIRECTIONS={iso:[1,-1.35,.95],front:[0,-1,.1],side:[1,0,.1],back:[0,1,.1],top:[0,-.001,1],under:[0,-.001,-1]};
 let view=DIRECTIONS[query.get('view')]?query.get('view'):'iso';
-function panelShift(){return innerWidth>700?($('panel').offsetWidth+12)/2:0;}
+function panelShift(){return query.has('embedded')?0:innerWidth>700?($('panel').offsetWidth+12)/2:0;}
 function resize(){
   const w=host.clientWidth,h=host.clientHeight,shift=panelShift();
-  renderer.setSize(w,h);camera.aspect=w/h;
+  if(!w||!h)return;
+  renderer.setSize(w,h);labels.setSize(w,h);camera.aspect=w/h;
   // Centre the part in the space beside the panel, not behind it.
   if(shift)camera.setViewOffset(w,h,-shift,0,w,h);else camera.clearViewOffset();
   camera.updateProjectionMatrix();
@@ -90,10 +175,13 @@ function setView(name=view){
   camera.position.copy(centre).addScaledVector(new THREE.Vector3(...DIRECTIONS[name]).normalize(),radius/Math.sin(fit)*1.08);
   controls.target.copy(centre);controls.update();
 }
-addEventListener('resize',()=>resize());resize();
+new ResizeObserver(()=>{resize();if(current)setView();}).observe(host);resize();
 renderer.setAnimationLoop(()=>{
+  if(document.hidden||!host.clientWidth||!host.clientHeight)return;
   controls.update();bed.visible=$('showBed').checked&&camera.position.z>0;   // from below, the grid would hide the part
+  const showDims=$('showDims');if(showDims)dimGroup.visible=showDims.checked;
   renderer.render(scene,camera);
+  labels.render(scene,camera);
 });
 
 // ---------- the panel ----------
@@ -184,6 +272,7 @@ async function showMesh(entry){
   part.clear();
   const mesh=new THREE.Mesh(geometry,surface);surface.transparent=Boolean(entry.error);surface.opacity=entry.error?.45:1;
   part.add(mesh,new THREE.LineSegments(new THREE.EdgesGeometry(geometry,25),edgeMaterial));
+  updateDimensions(entry,geometry);
   const wall=(entry.checks||[]).find(c=>c.id==='wall');
   marker.visible=Boolean(wall&&wall.status!=='pass'&&wall.at);
   if(marker.visible){marker.position.fromArray(wall.at);marker.scale.setScalar(Math.max(.6,Math.max(...entry.size)*.025));}
@@ -230,6 +319,7 @@ if(live){
 drawBed(manifest.printer.bed);
 for(const b of document.querySelectorAll('[data-view]'))b.addEventListener('click',()=>setView(b.dataset.view));
 $('showOverhang').addEventListener('change',()=>{if(geometry)paint(geometry,geometry.userData.colour,manifest.printer.max_overhang,$('showOverhang').checked);});
+$('showDims')?.addEventListener('change',()=>{dimGroup.visible=$('showDims').checked;});
 addEventListener('hashchange',()=>select(decodeURIComponent(location.hash.slice(1))));
 renderSub();
 if(parts().length)select(decodeURIComponent(location.hash.slice(1)));

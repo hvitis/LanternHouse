@@ -89,19 +89,15 @@ jobs:
         run: |
           ./FreeCAD-squashfs/usr/bin/python -c "import sys,pathlib; sys.path.insert(0,str(pathlib.Path(sys.executable).resolve().parent.parent/'lib')); import FreeCAD, Part, Sketcher, numpy, shapely; print('FreeCAD runtime version:', '.'.join(str(x) for x in FreeCAD.Version()[:3]))"
 
-      - name: Rebuild all deliverables
+      - name: Rebuild, check thickness, and package all deliverables
         env:
           MOOMIN_HEADLESS: "1"
           QT_QPA_PLATFORM: "offscreen"
         run: |
-          xvfb-run python source/rebuild.py --freecad-python "$PWD/FreeCAD-squashfs/usr/bin/python"
+          xvfb-run python source/rebuild.py --freecad-python "$PWD/FreeCAD-squashfs/usr/bin/python" --tolerance
 
-      - name: Run plywood tolerance check
-        env:
-          MOOMIN_HEADLESS: "1"
-          QT_QPA_PLATFORM: "offscreen"
-        run: |
-          xvfb-run ./FreeCAD-squashfs/usr/bin/python source/thickness_check.py
+      - name: Verify the downloadable kit contains the passing reports
+        run: python -c "import sys; from pathlib import Path; sys.path.insert(0, 'source'); from package import validate_release_kit; validate_release_kit(Path('output'))"
 
       - name: Keep the check reports when the build fails
         if: failure()
@@ -111,6 +107,9 @@ jobs:
           path: |
             output/reports/
             output/nesting.json
+            .build-work/**/output/reports/
+            .build-work/**/output/nesting.json
+          include-hidden-files: true
           if-no-files-found: ignore
 
       - name: Publish GitHub Release

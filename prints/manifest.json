@@ -1,6 +1,6 @@
 {
  "printer": {
-  "name": "FDM printer, 0.4 mm nozzle, 220 × 220 × 250 mm",
+  "name": "Creality Ender 3, stock: 0.4 mm nozzle, 220 × 220 × 250 mm, PLA",
   "bed": [
    220,
    220,
@@ -13,8 +13,8 @@
   "max_overhang": 45,
   "min_base_area": 40,
   "wall_samples": 600,
-  "shell": 1.2,
-  "infill": 0.15,
+  "shell": 0.8,
+  "infill": 0.2,
   "material": {
    "name": "PLA",
    "density": 1.24
@@ -25,10 +25,169 @@
   57.1
  ],
  "parts": {
+  "bathtub": {
+   "name": "bathtub",
+   "title": "Bathtub",
+   "notes": "Print upright, as shown, with no supports: the standard Ender 3 PLA profile (0.2 mm layers, 20 % infill) is fine.",
+   "color": "#FFF3DB",
+   "about": "A clawfoot bathtub for the Moomin House, wide enough for Moomintroll to sit in, printed upright with no supports.\n\nThe sides flare outward as they rise and the rim rolls out over a 45° lip, so no surface leans out more than 45°.\nUnderneath, the tub narrows at 45° to an oval plinth, and four cone feet stand on the bed at its corners. The\ninside is one smooth shell with a curved floor and a plug hole. It has no taps on purpose: a thin tap could snap\noff and become a part small enough to swallow.",
+   "params": {
+    "length": {
+     "value": 76,
+     "default": 76,
+     "min": 60,
+     "max": 110,
+     "step": 1,
+     "unit": "mm"
+    },
+    "width": {
+     "value": 44,
+     "default": 44,
+     "min": 36,
+     "max": 60,
+     "step": 1,
+     "unit": "mm"
+    },
+    "height": {
+     "value": 30.0,
+     "default": 30,
+     "min": 22,
+     "max": 45,
+     "step": 0.5,
+     "unit": "mm"
+    },
+    "wall": {
+     "value": 2.0,
+     "default": 2,
+     "min": 1.2,
+     "max": 3,
+     "step": 0.1,
+     "unit": "mm"
+    },
+    "flare": {
+     "value": 10,
+     "default": 10,
+     "min": 0,
+     "max": 30,
+     "step": 1,
+     "unit": "°"
+    },
+    "lift": {
+     "value": 6.0,
+     "default": 6,
+     "min": 3,
+     "max": 10,
+     "step": 0.5,
+     "unit": "mm"
+    },
+    "lip": {
+     "value": 1.2,
+     "default": 1.2,
+     "min": 0,
+     "max": 2,
+     "step": 0.1,
+     "unit": "mm"
+    },
+    "round": {
+     "value": 0.8,
+     "default": 0.8,
+     "min": 0,
+     "max": 1.2,
+     "step": 0.1,
+     "unit": "mm"
+    },
+    "curve": {
+     "value": 4.0,
+     "default": 4,
+     "min": 0,
+     "max": 6,
+     "step": 0.5,
+     "unit": "mm"
+    }
+   },
+   "hash": "c2653f825eb6fe4f",
+   "generator": "build123d 0.13.0",
+   "files": {
+    "stl": {
+     "path": "bathtub.stl",
+     "bytes": 729584
+    },
+    "3mf": {
+     "path": "bathtub.3mf",
+     "bytes": 147537
+    },
+    "step": {
+     "path": "bathtub.step",
+     "bytes": 222766
+    }
+   },
+   "size": [
+    76.0,
+    44.0,
+    30.0
+   ],
+   "volume": 22243.9,
+   "area": 13127.8,
+   "triangles": 14590,
+   "grams": {
+    "solid": 27.6,
+    "estimate": 15.9
+   },
+   "checks": [
+    {
+     "id": "closed",
+     "label": "Closed solid",
+     "status": "pass",
+     "detail": "Watertight, every edge shared by two faces."
+    },
+    {
+     "id": "pieces",
+     "label": "One piece",
+     "status": "pass",
+     "detail": "One connected solid."
+    },
+    {
+     "id": "bed",
+     "label": "Fits the printer",
+     "status": "pass",
+     "detail": "76.0 × 44.0 × 30.0 mm on a 220 × 220 × 250 mm build volume."
+    },
+    {
+     "id": "base",
+     "label": "Stands flat on the bed",
+     "status": "pass",
+     "detail": "1362 mm² touches the bed."
+    },
+    {
+     "id": "overhang",
+     "label": "No supports needed",
+     "status": "pass",
+     "detail": "Nothing leans out more than 45° from vertical."
+    },
+    {
+     "id": "wall",
+     "label": "Walls thick enough",
+     "status": "pass",
+     "detail": "Thinnest wall 1.94 mm (at least 1.2 mm; 420 places measured).",
+     "at": [
+      33.3,
+      5.83,
+      13.1
+     ]
+    },
+    {
+     "id": "small_parts",
+     "label": "Too big to swallow",
+     "status": "pass",
+     "detail": "Does not fit the Ø31.7 × 57.1 mm small-parts cylinder (EN 71-1)."
+    }
+   ],
+   "status": "pass"
+  },
   "chair": {
    "name": "chair",
    "title": "Chair",
-   "notes": "Print upright, as shown. PLA, 0.2 mm layers, 3 walls, 15 % infill, no supports.",
+   "notes": "Print upright, as shown, with no supports: the standard Ender 3 PLA profile (0.2 mm layers, 20 % infill) is fine.",
    "color": "#BD8B5D",
    "about": "A chair for the Moomin House, sized for Moomintroll, that prints upright with no supports.\n\nThe four legs are what is left of a solid block after two pointed tunnels are cut through it, front to back and\nside to side. Their roofs lean 45°, the most an FDM printer prints without support, so the seat needs none. The\nback is a slab with an arched top. The outer corners, the seat and the back are rounded; the bottom edges stay\nsharp, because a rounded bottom edge would overhang.",
    "params": {
@@ -97,7 +256,7 @@
      "unit": "mm"
     }
    },
-   "hash": "1e651de8150f8c51",
+   "hash": "39661554f39e8427",
    "generator": "build123d 0.13.0",
    "files": {
     "stl": {
@@ -123,7 +282,7 @@
    "triangles": 9326,
    "grams": {
     "solid": 15.4,
-    "estimate": 9.9
+    "estimate": 7.9
    },
    "checks": [
     {
@@ -160,7 +319,7 @@
      "id": "wall",
      "label": "Walls thick enough",
      "status": "pass",
-     "detail": "Thinnest wall 3.50 mm (at least 1.2 mm; 393 places measured).",
+     "detail": "Thinnest wall 3.50 mm (at least 1.2 mm; 313 places measured).",
      "at": [
       10.57,
       16.0,
@@ -176,10 +335,280 @@
    ],
    "status": "pass"
   },
+  "chandelier": {
+   "name": "chandelier",
+   "title": "Chandelier",
+   "notes": "Print upright, as shown, with no supports: the standard Ender 3 PLA profile (0.2 mm layers, 20 % infill) is fine.",
+   "color": "#D2AD63",
+   "about": "A classic hanging chandelier for the Moomin House, printed upright with no supports.\n\nFeatures a drop finial base on the printer bed, a flared 45° gallery bowl, four candle holders\nwith tapered candles and flame finials, a central stem, and a self-supporting top suspension loop.\nAll overhangs are 45° or steeper, allowing clean printing without supports.",
+   "params": {
+    "diameter": {
+     "value": 46,
+     "default": 46,
+     "min": 36,
+     "max": 60,
+     "step": 1,
+     "unit": "mm"
+    },
+    "height": {
+     "value": 54,
+     "default": 54,
+     "min": 40,
+     "max": 70,
+     "step": 1,
+     "unit": "mm"
+    },
+    "base_diameter": {
+     "value": 15,
+     "default": 15,
+     "min": 12,
+     "max": 22,
+     "step": 1,
+     "unit": "mm"
+    },
+    "candle_height": {
+     "value": 10,
+     "default": 10,
+     "min": 6,
+     "max": 16,
+     "step": 1,
+     "unit": "mm"
+    },
+    "stem": {
+     "value": 9.0,
+     "default": 9,
+     "min": 6,
+     "max": 14,
+     "step": 0.5,
+     "unit": "mm"
+    }
+   },
+   "hash": "df4935a8f573c883",
+   "generator": "build123d 0.13.0",
+   "files": {
+    "stl": {
+     "path": "chandelier.stl",
+     "bytes": 388284
+    },
+    "3mf": {
+     "path": "chandelier.3mf",
+     "bytes": 70994
+    },
+    "step": {
+     "path": "chandelier.step",
+     "bytes": 98960
+    }
+   },
+   "size": [
+    46.0,
+    46.0,
+    54.0
+   ],
+   "volume": 16346.6,
+   "area": 7020.3,
+   "triangles": 7760,
+   "grams": {
+    "solid": 20.3,
+    "estimate": 9.6
+   },
+   "checks": [
+    {
+     "id": "closed",
+     "label": "Closed solid",
+     "status": "pass",
+     "detail": "Watertight, every edge shared by two faces."
+    },
+    {
+     "id": "pieces",
+     "label": "One piece",
+     "status": "pass",
+     "detail": "One connected solid."
+    },
+    {
+     "id": "bed",
+     "label": "Fits the printer",
+     "status": "pass",
+     "detail": "46.0 × 46.0 × 54.0 mm on a 220 × 220 × 250 mm build volume."
+    },
+    {
+     "id": "base",
+     "label": "Stands flat on the bed",
+     "status": "pass",
+     "detail": "177 mm² touches the bed."
+    },
+    {
+     "id": "overhang",
+     "label": "No supports needed",
+     "status": "pass",
+     "detail": "Nothing leans out more than 45° from vertical."
+    },
+    {
+     "id": "wall",
+     "label": "Walls thick enough",
+     "status": "pass",
+     "detail": "Thinnest wall 1.98 mm (at least 1.2 mm; 557 places measured).",
+     "at": [
+      -2.0,
+      -1.05,
+      52.0
+     ]
+    },
+    {
+     "id": "small_parts",
+     "label": "Too big to swallow",
+     "status": "pass",
+     "detail": "Does not fit the Ø31.7 × 57.1 mm small-parts cylinder (EN 71-1)."
+    }
+   ],
+   "status": "pass"
+  },
+  "stove": {
+   "name": "stove",
+   "title": "Tiled stove",
+   "notes": "Print upright, as shown, with no supports: the standard Ender 3 PLA profile (0.2 mm layers, 20 % infill) is fine.",
+   "color": "#FFF3DB",
+   "about": "A traditional Nordic tiled stove (kakelugn) for the Moomin House, printed upright with no supports.\n\nThe kakelugn features a sturdy round plinth on the printer bed, an arched firebox door with raised\nmoulding on the lower drum, a flared waist shelf, an upper cylindrical tiled column, and an ornate\nflared crown cornice. All transitions and overhangs are 45° or steeper, so it prints cleanly without\nany support structures.",
+   "params": {
+    "diameter": {
+     "value": 40,
+     "default": 40,
+     "min": 32,
+     "max": 50,
+     "step": 1,
+     "unit": "mm"
+    },
+    "height": {
+     "value": 95,
+     "default": 95,
+     "min": 75,
+     "max": 115,
+     "step": 1,
+     "unit": "mm"
+    },
+    "plinth_height": {
+     "value": 6.0,
+     "default": 6,
+     "min": 4,
+     "max": 10,
+     "step": 0.5,
+     "unit": "mm"
+    },
+    "shelf_height": {
+     "value": 40,
+     "default": 40,
+     "min": 30,
+     "max": 55,
+     "step": 1,
+     "unit": "mm"
+    },
+    "crown_diameter": {
+     "value": 39,
+     "default": 39,
+     "min": 32,
+     "max": 48,
+     "step": 1,
+     "unit": "mm"
+    },
+    "door_width": {
+     "value": 14,
+     "default": 14,
+     "min": 10,
+     "max": 20,
+     "step": 1,
+     "unit": "mm"
+    },
+    "door_height": {
+     "value": 16,
+     "default": 16,
+     "min": 12,
+     "max": 24,
+     "step": 1,
+     "unit": "mm"
+    }
+   },
+   "hash": "4211765bfc332cc3",
+   "generator": "build123d 0.13.0",
+   "files": {
+    "stl": {
+     "path": "stove.stl",
+     "bytes": 133484
+    },
+    "3mf": {
+     "path": "stove.3mf",
+     "bytes": 23806
+    },
+    "step": {
+     "path": "stove.step",
+     "bytes": 55932
+    }
+   },
+   "size": [
+    40.0,
+    40.0,
+    95.0
+   ],
+   "volume": 88448.8,
+   "area": 13162.7,
+   "triangles": 2668,
+   "grams": {
+    "solid": 109.7,
+    "estimate": 32.4
+   },
+   "checks": [
+    {
+     "id": "closed",
+     "label": "Closed solid",
+     "status": "pass",
+     "detail": "Watertight, every edge shared by two faces."
+    },
+    {
+     "id": "pieces",
+     "label": "One piece",
+     "status": "pass",
+     "detail": "One connected solid."
+    },
+    {
+     "id": "bed",
+     "label": "Fits the printer",
+     "status": "pass",
+     "detail": "40.0 × 40.0 × 95.0 mm on a 220 × 220 × 250 mm build volume."
+    },
+    {
+     "id": "base",
+     "label": "Stands flat on the bed",
+     "status": "pass",
+     "detail": "1255 mm² touches the bed."
+    },
+    {
+     "id": "overhang",
+     "label": "No supports needed",
+     "status": "pass",
+     "detail": "Nothing leans out more than 45° from vertical."
+    },
+    {
+     "id": "wall",
+     "label": "Walls thick enough",
+     "status": "pass",
+     "detail": "Thinnest wall 1.32 mm (at least 1.2 mm; 481 places measured).",
+     "at": [
+      5.96,
+      -17.93,
+      9.93
+     ]
+    },
+    {
+     "id": "small_parts",
+     "label": "Too big to swallow",
+     "status": "pass",
+     "detail": "Does not fit the Ø31.7 × 57.1 mm small-parts cylinder (EN 71-1)."
+    }
+   ],
+   "status": "pass"
+  },
   "table": {
    "name": "table",
    "title": "Round table",
-   "notes": "Print upright, as shown. PLA, 0.2 mm layers, 3 walls, 15 % infill, no supports.",
+   "notes": "Print upright, as shown, with no supports: the standard Ender 3 PLA profile (0.2 mm layers, 20 % infill) is fine.",
    "color": "#FFF3DB",
    "about": "A round table for the Moomin House on one flared pedestal, printed upright with no supports.\n\nThe column widens into the table top in a 45° cone, the most an FDM printer prints without support, so the\nunderside of the top needs none. The top's upper edge and the foot are rounded.",
    "params": {
@@ -240,7 +669,7 @@
      "unit": "mm"
     }
    },
-   "hash": "fad22de6fa2d4730",
+   "hash": "bd318a22f26b8bb7",
    "generator": "build123d 0.13.0",
    "files": {
     "stl": {
@@ -266,7 +695,7 @@
    "triangles": 8396,
    "grams": {
     "solid": 34.1,
-    "estimate": 14.6
+    "estimate": 12.8
    },
    "checks": [
     {
@@ -303,10 +732,10 @@
      "id": "wall",
      "label": "Walls thick enough",
      "status": "pass",
-     "detail": "Thinnest wall 2.25 mm (at least 1.2 mm; 476 places measured).",
+     "detail": "Thinnest wall 2.63 mm (at least 1.2 mm; 429 places measured).",
      "at": [
-      -16.97,
-      0.0,
+      15.12,
+      7.27,
       0.0
      ]
     },

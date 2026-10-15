@@ -9,18 +9,21 @@ const response=await fetch('./data/parts.json');
 if(!response.ok)throw new Error(`Could not load the model (HTTP ${response.status})`);
 const data=await response.json();
 const {parts,instances,hardware,fasteners,derived,config}=data;
-document.getElementById('walls').max=derived.views.open_angle;   // the walls stop at the garden posts
+const maxWallAngle=derived.views.open_angle;   // the walls stop at the garden posts
+document.getElementById('walls').max=maxWallAngle;
+document.getElementById('wallLeft').max=maxWallAngle;
+document.getElementById('wallRight').max=maxWallAngle;
 const total=derived.total_height??config.height;
 
 // ---------- scene ----------
 const host=document.getElementById('view');
 const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(host.clientWidth,host.clientHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,matchMedia('(pointer: coarse)').matches?1.5:2));renderer.setSize(Math.max(1,host.clientWidth),Math.max(1,host.clientHeight));
 renderer.setClearColor(0xeef2ee);host.appendChild(renderer.domElement);
-const labels=new CSS2DRenderer();labels.setSize(host.clientWidth,host.clientHeight);
+const labels=new CSS2DRenderer();labels.setSize(Math.max(1,host.clientWidth),Math.max(1,host.clientHeight));
 Object.assign(labels.domElement.style,{position:'absolute',top:'0',left:'0',pointerEvents:'none'});host.appendChild(labels.domElement);
 const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(32,host.clientWidth/host.clientHeight,5,20000);
+const camera=new THREE.PerspectiveCamera(32,Math.max(1,host.clientWidth)/Math.max(1,host.clientHeight),5,20000);
 camera.up.set(0,0,1);   // CAD is Z-up, millimetres
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.08;controls.screenSpacePanning=true;
@@ -57,7 +60,7 @@ const searchMaterial=new THREE.MeshBasicMaterial({color:0xffe600,transparent:tru
 const searchMatches=new Set(),ghostMaterials=new Map();let searchRestore=null;
 
 // ---------- assembly hierarchy: explode offset -> pivot / slide -> meshes ----------
-const LABEL={Fixed:'Fixed rear shell, plinth, floors and frame',WallRight:'Right opening wall shell',WallLeft:'Left opening wall shell',Roof:'Removable roof',RoofLocks:'Roof turn-button catches',Porch:'Permanent veranda',Drawer:'Hidden plinth drawer',Furniture:'Furniture for the 3D view',Figures:'Example clay figures',RoomDoors:'Room door leaves',Garden:'Garden scene (display only)'};
+const LABEL={Fixed:'Fixed rear shell, plinth, floors and frame',WallRight:'Right opening wall shell',WallLeft:'Left opening wall shell',Roof:'Removable roof',RoofLocks:'Roof turn-button catches',Porch:'Permanent veranda',Drawer:'Hidden plinth drawer',Furniture:'Furniture for the 3D view',Figures:'Example clay figures',Printables:'3D-printable objects',RoomDoors:'Room door leaves',Garden:'Garden scene (display only)'};
 const root=new THREE.Group();scene.add(root);
 const nodes={};
 for(const g of Object.keys(LABEL)){
@@ -114,6 +117,58 @@ for(const f of derived.figures??[]){
   const part={id:f.code,name:`${f.name} (thermo-clay)`,revision:f.revision,clay:data.clay[f.key]};
   mesh.userData={kind:'figure',inst:{id:f.id,part:f.code,group:'Figures'},part,figure:f,base:clayMaterial};nodes.Figures.inner.add(mesh);meshes.push(mesh);
 }
+
+// 3D-printable objects inside the house
+function parseSTL(buffer){
+  const view=new DataView(buffer),count=buffer.byteLength>=84?view.getUint32(80,true):-1;
+  if(buffer.byteLength!==84+50*count)throw new Error('Not a binary STL file');
+  const position=new Float32Array(count*9);
+  for(let i=0;i<count;i++)for(let k=0;k<9;k++)position[i*9+k]=view.getFloat32(84+i*50+12+k*4,true);
+  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(position,3));
+  geometry.computeVertexNormals();
+  return geometry;
+}
+const printableMeshes=[];
+async function loadPrintables(){
+  try{
+    const r=await fetch('./prints/manifest.json');if(!r.ok)return;
+    const manifest=await r.json();
+    const geomCache={};
+    const placements=[
+      {design:'stove',pos:[-52,40,tops[0]],rot:[0,0,Math.PI/4]},
+      {design:'chandelier',pos:[58,62,tops[1]+(config.floor_pitch-config.thickness.floor)*450/config.wall_height-54],rot:[0,0,0]},
+      {design:'bathtub',pos:[65,55,tops[2]],rot:[0,0,0]},
+      {design:'table',pos:[52,40,tops[0]],rot:[0,0,0]},
+      {design:'chair',pos:[52,22,tops[0]],rot:[0,0,Math.PI]},
+      {design:'chair',pos:[52,58,tops[0]],rot:[0,0,0]},
+    ];
+    for(const pl of placements){
+      const entry=manifest.parts?.[pl.design];
+      if(!entry?.files?.stl)continue;
+      if(!geomCache[pl.design]){
+        const resp=await fetch(`./prints/${entry.files.stl.path}`);
+        if(resp.ok)geomCache[pl.design]=parseSTL(await resp.arrayBuffer());
+      }
+      const geom=geomCache[pl.design];
+      if(!geom)continue;
+      const mat=new THREE.MeshStandardMaterial({color:new THREE.Color(entry.color||'#f5f0e1'),roughness:.75,metalness:0,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1});
+      const mesh=new THREE.Mesh(geom,mat);
+      mesh.position.set(...pl.pos);
+      mesh.rotation.set(...pl.rot);
+      mesh.userData={kind:'printable',printable:entry,inst:{id:entry.name,part:entry.name,group:'Printables'},base:mat};
+      nodes.Printables.inner.add(mesh);
+      meshes.push(mesh);
+      printableMeshes.push(mesh);
+      const line=new THREE.LineSegments(new THREE.EdgesGeometry(geom,25),edgeMaterial);
+      line.position.copy(mesh.position);line.rotation.copy(mesh.rotation);
+      nodes.Printables.inner.add(line);
+      lines.push(line);line.userData.mesh=mesh;
+    }
+    apply();
+  }catch(e){console.warn('Could not load 3D printables in house viewer:',e);}
+}
+loadPrintables();
+
 // Door rotation sign: positive angles must carry the door outward (measured with everything closed).
 root.updateMatrixWorld(true);
 for(const d of Object.values(doors)){
@@ -184,23 +239,59 @@ for(const h of hardwareObjects)if(h.userData.owners?.some(id=>atticIds.has(id)))
 
 // ---------- state, animation and controls ----------
 const travel=derived.drawer.travel;
-const state={walls:0,doors:0,drawer:0,lift:0,roof:'on',explode:0,cut:total+10,porch:true,furniture:true,figures:true,hardware:false,edges:true,xray:false,dims:true,highlight:false,thickness:false};
-const target={walls:0,doors:0,drawer:0,lift:0,explode:0};
+const state={walls:0,wallLeft:0,wallRight:0,doors:0,drawer:0,lift:0,roof:'on',explode:0,cut:total+10,porch:true,furniture:true,figures:true,printables:true,hardware:false,edges:true,xray:false,dims:false,highlight:false,thickness:false};
+const target={walls:0,wallLeft:0,wallRight:0,doors:0,drawer:0,lift:0,explode:0};
 const $=id=>document.getElementById(id);
 $('drawer').step='any';$('drawer').max=travel;$('cut').step='any';$('cut').max=total+10;$('cut').value=total+10;
 function bindSlider(id,key,fmt){const el=$(id),out=$(id+'Out');el.addEventListener('input',()=>{target[key]=+el.value;state[key]=+el.value;out.textContent=fmt(+el.value);});return v=>{el.value=v;out.textContent=fmt(v);};}
 const deg=v=>`${v}°`;
-const setters={walls:bindSlider('walls','walls',deg),doors:bindSlider('doors','doors',deg),drawer:bindSlider('drawer','drawer',v=>`${Number(v.toFixed(1))} mm`),explode:bindSlider('explode','explode',v=>`${v}%`)};
+function syncWallsFromSides(){
+  const wl=state.wallLeft,wr=state.wallRight;
+  const avg=(wl+wr)/2;
+  target.walls=avg;state.walls=avg;
+  $('walls').value=Math.round(avg);
+  const rwl=Math.round(wl),rwr=Math.round(wr);
+  $('wallsOut').textContent=(rwl===rwr)?deg(rwl):`${rwl}° / ${rwr}°`;
+}
+const setters={
+  walls:v=>{
+    $('walls').value=v;
+    const wl=Math.round(state.wallLeft),wr=Math.round(state.wallRight);
+    $('wallsOut').textContent=(wl===wr)?deg(v):`${wl}° / ${wr}°`;
+  },
+  wallLeft:bindSlider('wallLeft','wallLeft',deg),
+  wallRight:bindSlider('wallRight','wallRight',deg),
+  doors:bindSlider('doors','doors',deg),
+  drawer:bindSlider('drawer','drawer',v=>`${Number(v.toFixed(1))} mm`),
+  explode:bindSlider('explode','explode',v=>`${v}%`),
+};
+$('walls').addEventListener('input',e=>{
+  const v=+e.target.value;
+  target.walls=target.wallLeft=target.wallRight=v;
+  state.walls=state.wallLeft=state.wallRight=v;
+  setters.wallLeft(v);
+  setters.wallRight(v);
+  $('wallsOut').textContent=deg(v);
+});
+$('wallLeft').addEventListener('input',syncWallsFromSides);
+$('wallRight').addEventListener('input',syncWallsFromSides);
 $('cut').addEventListener('input',e=>{state.cut=+e.target.value;$('cutOut').textContent=state.cut>=total?'off':`Z${state.cut}`;});
 function setRoof(mode){
   state.roof=mode;target.lift=mode==='on'?0:350;
   document.querySelectorAll('#roofSeg button').forEach(b=>b.classList.toggle('on',b.dataset.roof===mode));
 }
 document.querySelectorAll('#roofSeg button').forEach(b=>b.addEventListener('click',()=>setRoof(b.dataset.roof)));
-$('openAll').addEventListener('click',()=>{target.walls=derived.views.open_angle;target.doors=90;target.drawer=travel;setRoof('lifted');});
-$('closeAll').addEventListener('click',()=>{target.walls=0;target.doors=0;target.drawer=0;target.explode=0;setRoof('on');});
-for(const [id,key] of [['showPorch','porch'],['showFurniture','furniture'],['showFigures','figures'],['showHardware','hardware'],['showEdges','edges'],['xray','xray'],['showDims','dims']])
-  $(id).addEventListener('change',e=>{state[key]=e.target.checked;if(key==='xray')recolour();});
+$('openAll').addEventListener('click',()=>{
+  const openAngle=derived.views.open_angle;
+  target.walls=target.wallLeft=target.wallRight=openAngle;
+  target.doors=90;target.drawer=travel;setRoof('lifted');
+});
+$('closeAll').addEventListener('click',()=>{
+  target.walls=target.wallLeft=target.wallRight=0;
+  target.doors=0;target.drawer=0;target.explode=0;setRoof('on');
+});
+for(const [id,key] of [['showPorch','porch'],['showFurniture','furniture'],['showFigures','figures'],['showPrintables','printables'],['showHardware','hardware'],['showEdges','edges'],['xray','xray'],['showDims','dims']])
+  $(id)?.addEventListener('change',e=>{state[key]=e.target.checked;if(key==='xray')recolour();apply();});
 for(const text of derived.changes??[]){const li=document.createElement('li');li.textContent=text;$('changes').appendChild(li);}
 
 const thicknessColours=[...new Map(Object.values(parts).filter(p=>p.dxf).map(p=>[p.dxf.layer,{...p.dxf,thickness:p.thickness}])).values()].sort((a,b)=>a.thickness-b.thickness);
@@ -231,7 +322,7 @@ function recolour(){for(const m of meshes)m.material=m===picked&&!searchMatches.
 const cutPlane=new THREE.Plane(new THREE.Vector3(0,0,-1),total);
 function apply(){
   const rad=THREE.MathUtils.degToRad;
-  nodes.WallRight.pivot.rotation.z=rad(state.walls);nodes.WallLeft.pivot.rotation.z=-rad(state.walls);
+  nodes.WallRight.pivot.rotation.z=rad(state.wallRight);nodes.WallLeft.pivot.rotation.z=-rad(state.wallLeft);
   for(const d of Object.values(doors))d.pivot.rotation.z=d.sign*rad(state.doors);
   const dir=derived.drawer.direction;nodes.Drawer.pivot.position.set(dir[0]*state.drawer,dir[1]*state.drawer,0);
   // The roof rises after both catches turn inward by 90 degrees.
@@ -240,7 +331,9 @@ function apply(){
   nodes.Roof.explode.visible=!(state.roof==='off'||state.roof==='attic');
   for(const m of attic)m.visible=state.roof!=='attic'&&(m.userData.kind!=='fastener'||state.hardware);
   for(const [g,offset] of Object.entries(derived.views.exploded))if(nodes[g])nodes[g].explode.position.set(...offset.map(v=>v*state.explode/100));
+  if(nodes.Printables&&derived.views.exploded.Furniture)nodes.Printables.explode.position.set(...derived.views.exploded.Furniture.map(v=>v*state.explode/100));
   nodes.Porch.explode.visible=state.porch;nodes.Furniture.explode.visible=state.furniture;nodes.Garden.explode.visible=state.furniture;nodes.Figures.explode.visible=state.figures;
+  if(nodes.Printables)nodes.Printables.explode.visible=state.printables;
   for(const h of hardwareObjects)if(!h.userData.owners?.some(id=>atticIds.has(id))||state.roof!=='attic')h.visible=state.hardware;
   for(const l of lines)l.visible=state.edges&&l.userData.mesh.visible;
   for(const o of dimObjects)o.visible=state.dims;
@@ -262,7 +355,7 @@ renderer.domElement.addEventListener('pointerup',e=>{
   const hit=ray.intersectObjects(meshes,false).find(h=>visibleChain(h.object)&&(state.cut>=total||h.point.z<=state.cut+.01));
   select(hit?hit.object:null);
 });
-addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('dxfDialog').open){clearElementSearch();select(null);}});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!e.defaultPrevented&&!$('housePanel').hidden){clearElementSearch();select(null);}});
 function select(mesh){
   const prev=picked;picked=mesh;if(prev)prev.material=displayMaterial(prev);const box=$('info');
   if(!mesh){box.style.display='none';return;}
@@ -273,6 +366,12 @@ function select(mesh){
     box.innerHTML=`<b>${f.id}</b><span class="tag">thermo-clay</span>${f.revision?`<span class="tag">${f.revision}</span>`:''}<div>${f.name}</div>`+
       `<div class="meta">${f.room} · X${f.x} Y${f.y} · ${c.height.toFixed(0)} tall, ${c.length.toFixed(0)} long, ${c.width.toFixed(0)} wide · ${(c.volume_mm3/1000).toFixed(1)} cm³</div>`+
       `<div class="note">Clay to buy: about ${Math.round(c.grams)} g (${colours}); about ${Math.round(c.grams_with_core)} g with a foil core. Book page 3 shows it from four sides.</div>`;return;
+  }
+  if(mesh.userData.kind==='printable'){
+    const p=mesh.userData.printable;
+    box.innerHTML=`<b>${p.title}</b><span class="tag">3D print</span>`+
+      `<div class="meta">${p.size?.map(v=>Number(v.toFixed(1))).join(' × ')} mm${p.grams?.estimate ? ` · ≈ ${p.grams.estimate} g PLA` : ''}</div>`+
+      `<div class="note">${p.notes || '3D-printable object. Download STL / 3MF in Prints tab.'}</div>`;return;
   }
   const {inst:i,part:p}=mesh.userData;
   const tags=(p.render_only?'<span class="tag">view only</span>':p.optional?'<span class="tag">optional</span>':'')+(p.revision?`<span class="tag">${p.revision}</span>`:'');
@@ -334,6 +433,7 @@ $('clearSearch').addEventListener('click',clearElementSearch);
 const VIEWS={iso:[-60,22],front:[-90,8],back:[90,8],left:[180,8],right:[0,8],top:[-90,89],veranda:[-75+(Number(config.veranda.facet.slice(1))-1)*30,16]};
 let flight=null;
 function view(name){
+  if(name!=='fit')for(const button of document.querySelectorAll('[data-view]')){const selected=button.dataset.view===name;button.classList.toggle('on',selected);button.setAttribute('aria-pressed',String(selected));}
   const box=new THREE.Box3();meshes.forEach(m=>{if(visibleChain(m)&&m.userData.kind==='part')box.union(new THREE.Box3().setFromObject(m));});
   const centre=box.getCenter(new THREE.Vector3()),radius=box.getBoundingSphere(new THREE.Sphere()).radius;
   const vertical=THREE.MathUtils.degToRad(camera.fov/2);
@@ -354,8 +454,8 @@ camera.position.set(1300,-1700,1100);controls.target.set(0,0,total/2);view('iso'
 const clock=new THREE.Clock();
 renderer.setAnimationLoop(()=>{
   const dt=Math.min(clock.getDelta(),.05),k=1-Math.exp(-dt*6);
-  if($('dxfDialog').open)return;
-  for(const key of ['walls','doors','drawer','lift','explode']){
+  if(document.hidden||$('housePanel').hidden)return;
+  for(const key of ['walls','wallLeft','wallRight','doors','drawer','lift','explode']){
     if(Math.abs(state[key]-target[key])>.05)state[key]+=(target[key]-state[key])*k;else state[key]=target[key];
     if(setters[key])setters[key](key==='drawer'?state[key]:Math.round(state[key]));
   }
@@ -364,4 +464,12 @@ renderer.setAnimationLoop(()=>{
   document.getElementById('loading')?.remove();
   host.dataset.ready='true';
 });
-addEventListener('resize',()=>{camera.aspect=host.clientWidth/host.clientHeight;camera.updateProjectionMatrix();renderer.setSize(host.clientWidth,host.clientHeight);labels.setSize(host.clientWidth,host.clientHeight);view('fit');});
+// The canvas now lives beside the tools, so its own bounds drive the camera.
+let previousSize='';
+new ResizeObserver(()=>{
+  const w=host.clientWidth,h=host.clientHeight;
+  if(!w||!h||previousSize===`${w},${h}`)return;
+  previousSize=`${w},${h}`;camera.aspect=w/h;camera.updateProjectionMatrix();
+  renderer.setSize(w,h);labels.setSize(w,h);
+  if(!searchMatches.size)view('fit');
+}).observe(host);

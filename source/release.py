@@ -35,6 +35,9 @@ def problems():
     found=[];report=OUT/'reports/release-validation.json';manifest=OUT/'reports/build-manifest.json'
     if not report.exists():return ['there is no build: run source/rebuild.py first']
     checks=json.loads(report.read_text())
+    from package import validate_release_kit
+    try:validate_release_kit(OUT)
+    except (OSError,ValueError,KeyError,RuntimeError,zipfile.BadZipFile) as error:found.append(str(error))
     found+=[f'release check failed: {c["check"]}' for c in checks['checks'] if not c['pass']]
     found+=[f'missing {p.relative_to(ROOT)}' for p in assets() if not p.exists()]
     if manifest.exists():

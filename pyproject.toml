@@ -1,0 +1,18 @@
+# Adopt formatting one module at a time, so unrelated CAD code stays out of reviews.
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+include = [
+  "source/rebuild.py",
+  "source/package.py",
+  "source/specifications.py",
+  "source/joint_samples.py",
+  "source/joint_sample_pdf.py",
+  "tests/test_build_pipeline.py",
+  "tests/test_package.py",
+  "tests/test_specifications.py",
+  "tests/test_joint_samples.py",
+]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

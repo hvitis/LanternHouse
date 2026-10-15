@@ -8,10 +8,10 @@
   <img src="docs/images/cover.jpg" width="380" alt="Okładka książki: okrągła niebieska wieża z czerwonym stożkowym dachem i małą werandą na letniej łące">
 </p>
 
-Domek to niebieska wieża o wysokości 838.4 mm, z czerwonym spiczastym dachem, trzema kondygnacjami i poddaszem. Wszystkie części ze sklejki mieszczą się na A3 (297 × 420 mm). Można je obrabiać CNC lub wycinać ręcznie z szablonów A4. Przednie ściany otwierają się na zawiasach. Dach z dwiema lukarnami jest zdejmowany, weranda z drabinką sznurową stoi na stałe z boku, tylne drzwi prowadzą do drewutni, a kamienny cokół kryje szufladę. W domku mieszka sześć figurek z modeliny termoutwardzalnej: rodzina Muminków, Włóczykij, Panna Migotka i Mała Mi.
+Domek to niebieska wieża z czerwonym spiczastym dachem, trzema kondygnacjami i poddaszem. Wszystkie części ze sklejki mieszczą się na A3 (297 × 420 mm). Można je obrabiać CNC lub wycinać ręcznie z szablonów A4. Przednie ściany otwierają się na zawiasach. Dach z dwiema lukarnami jest zdejmowany, weranda z drabinką sznurową stoi na stałe z boku, tylne drzwi prowadzą do drewutni, a kamienny cokół kryje szufladę. W domku mieszka sześć figurek z modeliny termoutwardzalnej: rodzina Muminków, Włóczykij, Panna Migotka i Mała Mi.
 
 <p align="center">
-  <b><a href="https://hvitis.github.io/moominshouse/">Otwórz model 3D w przeglądarce</a></b> &nbsp;·&nbsp;
+  <b><a href="https://hvitis.github.io/MoominsHouse/">Otwórz model 3D w przeglądarce</a></b> &nbsp;·&nbsp;
   <b><a href="https://github.com/hvitis/moominshouse/releases/latest">Pobierz książkę budowy (PDF)</a></b>
 </p>
 
@@ -30,10 +30,32 @@ Domek to niebieska wieża o wysokości 838.4 mm, z czerwonym spiczastym dachem, 
   <sub>Rodzina z modeliny: model z brył, objętości i gramatura każdego koloru</sub>
 </p>
 
+<!-- specifications:start -->
+| Parametr | Wartość |
+| --- | --- |
+| Wysokość całkowita | 778.4 mm |
+| Średnica podstawy / sklejka | 522.7 mm / 6 mm |
+| Wysokość cokołu | 61.6 mm |
+| Średnica wieży / sklejka ścian | 326.7 mm / 3 mm |
+| Wysokość ścian stałych / otwieranych | 420 mm / 418 mm |
+| Sklejka podłóg / poziomy podłóg | 6 mm / Z73.6, Z213.6, Z353.6, Z493.6 |
+| Wysokość pomieszczeń | 134 mm |
+| Słupki: liczba / przekrój / długość | 4 / 6 × 16.8 mm / 402 mm |
+| Luz otworów słupków | 0.6 mm |
+| Średnica dachu / wysokość okapu | 373.3 mm / Z493.6 |
+| Pierścień dachu: segmenty / sklejka | 3 / 3 mm |
+| Segmenty podstawy | 8 |
+| Podest werandy / ściana | 149.3 × 84 mm / W07 |
+| Wysuw szuflady | 200 mm |
+| Kąt otwarcia ścian | 100° |
+| Listwy pod podłogami: parter / piętra | 3 × 4 mm / 3 × 12 mm |
+| Luz połączeń podłóg | 0.1 mm |
+<!-- specifications:end -->
+
 ## Możliwości
 
 - **Dokumentacja do wykonania domku.** Każda część ma grubość sklejki, obrys, otwory i otwory startowe dla wyrzynarki. Rozkrój uwzględnia rzeczywiste wymiary arkuszy. Książka zawiera szablony 1:1 podzielone na strony, kwadrat kalibracyjny, szablony kontroli zawiasów, listę okuć i instrukcję montażu.
-- **Ruchome elementy.** Dwie przednie części ściany otwierają się do 100°. Magnesy zamknięte w drewnie słupków ogrodowych utrzymują je w tej pozycji, a zaczepy pod podłogą poddasza utrzymują ściany zamknięte. Troje drzwi wejściowych otwiera się na zewnątrz, a pokoje na każdej kondygnacji łączą drzwi na zawiasach z taśmy bawełnianej. Dach można zdjąć po zwolnieniu dwóch obrotowych zaczepów. Szuflada wysuwa się z cokołu na 200 mm i nie da się jej wyciągnąć. Opcjonalne oświetlenie LED ma otwory na przewód i zakręcany schowek na baterie.
+- **Ruchome elementy.** Dwie przednie części ściany otwierają się do 100°. Magnesy zamknięte w drewnie słupków ogrodowych utrzymują je w tej pozycji, a zaczepy pod podłogą poddasza utrzymują ściany zamknięte. Troje drzwi wejściowych otwiera się na zewnątrz, a pokoje na każdej kondygnacji łączą drzwi na zawiasach z taśmy bawełnianej. Dach można zdjąć z wieży. Szuflada wysuwa się z cokołu na 200 mm i nie da się jej wyciągnąć. Opcjonalne oświetlenie LED ma otwory na przewód i zakręcany schowek na baterie.
 - **Jedna konfiguracja steruje całością.** Wysokość, podstawa, cokół, szuflada, drzwi, położenie i wymiary werandy, otwory zawiasów, arkusze sklejki i kolory znajdują się w `source/config.json`.
 - **Automatyczne kontrole.** Każda kompilacja sprawdza przenikanie brył, ruch ścian co 5° aż do ogranicznika 100° i ruch wszystkich sześciorga drzwi. Sprawdza też szufladę aż do ogranicznika, podnoszenie dachu, prześwity okien, przejście każdej figurki przez każde drzwi i to, że żadnej nie da się połknąć, zamknięcie każdego magnesu w drewnie, przypisanie każdej części do jednego kroku montażu, odstępy rozkroju, liczbę części i okuć oraz skalę PDF. Osobne kontrole odtwarzają domek dla najcieńszej i najgrubszej zmierzonej sklejki, liczą łańcuchy tolerancji każdego połączenia i siłę przewrócenia przy otwartych ścianach. Niepowodzenie dowolnej kontroli zatrzymuje kompilację.
 - **Figurki z modeliny.** Tatuś Muminka, Mamusia Muminka, Muminek, Włóczykij, Panna Migotka i Mała Mi powstają z łączonych brył opisanych polem odległości. Model oblicza objętość figurki, gramaturę każdego koloru i oszczędność przy zastosowaniu rdzenia z folii aluminiowej.
@@ -41,7 +63,7 @@ Domek to niebieska wieża o wysokości 838.4 mm, z czerwonym spiczastym dachem, 
 
 ## Wypróbuj przeglądarkę 3D — bez FreeCAD
 
-Najłatwiej otworzyć [przeglądarkę online](https://hvitis.github.io/moominshouse/). GitHub przebudowuje ją po każdym wysłaniu zmian na gałąź `main`. Do uruchomienia lokalnego lub podglądu własnej konfiguracji potrzebujesz Pythona 3.12 lub nowszego oraz Git.
+Najłatwiej otworzyć [przeglądarkę online](https://hvitis.github.io/MoominsHouse/). GitHub przebudowuje ją po każdym wysłaniu zmian na gałąź `main`. Do uruchomienia lokalnego lub podglądu własnej konfiguracji potrzebujesz Pythona 3.12 lub nowszego oraz Git.
 
 ```sh
 git clone https://github.com/hvitis/moominshouse.git
@@ -71,7 +93,7 @@ Po zmianie `source/config.json` uruchom `serve.py --rebuild`, aby odświeżyć m
 
 ## Meble do druku 3D
 
-[Strona wydruków](https://hvitis.github.io/moominshouse/prints.html) pokazuje meble do domku, które można wydrukować w 3D. Każdy mebel możesz obracać w 3D i sprawdzić wyniki kontroli druku: czy mieści się na drukarce, czy nie wymaga podpór, czy ścianki są dość grube i czy jest za duży do połknięcia. Możesz też pobrać pliki STL, 3MF lub STEP. Każdy mebel to krótki plik Pythona w `source/prints/`. Na Macu `make studio` otwiera podgląd na żywo, który przebudowuje część po każdym zapisie pliku i każdym ruchu suwaka wymiaru. `make prints` publikuje pliki na stronę. Szczegóły (po angielsku): [docs/PRINTING.md](docs/PRINTING.md).
+[Strona wydruków](https://hvitis.github.io/MoominsHouse/#printables) pokazuje meble do domku, które można wydrukować w 3D. Każdy mebel możesz obracać w 3D i sprawdzić wyniki kontroli druku: czy mieści się na drukarce, czy nie wymaga podpór, czy ścianki są dość grube i czy jest za duży do połknięcia. Możesz też pobrać pliki STL, 3MF lub STEP. Każdy mebel to krótki plik Pythona w `source/prints/`. Na Macu `make studio` otwiera podgląd na żywo, który przebudowuje część po każdym zapisie pliku i każdym ruchu suwaka wymiaru. `make prints` publikuje pliki na stronę. To zakładka **3D printables** przeglądarki online; CI publikuje ją razem z przeglądarką po każdym wysłaniu zmian na `main`. Szczegóły (po angielsku): [docs/PRINTING.md](docs/PRINTING.md).
 
 ## Wygeneruj pliki do budowy
 
@@ -102,9 +124,9 @@ FREECAD_PYTHON=/Applications/FreeCAD.app/Contents/Resources/bin/python
 make all        # kontrola konfiguracji, testy, pełna kompilacja i kontrola grubości sklejki
 ```
 
-`make` domyślnie używa ścieżki FreeCAD dla macOS. W innym systemie podaj własną, na przykład `make all FREECAD_PYTHON=squashfs-root/usr/bin/python`. Polecenie `make help` pokazuje poszczególne etapy: `check`, `build`, `tolerance`, `clean`, `viewer`, `site`, `stock` i `cutfile`. Bez Make uruchom `.venv/bin/python source/rebuild.py --freecad-python "$FREECAD_PYTHON"`, a następnie `source/thickness_check.py` w Pythonie FreeCAD.
+`make` domyślnie używa ścieżki FreeCAD dla macOS. W innym systemie podaj własną, na przykład `make all FREECAD_PYTHON=squashfs-root/usr/bin/python`. Polecenie `make help` pokazuje poszczególne etapy: `check`, `build`, `tolerance`, `clean`, `viewer`, `site`, `stock` i `cutfile`. Bez Make uruchom `.venv/bin/python source/rebuild.py --freecad-python "$FREECAD_PYTHON"` z opcją `--tolerance`, aby sprawdzić grubość przed utworzeniem paczki.
 
-Pełna kompilacja trwa około dwóch minut, a kontrola grubości — około minuty. Kompilacja najpierw opróżnia `output/`, aby usunąć pliki z poprzedniego uruchomienia. Następnie tworzy CAD, rozkroje, rendery, książkę, kontrole wydania i paczkę. Zatrzymuje się po pierwszym błędzie kontroli. Wyniki:
+Pełna kompilacja trwa około dwóch minut, a kontrola grubości — około minuty. Kompilacja używa osobnego katalogu roboczego. `make all` sprawdza grubość przed utworzeniem paczki. Podmienia `output/` dopiero po zakończeniu wszystkich wymaganych etapów. Błąd zachowuje poprzednie wyniki i raporty diagnostyczne w `.build-work/`. Wyniki:
 
 | Ścieżka | Zawartość |
 | --- | --- |
@@ -127,6 +149,8 @@ Aby wybrać, jaką sklejkę kupić, uruchom `make stock`. Skrypt pyta o dostawc�
 Domyślny rozkrój używa **odstępów 3 mm do cięcia laserowego** oraz **sklejki brzozowej klasy 2/2 dla wszystkich arkuszy**, zarówno 3, jak i 6 mm. Zapisany profil dostawcy wycenia tylko klasę 2. Frezowanie konturów wymaga szerszych odstępów i nowego rozkroju.
 
 Stałe ściany mają 420 mm i zachowują fabryczne krawędzie końcowe arkusza. Ruchome ściany mają 418 mm. Cztery ciągłe słupki P01 o długości 402 mm przechodzą przez otwory obu stropów F01. Wszystkie płyty stropowe mają grubość 6 mm. Każdy strop to tylna płyta i dwie przednie, połączone na osi domu frezowanym złączem puzzle. Pod łączeniami parteru są podpory ze sklejki 3 mm, szerokie na 4 mm, a pod złączami grzebieniowymi wyższych stropów listwy 3 × 12 mm. Podstawa składa się z czterech ćwiartek, a pierścień dachu z dwóch połówek. Mapy montażowe wskazują położenie podpór. Przed montażem wykonaj próbkę klejonego łączenia stropu. Uzgodnij z firmą frezy, mocowanie, obróbkę przy krawędzi i tolerancje.
+
+`make specs` aktualizuje tabele parametrów w obu plikach README i poradniku budowy. Testy wykrywają nieaktualne tabele. `make joints` tworzy próbki połączeń do wycięcia laserem. Instrukcja: [JOINT-VALIDATION.md](docs/JOINT-VALIDATION.md).
 
 ## Zmień projekt
 
@@ -157,7 +181,7 @@ source/                  źródła generujące domek
   build_cad.py            CAD i kontrole FreeCAD (Python FreeCAD)
   nest.py, stock.py       rozkroje A3; planer zakupu sklejki (make stock)
   render.py, cover.py, book.py, verify.py, package.py             (zwykły Python)
-  rebuild.py             opróżnia output/ i uruchamia cały proces
+  rebuild.py             buduje osobno i publikuje sprawdzone wyniki
   thickness_check.py     kontrola domku dla zmierzonej grubości sklejki (Python FreeCAD)
   serve.py, viewer/      interaktywna przeglądarka 3D (lokalny three.js r160)
   export_viewer.py       eksport przeglądarki jako strony statycznej (GitHub Pages)
@@ -190,7 +214,7 @@ Dokumenty w katalogu `docs/` są po angielsku. Obie wersje README opisują ten s
 
 ## Bezpieczeństwo
 
-To projekt drewnianej zabawki do samodzielnego wykonania, bez certyfikacji. Kontrole CAD sprawdzają prześwity, ale nie wytrzymałość kleju, stabilność ani bezpieczeństwo zabawki. [RISKS.md](RISKS.md) opisuje każde zagrożenie i to, co projekt z nim robi. Najpierw złóż części na sucho z rzeczywistej sklejki i zawiasów i przejdź stronę „Dry-fit and safety checks” w książce. Zaokrąglij wszystkie odsłonięte krawędzie. Przymocuj domek do ściany pokoju zestawem zabezpieczającym przed przewróceniem: bez niego otwarty domek przewraca się przy pchnięciu około 33 N na wysokości okapu. Cztery magnesy są zamknięte w twardym drewnie; sprawdzaj, czy żaden nigdy nie jest widoczny. Używaj wyłącznie podkładu, farby i lakieru z deklaracją zgodności z EN 71-3. Książka podaje przykładowe produkty.
+To projekt drewnianej zabawki do samodzielnego wykonania, bez certyfikacji. Kontrole CAD sprawdzają prześwity, ale nie wytrzymałość kleju, stabilność ani bezpieczeństwo zabawki. [RISKS.md](RISKS.md) opisuje każde zagrożenie i to, co projekt z nim robi. Najpierw złóż części na sucho z rzeczywistej sklejki i zawiasów i przejdź stronę „Dry-fit and safety checks” w książce. Zaokrąglij wszystkie odsłonięte krawędzie. Przymocuj domek do ściany pokoju zestawem zabezpieczającym przed przewróceniem: raport risk-audit.json podaje szacowaną siłę przewrócenia aktualnego projektu. Cztery magnesy są zamknięte w twardym drewnie; sprawdzaj, czy żaden nigdy nie jest widoczny. Używaj wyłącznie podkładu, farby i lakieru z deklaracją zgodności z EN 71-3. Książka podaje przykładowe produkty.
 
 ## Stan projektu
 

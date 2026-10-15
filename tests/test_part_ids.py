@@ -15,10 +15,10 @@ def test_all_interchangeable_profiles_share_an_id(data):
 
 def test_shared_build_quantities_and_design_roles(data):
     parts=data['parts']
-    assert {pid:parts[pid]['quantity'] for pid in ('J01','J02','J03','J04','P01','DM06','K2A')}=={
-        'J01':22,'J02':5,'J03':2,'J04':1,'P01':4,'DM06':len(data['config']['dormer']['over']),'K2A':2,
+    assert {pid:parts[pid]['quantity'] for pid in ('J01','J02','J03','J04','P01','DM06')}=={
+        'J01':22,'J02':5,'J03':2,'J04':1,'P01':4,'DM06':len(data['config']['dormer']['over']),
     }
-    assert not {'DM07','K1A','K4A','K4B','K4C','K5A','K5B','PC01','PC02','PC03','V6A'} & parts.keys()
+    assert not {'DM07','K1A','K2A','K4A','K4B','K4C','K5A','K5B','PC01','PC02','PC03','V6A'} & parts.keys()
 
 
 def test_floor_seam_supports_orientation_and_quantities(data):
@@ -37,8 +37,7 @@ def test_floor_seam_supports_orientation_and_quantities(data):
 
 
 @pytest.mark.parametrize('build_id,design_parts,size,quantity',[
-    ('K2A',{'K2A'},(37,48,4),2),
-    ('U4A',{'U4A','N1B'},(28,44,4),3),
+    ('L1LA',{'L1LA','L1MA'},(26,110,4),4),
 ])
 def test_standard_furniture_blanks_have_shared_ids(data,build_id,design_parts,size,quantity):
     p=data['parts'][build_id]
@@ -64,7 +63,7 @@ def test_furniture_is_only_for_display(data):
 @pytest.mark.parametrize('optional',[False,True])
 def test_supplier_rejects_stale_furniture_cutting_sheets(data,optional):
     import supplier
-    sheet={'thickness':4,'items':[{'part':'K2A'}]}
+    sheet={'thickness':4,'items':[{'part':'L1LA'}]}
     nest={'sheets':[] if optional else [sheet],'optional_sheets':[sheet] if optional else []}
     with pytest.raises(ValueError,match='View-only furniture'):
         supplier.sheets_for(data,nest,dict(supplier.settings(data['config']),include_optional=True))

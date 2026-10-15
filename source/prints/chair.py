@@ -8,7 +8,7 @@ sharp, because a rounded bottom edge would overhang.
 from build123d import Axis, Box, Ellipse, Plane, Polygon, Pos, Rectangle, Rotation, extrude, fillet
 
 TITLE='Chair'
-NOTES='Print upright, as shown. PLA, 0.2 mm layers, 3 walls, 15 % infill, no supports.'
+NOTES='Print upright, as shown, with no supports: the standard Ender 3 PLA profile (0.2 mm layers, 20 % infill) is fine.'
 COLOR='wood'
 PARAMS={
     'width':(34,32,50,.5),

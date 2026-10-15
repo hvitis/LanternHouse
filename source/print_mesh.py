@@ -57,7 +57,9 @@ def shells(n,F):
 
 def wall_samples(T,normal,area,count,seed=1):
     """Wall thickness at up to `count` faces: the distance from the face centre straight into the part to the
-    far surface. Half the samples are picked by area and half by number, so small thin details are found too.
+    wall's other side, a surface facing back within 60°. Surfaces met at a slant don't count: next to an acute
+    edge (the rim of a tapered foot) a ray meets the neighbouring face almost at once, but that is a corner,
+    not a thin wall. Half the samples are picked by area and half by number, so small thin details are found too.
     Returns (thicknesses, sample points)."""
     m=len(T);rng=np.random.default_rng(seed)
     if m<=count:pick=np.arange(m)
@@ -68,7 +70,7 @@ def wall_samples(T,normal,area,count,seed=1):
         o,d=origin[s:s+64,None],direction[s:s+64,None]
         p=np.cross(d,e2);det=(e1*p).sum(-1);ok=np.abs(det)>1e-12;inv=np.where(ok,1/np.where(ok,det,1),0)
         tv=o-T[:,0];u=(tv*p).sum(-1)*inv;q=np.cross(tv,e1);v=(d*q).sum(-1)*inv;t=(e2*q).sum(-1)*inv
-        hit=ok&(u>=-1e-9)&(v>=-1e-9)&(u+v<=1+1e-9)&(t>1e-6)
+        hit=ok&(u>=-1e-9)&(v>=-1e-9)&(u+v<=1+1e-9)&(t>1e-6)&((d*normal).sum(-1)>.5)
         best[s:s+64]=np.where(hit,t,np.inf).min(1)
     found=np.isfinite(best);return best[found],origin[found]
 

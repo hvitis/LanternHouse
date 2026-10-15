@@ -5,11 +5,11 @@ part, its printability checks and its downloads about a second later.
     make studio
 
 Each save of source/prints/<name>.py rebuilds that design into output/prints/live/, with the slider values set
-in the page; a save of printer.json rebuilds them all. The page is source/viewer/prints.html, the same page the
+in the page; a save of printer.json or source/print_mesh.py (the checks) rebuilds them all. The page is source/viewer/prints.html, the same page the
 published site shows from prints/. Nothing in prints/ changes here: publish with `make prints`. Every build is
 also logged in this terminal. The server listens on this machine only, unless --host says otherwise.
 """
-import argparse, http.server, json, queue, threading, time, traceback, webbrowser
+import argparse, http.server, importlib, json, queue, threading, time, traceback, webbrowser
 from pathlib import Path
 import print_build, print_mesh
 from serve import VIEWER, bind
@@ -56,19 +56,21 @@ class Studio:
         return entry
 
     def watch(self):
-        """Rebuild a design when its file is saved, and every design when printer.json is."""
+        """Rebuild a design when its file is saved, and every design when printer.json or the checks are."""
         seen={}
         while True:
             try:
                 stamps={p.stem:p.stat().st_mtime_ns for p in print_build.DESIGNS.glob('*.py') if not p.name.startswith('_')}
-                printer=print_mesh.PRINTER_FILE.stat().st_mtime_ns
+                shared=(print_mesh.PRINTER_FILE.stat().st_mtime_ns,Path(print_mesh.__file__).stat().st_mtime_ns)
             except FileNotFoundError:time.sleep(.25);continue   # a file vanished mid-save
             changed=[n for n,s in stamps.items() if seen.get(n)!=s]
-            if seen and seen.get('printer.json')!=printer:changed=list(stamps)
+            if seen and seen.get('shared')!=shared:
+                if seen['shared'][1]!=shared[1]:importlib.reload(print_mesh)   # print_build uses the same module
+                changed=list(stamps)
             for gone in set(self.parts)-set(stamps):
                 with self.lock:self.parts.pop(gone,None)
                 self.send({'event':'removed','part':gone})
-            seen={**stamps,'printer.json':printer}
+            seen={**stamps,'shared':shared}
             for name in changed:self.build(name)
             time.sleep(.25)
 

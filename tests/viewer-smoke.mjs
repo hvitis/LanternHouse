@@ -10,7 +10,7 @@ const root = fileURLToPath(new URL('../_site/', import.meta.url));
 const screenshots = fileURLToPath(new URL('../output/viewer-smoke/', import.meta.url));
 const prefix = '/moominshouse/';
 const model = JSON.parse(await readFile(resolve(root, 'data/parts.json'), 'utf8'));
-const mime = {'.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.txt': 'text/plain'};
+const mime = {'.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.txt': 'text/plain'};
 const server = createServer(async (req, res) => {
   try {
     const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
@@ -34,6 +34,7 @@ try {
   await mkdir(screenshots, {recursive: true});
   for (const [name, viewport] of [['desktop', {width: 1440, height: 1000}], ['mobile', {width: 390, height: 844}]]) {
     const page = await browser.newPage({viewport, hasTouch: name === 'mobile'});
+    page.setDefaultTimeout(30_000);
     const errors = [], requests = [], failures = [];
     page.on('pageerror', error => errors.push(error.message));
     page.on('request', request => requests.push(request.url()));
@@ -43,12 +44,20 @@ try {
       if (!route.request().url().startsWith(origin + prefix)) return route.abort();
       // Expose the real scene to assertions only in this browser test.
       if (route.request().url().endsWith('/app.js')) return route.fulfill({
-        contentType: 'text/javascript', body: await readFile(resolve(root, 'app.js'), 'utf8') + '\nexport {meshes, lines, select, visibleChain, searchMatches, camera, controls, flight};',
+        contentType: 'text/javascript', body: await readFile(resolve(root, 'app.js'), 'utf8') + '\nexport {meshes, lines, select, visibleChain, searchMatches, camera, controls, flight, nodes};',
       });
       return route.continue();
     });
     await page.goto(origin + prefix);
     await page.locator('#view[data-ready="true"]').waitFor({timeout: 60_000});
+    assert.equal(await page.locator('#tab-house').getAttribute('aria-selected'), 'true');
+    assert.equal(await page.locator('#dxfPanel').isVisible(), false);
+    assert.equal(await page.locator('#printablesFrame').getAttribute('src'), null, 'Printables load only when opened');
+    assert.equal(requests.some(url => url.endsWith('/data/house.dxf')), false, 'DXF loads only when opened');
+    await page.waitForFunction(async () => { const {flight} = await import('./app.js'); return flight?.t === 1; });
+    assert.equal(await page.locator('#showDims').isChecked(), false, 'The default house preview is free of dimension labels');
+    await page.screenshot({path: resolve(screenshots, `${name}-workbench.png`)});
+    if (name === 'mobile') await page.locator('#houseTools > summary').click();
     const stats = await page.locator('#stats').innerText();
     assert.match(stats, /build part profiles/);
     assert.ok(stats.includes(`${model.derived.total_height ?? model.config.height} mm tall`));
@@ -57,7 +66,7 @@ try {
     if (name === 'mobile') {
       const panel = await page.locator('#panel').boundingBox();
       const canvas = await page.locator('canvas').boundingBox();
-      assert.ok(canvas.y >= panel.y + panel.height, 'Mobile controls cover the 3D canvas');
+      assert.ok(canvas.y + canvas.height <= panel.y + 1, 'Mobile controls cover the 3D canvas');
     }
     // Read the rendered pixels immediately after a WebGL frame, before the browser clears its drawing buffer.
     const colours = await page.locator('canvas').evaluate(canvas => new Promise(resolve => requestAnimationFrame(() => {
@@ -70,6 +79,7 @@ try {
     })));
     assert.ok(colours > 20, `${name}: the WebGL frame is blank (${colours} colours)`);
     await page.screenshot({path: resolve(screenshots, `${name}.png`)});
+    await page.locator('#displayTools > summary').click();
     assert.equal(await page.locator('#showThickness').isChecked(), false);
     assert.equal(await page.locator('#thicknessLegend').isVisible(), false);
     async function checkMaterials(thickness) {
@@ -180,14 +190,50 @@ try {
       assert.ok(visible.figures && visible.buildParts, 'Furniture must not hide figures or build parts');
     }
     await page.locator('#openAll').click();
-    await page.waitForFunction(() => ['walls', 'doors', 'drawer'].every(id => {
+    await page.waitForFunction(() => ['walls', 'wallLeft', 'wallRight', 'doors', 'drawer'].every(id => {
       const input = document.getElementById(id);
       return Number(input.value) === Number(input.max);
     }));
     assert.equal(await page.locator('#doors').inputValue(), '90');
     assert.equal(await page.locator('#drawer').inputValue(), String(model.config.plinth.drawer.travel));
     await page.locator('#closeAll').click();
-    await page.waitForFunction(() => document.querySelector('#walls').value === '0' && document.querySelector('#drawer').value === '0');
+    await page.waitForFunction(() => document.querySelector('#walls').value === '0' && document.querySelector('#wallLeft').value === '0' && document.querySelector('#wallRight').value === '0' && document.querySelector('#drawer').value === '0');
+
+    // Test opening left and right walls separately
+    await page.locator('#wallLeft').fill('45');
+    await page.locator('#wallLeft').dispatchEvent('input');
+    await page.waitForFunction(() => document.querySelector('#wallLeft').value === '45');
+    const wallRotations = await page.evaluate(async () => {
+      const {nodes} = await import('./app.js');
+      const {MathUtils} = await import('./vendor/three.module.js');
+      return {
+        leftDeg: Math.round(MathUtils.radToDeg(-nodes.WallLeft.pivot.rotation.z)),
+        rightDeg: Math.round(MathUtils.radToDeg(nodes.WallRight.pivot.rotation.z)),
+      };
+    });
+    assert.equal(wallRotations.leftDeg, 45, 'Left wall opens to 45 degrees');
+    assert.equal(wallRotations.rightDeg, 0, 'Right wall remains closed when left wall opens');
+    assert.equal(await page.locator('#wallLeftOut').innerText(), '45°');
+    assert.equal(await page.locator('#wallsOut').innerText(), '45° / 0°');
+
+    await page.locator('#wallRight').fill('70');
+    await page.locator('#wallRight').dispatchEvent('input');
+    await page.waitForFunction(() => document.querySelector('#wallRight').value === '70');
+    const wallRotations2 = await page.evaluate(async () => {
+      const {nodes} = await import('./app.js');
+      const {MathUtils} = await import('./vendor/three.module.js');
+      return {
+        leftDeg: Math.round(MathUtils.radToDeg(-nodes.WallLeft.pivot.rotation.z)),
+        rightDeg: Math.round(MathUtils.radToDeg(nodes.WallRight.pivot.rotation.z)),
+      };
+    });
+    assert.equal(wallRotations2.leftDeg, 45, 'Left wall stays at 45 degrees');
+    assert.equal(wallRotations2.rightDeg, 70, 'Right wall opens to 70 degrees');
+    assert.equal(await page.locator('#wallRightOut').innerText(), '70°');
+    assert.equal(await page.locator('#wallsOut').innerText(), '45° / 70°');
+
+    await page.locator('#closeAll').click();
+    await page.waitForFunction(() => document.querySelector('#wallLeft').value === '0' && document.querySelector('#wallRight').value === '0');
     await page.locator('[data-view="top"]').click();
     await page.locator('#showFigures').uncheck();
     await page.locator('#xray').check();
@@ -196,10 +242,10 @@ try {
       return meshes.filter(m => m.userData.part?.category === 'Walls').every(m => m.material.transparent && m.material.opacity === .22);
     });
     // DXF is the real cutting file, loaded on demand under the same static-site prefix.
-    await page.locator('#openDxf').click();
+    await page.locator('#tab-dxf').click();
     await page.locator('#dxfViewport[data-ready="true"]').waitFor({timeout: 30_000});
     const drawing = page.locator('#dxfViewport canvas');
-    assert.equal(await page.locator('#dxfDialog').isVisible(), true);
+    assert.equal(await page.locator('#dxfPanel').isVisible(), true);
     assert.match(await page.locator('#dxfStatus').innerText(), /Supplier-Cut.dxf · \d+ paths/);
     assert.equal(await page.locator('#dxfLayers input').count(), 2);
     await page.locator('#dxfPieceIds').check();
@@ -255,8 +301,18 @@ try {
     await page.waitForFunction(() => document.getElementById('dxfStatus').textContent.includes('example.dxf · 2 paths'));
     assert.equal(await page.locator('#dxfPieceIds').isDisabled(), true, 'Uploaded drawings must not inherit house piece IDs');
     await page.keyboard.press('Escape');
-    assert.equal(await page.locator('#dxfDialog').isVisible(), false);
-    assert.equal(await page.locator('#openDxf').evaluate(button => button === document.activeElement), true);
+    assert.equal(await page.locator('#dxfPanel').isVisible(), false);
+    assert.equal(await page.locator('#tab-house').evaluate(button => button === document.activeElement), true);
+    assert.equal(await page.locator('#xray').isChecked(), true, 'House settings survive switching tabs');
+    await page.locator('#tab-house').focus();
+    await page.keyboard.press('ArrowRight');
+    assert.equal(await page.locator('#tab-dxf').getAttribute('aria-selected'), 'true');
+    assert.match(await page.locator('#dxfStatus').innerText(), /example.dxf · 2 paths/, 'Custom drawing survives switching tabs');
+    await page.keyboard.press('Home');
+    assert.equal(await page.locator('#housePanel').isVisible(), true);
+    await page.goBack();
+    assert.equal(await page.locator('#dxfPanel').isVisible(), true, 'Back restores the previous preview');
+    await page.locator('#tab-house').click();
     assert.ok(requests.some(url => url.endsWith('/data/house.dxf')));
     assert.ok(requests.some(url => url.endsWith('/data/parts.json')));
     assert.ok(requests.some(url => url.endsWith('/vendor/three.module.js')));
@@ -265,6 +321,18 @@ try {
     assert.ok(requests.every(url => url.startsWith(origin + prefix)), `${name}: external or root-relative dependency`);
     console.log(`${name}: static assets, WebGL pixels and viewer controls passed`);
     await page.close();
+  }
+  for (const preview of ['dxf', 'printables']) {
+    const direct = await browser.newPage();
+    await direct.goto(origin + prefix + '#' + preview);
+    assert.equal(await direct.locator(`#tab-${preview}`).getAttribute('aria-selected'), 'true');
+    if (preview === 'dxf') await direct.locator('#dxfViewport[data-ready="true"]').waitFor();
+    else await direct.frameLocator('#printablesFrame').locator('#view[data-ready="true"]').waitFor();
+    await direct.locator('#tab-house').click();
+    await direct.locator('#view[data-ready="true"]').waitFor();
+    const size = await direct.locator('#view canvas').boundingBox();
+    assert.ok(size.width > 100 && size.height > 100, 'House sizes correctly after direct entry to another tab');
+    await direct.close();
   }
   const page = await browser.newPage();
   await page.route('**/data/parts.json', route => route.fulfill({status: 404, body: 'Not found'}));

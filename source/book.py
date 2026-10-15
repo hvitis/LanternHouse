@@ -10,11 +10,12 @@ from reportlab.lib.units import mm
 from reportlab.lib.utils import simpleSplit, ImageReader
 from pypdf import PdfReader, PdfWriter
 from model import fabrication_parts, BOUGHT
+from specifications import book_rows
 
 ROOT=Path(__file__).resolve().parents[1]
 DATA=json.loads((ROOT/'output/parts.json').read_text());P=DATA['parts'];CFG=DATA['config']
 NEST=json.loads((ROOT/'output/nesting.json').read_text())
-W,H=A4;M=40;INK=colors.HexColor('#284849');TEAL=colors.HexColor('#197F98');RUST=colors.HexColor('#B56535')
+W,H=A4;M=40;INK=colors.HexColor('#284849');TEAL=colors.HexColor('#197F98');RUST=colors.HexColor('#B56535');LINE=colors.HexColor('#d6ded4')
 OUT=ROOT/'output/pdf';OUT.mkdir(exist_ok=True)
 DER=DATA['derived'];DOORS=CFG['doors'];VER=CFG['veranda'];VER_FACET=int(VER['facet'][1:])-1
 TOPS=DER['floor_tops'];G0=TOPS[0];PITCH=CFG['floor_pitch'];EAVE=DER['roof_eave'];CLEAR=DER['clear_room_height']
@@ -258,9 +259,7 @@ def overall_page(b):
             a=project([o[k]+wv[k]*6 for k in range(3)]);bb=project([o[k]+u[k]*VER['width']+wv[k]*6 for k in range(3)])
             aligned_dimension(c,a,bb,f'Veranda {VER["width"]:g}',-12,7)
         c.setFillColor(INK);c.setFont('Helvetica',8);c.drawCentredString(x+w/2,y-14,caption)
-    wpf=DER['windows_per_floor'];tops=' / '.join(f'Z{z:g}' for z in DER['floor_tops'])
-    dr=DRAWER;pl=CFG['plinth']
-    rows=[['Base',f'Round D{D:g}, {DER["base_thickness"]:g} mm plywood, plain green'],['Stone plinth',f'{pl["height"]:g} high, 12 facets {2*pl["apothem"]:g} across flats; ground floor top Z{G0:g}'],['Hidden drawer',f'{DER["drawer"]["width"]:g} wide x {DER["drawer"]["depth"]:.0f} long x {DER["drawer"]["height"]:g} high ({DER["drawer"]["height"]-4:g} deep inside), in the plinth; pulls out {DER["drawer"]["travel"]:g} mm to the {SIDE}'],['Rooms',f'One divider per storey with a {CFG["partition"]["door_width"]:g} x {CFG["partition"]["door_height"]:g} doorway at its front end: two rooms per floor'],['Figures','Thermo-clay '+', '.join(f'{f["name"]} {f["height"]:.0f}' for f in DER['figures'])+' (pages 3-4)'],['Tower',f'12 flat facets, {CFG["tower_diameter"]:g} across vertices, 6 mm walls'],['Floors',f'Tops {tops}; clear room height {DER["clear_room_height"]:g}; attic inside the roof'],['Opening walls',f'{ids(shell("WallRight"))} (right) and {ids(shell("WallLeft"))} (left) on hinge axes X+/-{DER["hinge_axes"]["WallRight"][0]:g}; open to {OPEN:g} degrees against the GP1 stop posts'],['Roof',f'About {CFG["roof_diameter"]:g} across; eave Z{DER["roof_eave"]:g}; lifts off; finial top Z{top:g}'],['Veranda',f'{VER["width"]:g} x {VER["depth"]:g} deck on {VER["facet"]}; deck top Z{G0+6:g}; roof apex about Z{apex:.0f}'],['Doors',f'Main {DOORS["main"]}, veranda {DOORS["veranda"]} ({P["E01"]["width"]:.1f} x {P["E01"]["height"]:.1f}), back {DOORS["back"]} ({P["E04"]["width"]:.1f} wide); all open outward'],['Windows',f'{wpf[0]} ground / {wpf[1]} middle / {wpf[2]} bedroom / {wpf[3]} dormers (over {" and ".join(CFG["dormer"]["over"])})']]
+    rows=book_rows(DATA,apex,ids(shell("WallRight")),ids(shell("WallLeft")))
     mini_table(c,rows,M,y-36,[90,425],['Item','Dimension'],8,15.5)
     b.end()
 
@@ -342,6 +341,81 @@ def figure_views(b,keys,last):
         y=para(c,lump_text(key)+'.',M+70,y-2,width=W-2*M-70,size=8,leading=10.5)
     b.end()
 
+def printables_page(b):
+    """3D-printable interior parts (stove, chandelier, bathtub, table, chair): rendering, measurements, print specs."""
+    c=b.c
+    b.page('3D-printable interior accessories','Optional accessories / no supports needed / STL, 3MF & STEP in prints/')
+    y=718
+    intro=('Five optional accessories can be 3D printed for the interior. Every model is a single watertight solid '
+           'designed with self-supporting geometry (no overhang exceeds 45 degrees from vertical), so all pieces print upright '
+           'without slicer supports or brim. Sized to exceed the EN 71-1 small-parts cylinder (D31.7 x 57.1 mm) for child play. '
+           'Recommended slicing: 0.4 mm nozzle, 0.20 mm layer height, 20 % infill, 2 perimeters, standard PLA.')
+    y=para(c,intro,M,y,size=8.5,leading=11.5)
+
+    manifest_path=ROOT/'prints/manifest.json'
+    manifest=json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+    parts_meta=manifest.get('parts',{})
+
+    items=[
+        ('stove','PR-01','Kakelugn tiled stove','Ground floor kitchen','Traditional cylindrical kakelugn with arched firebox door, waist shelf, and flared crown cornice.'),
+        ('chandelier','PR-02','Hanging chandelier','Floor 1 living room (ceiling)','4 candle holders with tapered candles, central fluted stem, and diamond suspension eyelet.'),
+        ('bathtub','PR-03','Clawfoot bathtub','Floor 2 bathroom','Clawfoot plinth with four cone feet, smooth flared tub shell, and plug hole. Sized for Moomintroll.'),
+        ('table','PR-04','Round pedestal table','Ground floor dining room','Single flared 45-degree conical pedestal column, wide stable foot, and rounded top edge.'),
+        ('chair','PR-05','Dining chairs (x2)','Ground floor dining room','Arched backrest and 45-degree tunnel seat arches for 100 % support-free printing.'),
+    ]
+
+    top_w=(W-2*M-16)/2
+    card_y=y-10
+    card_h=135
+    for idx,key in enumerate(['stove','chandelier']):
+        it=next(item for item in items if item[0]==key)
+        cx=M+idx*(top_w+16)
+        c.setFillColor(colors.HexColor('#F8F9F8'));c.setStrokeColor(LINE);c.roundRect(cx,card_y-card_h,top_w,card_h,4,fill=1,stroke=1)
+        img_p=ROOT/'output/previews'/f'print-{key}.png'
+        if img_p.exists():
+            c.drawImage(str(img_p),cx+6,card_y-card_h+8,width=100,height=card_h-16,preserveAspectRatio=True,anchor='c',mask='auto')
+        info_x=cx+112;info_w=top_w-118;ty=card_y-16
+        label(c,f'{it[1]}  {it[2]}',info_x,ty,9.5)
+        meta=parts_meta.get(key,{})
+        sz=meta.get('size',[0,0,0])
+        wt=meta.get('grams',{}).get('estimate',0)
+        c.setFont('Helvetica',7.5);c.setFillColor(TEAL)
+        c.drawString(info_x,ty-13,f'Room: {it[3]}')
+        c.drawString(info_x,ty-24,f'Size: {sz[0]:.0f} x {sz[1]:.0f} x {sz[2]:.0f} mm  |  Weight: ~{wt:.0f} g PLA')
+        c.drawString(info_x,ty-35,f'Files: prints/{key}.stl / .3mf / .step')
+        para(c,it[4],info_x,ty-48,width=info_w,size=7.2,leading=9.5,color=INK)
+
+    bot_y=card_y-card_h-12
+    bot_w=(W-2*M-20)/3
+    bot_h=135
+    for idx,key in enumerate(['bathtub','table','chair']):
+        it=next(item for item in items if item[0]==key)
+        cx=M+idx*(bot_w+10)
+        c.setFillColor(colors.HexColor('#F8F9F8'));c.setStrokeColor(LINE);c.roundRect(cx,bot_y-bot_h,bot_w,bot_h,4,fill=1,stroke=1)
+        img_p=ROOT/'output/previews'/f'print-{key}.png'
+        if img_p.exists():
+            c.drawImage(str(img_p),cx+(bot_w-72)/2,bot_y-68,width=72,height=60,preserveAspectRatio=True,anchor='c',mask='auto')
+        ty=bot_y-78
+        label(c,f'{it[1]} {it[2]}',cx+6,ty,8.5)
+        meta=parts_meta.get(key,{})
+        sz=meta.get('size',[0,0,0])
+        wt=meta.get('grams',{}).get('estimate',0)
+        c.setFont('Helvetica',7);c.setFillColor(TEAL)
+        c.drawString(cx+6,ty-11,f'{sz[0]:.0f} x {sz[1]:.0f} x {sz[2]:.0f} mm  |  ~{wt:.0f} g PLA')
+        c.drawString(cx+6,ty-21,f'{it[3]}')
+        para(c,it[4],cx+6,ty-31,width=bot_w-12,size=6.8,leading=8.5,color=INK)
+
+    tbl_y=bot_y-bot_h-14
+    rows=[]
+    for it in items:
+        meta=parts_meta.get(it[0],{})
+        sz=meta.get('size',[0,0,0])
+        wt=meta.get('grams',{}).get('estimate',0)
+        rows.append([it[1],it[2],it[3],f'{sz[0]:.0f} x {sz[1]:.0f} x {sz[2]:.0f}',f'{wt:.0f} g',f'prints/{it[0]}.stl'])
+    table(c,rows,M,tbl_y,[44,115,145,80,45,86],['Part ID','Part Name','House Placement','Size (W x D x H mm)','PLA','Mesh file'],7.5)
+
+    b.end()
+
 def strip_rows():
     """No-laser option: 3 mm parts that are plain rectangles a few mm wide can be cut from bought strip wood."""
     groups={}
@@ -378,7 +452,7 @@ def manual():
     b=Book('Moomin-House-Instructions.pdf','Instructions');c=b.c
     c.drawImage(str(ROOT/'output/previews/cover.png'),0,0,width=W,height=H)
     c.setFillColor(INK);c.rect(0,0,W,65,fill=1,stroke=0);c.setFillColor(colors.white);c.setFont('Helvetica-Bold',11);c.drawCentredString(W/2,39,f'{CFG["height"]:g} mm tall  /  Three floors + attic  /  Round D{CFG["base_diameter"]:g} base');c.setFont('Helvetica',9);c.drawCentredString(W/2,21,'Real CAD  -  Jigsaw templates  -  Illustrated assembly');b.n=1;c.showPage()
-    overall_page(b);figures_page(b)
+    overall_page(b);figures_page(b);printables_page(b)
     rows=hardware_rows()
     b.page('Buy the hardware first','Exact installed quantities + sensible spare packs')
     para(c,'Every fastener has a drawing code. D means diameter. Countersunk screw length includes the head. Pan-head bolt length starts below the head. Wood screws bite into timber through a pilot hole. M3 bolts need matching nuts.',M,715,size=10)
@@ -550,7 +624,7 @@ def manual():
     b.page('Roof ring and cleats from below','R02 (3 mm) + R04 x12 / cone bearing faces / retaining gap')
     imagebox(c,'roof-underside',M,280,W-2*M,431)
     para(c,f'R02 ring: underside Z{EAVE:g}, thickness 3, outer vertex radius {182*CFG["wall_height"]/450:g}. Three 120-degree sections (R02, R02B, R02C), centered on the cone. R04 cleats start at radial {170*CFG["wall_height"]/450:g}, bottom Z{EAVE+3:g}. Place one cleat in the center of each cone facet. Glue its level bottom to the ring and its slope to the roof skin. The dormer openings stop {dmr["cleat_clearance"]:g} mm short of their cleats.',M,244,size=10,leading=15)
-    para(c,f'Use R05 angle gauges to hold the cone while its taped seams cure. Make the ring and all twelve cleats part of the removable roof. The turn-button underside is Z{EAVE+9:g}, giving 6 mm above the ring. The finial ball top is Z{DER["total_height"]:g}.',M,152,size=10,leading=15)
+    para(c,f'Use R05 angle gauges to hold the cone while its taped seams cure. Make the ring and all twelve cleats part of the removable roof. The finial ball top is Z{DER["total_height"]:g}.',M,152,size=10,leading=15)
     b.end()
     b.page('Validation and workshop checks','CAD checks do not replace a physical dry fit')
     r=json.loads((ROOT/'output/reports/cad-validation.json').read_text())

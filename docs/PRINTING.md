@@ -1,6 +1,6 @@
 # 3D-printable furniture
 
-The house's furniture and accessories can also be 3D printed. Each design is a short Python file. Its STL, 3MF and STEP files are generated on the Mac, and the [prints page](https://hvitis.github.io/moominshouse/prints.html) shows every published design in 3D with its print checks and downloads.
+The house's furniture and accessories can also be 3D printed. Each design is a short Python file. Its STL, 3MF and STEP files are generated on the Mac, and the [prints page](https://hvitis.github.io/MoominsHouse/#printables) shows every published design in 3D with its print checks and downloads. It is the **3D printables** tab of the viewer (`#printables`, which loads `prints.html?embedded=1`); `prints.html` also works on its own. The designs are checked for a stock Creality Ender 3.
 
 | Where | What runs | Needs |
 | --- | --- | --- |
@@ -59,7 +59,7 @@ def build(size):
 
 ## The print checks
 
-Every check reads the STL that is offered for download, not the CAD solid it came from (`source/print_mesh.py`). The limits are in `source/prints/printer.json`. Set them to match your printer: changing the file rebuilds every design in the studio, and `make prints` republishes them.
+Every check reads the STL that is offered for download, not the CAD solid it came from (`source/print_mesh.py`). The limits are in `source/prints/printer.json`, set for a stock Creality Ender 3: a 220 × 220 × 250 mm build volume, a 0.4 mm nozzle and PLA. The weight estimate assumes its standard slicer profile (two 0.4 mm walls, 20 % infill). Change the file for another printer: the studio rebuilds every design when it is saved, and `make prints` republishes them. The studio also reloads `print_mesh.py` itself when it changes.
 
 | Check | Fails or warns when |
 | --- | --- |
@@ -68,7 +68,7 @@ Every check reads the STL that is offered for download, not the CAD solid it cam
 | Fits the printer | It does not fit the bed (either way round) less `bed_margin`, or it is taller than the build volume. **Fail** |
 | Stands flat on the bed | Less than `min_base_area` mm² touches the bed: **warn**, add a brim. Under 1 mm²: **fail** |
 | No supports needed | A surface leans out more than `max_overhang` degrees from vertical (1° of grace for faceted cones). **Warn**. The page paints these faces red |
-| Walls thick enough | The thinnest wall at `wall_samples` sampled places, measured straight into the part, is under `min_wall`. **Fail**. A red dot marks the place |
+| Walls thick enough | The thinnest wall at `wall_samples` sampled places is under `min_wall`. Each is measured straight into the part to the wall's other side, a surface facing back within 60°, so the corner of an acute edge (the rim of a tapered foot) does not count as thin. **Fail**. A red dot marks the place |
 | Too big to swallow | The part fits the EN 71-1 small-parts cylinder (config `figures.small_parts`, the same rule as the clay figures). **Fail**, unless the design sets `TOY=False` |
 
 The page also gives the size, the solid weight and a rough weight at the profile's `shell` and `infill`. Your slicer gives the real weight and time.

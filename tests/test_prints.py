@@ -47,6 +47,16 @@ def test_a_thin_plate_fails_the_wall_check():
     V,F=hexahedron((60,60),(60,60),.8)
     assert statuses(V,F)['wall']=='fail'
 
+def test_an_acute_edge_is_not_a_thin_wall():
+    # A foot narrowing upward (sides 8.5 degrees in from vertical), its bottom split so one sliver triangle
+    # lies 0.01 mm from an edge. A ray from there into the part meets the side almost at once, but that side
+    # does not face back, so it is the corner of a wedge, not a thin wall.
+    V,F=hexahedron((40,40),(34,34),20)
+    V=np.vstack([V,[0,-19.99,0]]);p=8
+    F=np.vstack([F[2:],[(0,p,1),(1,p,2),(2,p,3),(3,p,0)]])
+    assert statuses(V,F)['closed']=='pass'
+    assert statuses(V,F)['wall']=='pass'
+
 def test_a_part_that_fits_the_small_parts_cylinder_fails_unless_it_is_not_a_toy():
     V,F=hexahedron((20,20),(20,20),20)
     assert statuses(V,F)['small_parts']=='fail'

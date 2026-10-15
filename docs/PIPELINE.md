@@ -9,7 +9,7 @@ Every part, placement, PDF page, cut sheet and render is generated from `source/
 | **FreeCAD 1.1+ bundled Python** | `build_cad.py`, `audit_connections.py`, `thickness_check.py`, `run_stress_tests.py` | FreeCAD, Part, Sketcher, Mesh (the OpenCASCADE solid kernel), numpy, shapely |
 | **Your own Python 3.12+** (`.venv`) | `model.py`, `nest.py`, `stock.py`, `render.py`, `cover.py`, `decorate_cad.py`, `book.py`, `cut_file.py`, `verify.py`, `package.py`, `serve.py`, `config_check.py`, `export_viewer.py`, `release.py` | `requirements.txt`: reportlab, Pillow, numpy, pypdf, jsonschema, shapely (plus pytest from `requirements-dev.txt` for the tests) |
 
-`make all` runs everything in order: `make check` (config check and tests), `make build` (`source/rebuild.py`) and `make tolerance` (`thickness_check.py`). `source/rebuild.py` drives both runtimes. It checks the config first (`config_check.py`) and empties `output/`, so no file from an earlier build survives. It then runs the FreeCAD stages headless (`MOOMIN_HEADLESS=1`, `QT_QPA_PLATFORM=offscreen`), then the rest in the Python that launched it. Any failed check stops the build: `build_cad.py` exits with a list of the failures before nesting starts, and `verify.py` and `package.py` refuse to continue.
+`make all` runs everything in order: `make check` (config check and tests), `make build` (`source/rebuild.py`) and `make tolerance` (`thickness_check.py`). `source/rebuild.py` drives both runtimes. It checks the config first (`config_check.py`) and copies the build inputs into `.build-work/`. It starts with fresh output there. A failed build preserves the previous `output/` and keeps its diagnostics. A successful build replaces `output/` and updates the generated documentation. Concurrent edits to the copied inputs stop publication. It then runs the FreeCAD stages headless (`MOOMIN_HEADLESS=1`, `QT_QPA_PLATFORM=offscreen`), then the rest in the Python that launched it. Any failed check stops the build: `build_cad.py` exits with a list of the failures before nesting starts, and `verify.py` and `package.py` refuse to continue.
 
 `model.py` itself needs only numpy, so `source/serve.py` can generate the viewer data without FreeCAD.
 
@@ -60,9 +60,10 @@ flowchart LR
 | 9 | `book.py` (+ `shingles.py`, `supplier.py`, `pdf_assembly.py`) | venv | `parts.json`, `nesting.json`, previews, CAD report, locale catalogs | eight PDFs, supplier CSV, PDF report, template indices, supplier index and clickable contents index |
 | 10 | `cut_file.py` | venv | `parts.json`, `nesting.json` | `output/Moomin-House-Supplier-Cut.dxf` (every sheet's cutting lines in one DXF, one layer per thickness) and `reports/supplier-cut-file.json` |
 | 11 | `verify.py` | venv | everything above | `reports/release-validation.json`, `parts.csv`, `hardware.csv`, `stock.csv` |
-| 12 | `package.py` | venv | the validation report, `nesting.json` | `output/Moomin-House-Build-Kit.zip`, `reports/build-manifest.json`, and the stock tables in `docs/BUILD-GUIDE.md` |
+| 12 | `thickness_check.py` (with `--tolerance`) | FreeCAD | the built model | `reports/thickness-tolerance.json`; failure stops packaging |
+| 13 | `package.py` | venv | the validation report, `nesting.json` | `output/Moomin-House-Build-Kit.zip`, `reports/build-manifest.json`, and the stock tables in `docs/BUILD-GUIDE.md` |
 
-`package.py` refuses to package if any release check failed. After the build, `thickness_check.py` (FreeCAD) rebuilds every plywood part at the thinnest and thickest end of `thickness_tolerance`, about its mid-plane, reruns the CAD checks and writes `reports/thickness-tolerance.json`. Overlaps between parts that already touch at nominal size count as shifts; an overlap where the design had a gap fails the check. `verify_gui.py` is an optional extra: run it with FreeCAD's Python to check that the saved GUI document restores.
+`package.py` refuses to package if any release check failed. With `--tolerance`, it also requires passing thickness evidence. Both reports and the manifest are inside the ZIP. Before packaging, `thickness_check.py` (FreeCAD) rebuilds every plywood part at the thinnest and thickest end of `thickness_tolerance`, about its mid-plane, reruns the CAD checks and writes `reports/thickness-tolerance.json`. Overlaps between parts that already touch at nominal size count as shifts; an overlap where the design had a gap fails the check. `verify_gui.py` is an optional extra: run it with FreeCAD's Python to check that the saved GUI document restores.
 
 A full rebuild takes about three minutes on an Apple-silicon Mac. The FreeCAD CAD stage takes about 50 s of that and nesting about 70 s (24 part orders per thickness on all cores).
 
@@ -130,7 +131,7 @@ To add a part, call `add(...)` to define its profile and `put(...)` (or `upright
 | `figures` | Which clay Moomin stands on which floor (`levels`), their turn, their finished `heights`, the `door_clearance` every figure must have in every doorway, and the clay estimate (`density`, `block`, `allowance`, `foil_wall`). |
 | `stairs` | The veranda side stair. |
 | `tower_diameter`, `roof_diameter`, `floor_pitch`, `wall_height` | The main proportions. |
-| `thickness` | Plywood thickness per role: `structure`, `base`, `wall`, `furniture`, `detail`, `floor`. Each is 3 or 6 mm, the only two sheet thicknesses: `structure` (6) covers the pillars and the lower turn-button ply, `detail` (3) the doors, railings, trim, seam strips and the upper turn-button ply, `furniture` (3) the drawer bottom. |
+| `thickness` | Plywood thickness per role: `structure`, `base`, `wall`, `furniture`, `detail`, `floor`. Each is 3 or 6 mm, the only two sheet thicknesses: `structure` (6) covers the pillars, `detail` (3) the doors, railings, trim, seam strips , `furniture` (3) the drawer bottom. |
 | `moving_clearance`, `nest_spacing`, `stock_margin`, `starter_diameter` | Workshop tolerances. `nest_spacing` defaults to 3 mm for laser cutting. Router cutting requires wider lanes and new nesting. |
 | `fabrication` | A3 stock, pillar opening allowance, pillar end margins, floor and base support sections, base lift, and floor seam position. |
 | `laser` | Legacy settings for thin laser sheets. The A3 fabrication policy uses `nest_spacing` for both thicknesses. |
@@ -163,7 +164,7 @@ make all                          # or: make check / make build / make tolerance
 make all FREECAD_PYTHON=/path/to/freecad/python   # FreeCAD outside /Applications
 ```
 
-Without `make`: `.venv/bin/python source/rebuild.py --freecad-python /Applications/FreeCAD.app/Contents/Resources/bin/python`.
+Without `make`: `.venv/bin/python source/rebuild.py --freecad-python /Applications/FreeCAD.app/Contents/Resources/bin/python --tolerance`.
 
 **The supplier cut file (one DXF with everything to cut):**
 
@@ -224,10 +225,10 @@ You can also enable Pages with the GitHub CLI:
 gh api -X POST 'repos/<owner>/<repo>/pages' -f build_type=workflow
 ```
 
-The full FreeCAD build does not run in the push and pull-request CI. Pushing a `v*` tag from `main` runs `.github/workflows/release.yml`, which does the full rebuild and tolerance check on Linux and publishes the release. Releases can also be made from a local build:
+The full FreeCAD build does not run in the push and pull-request CI. Pushing a `v*` tag from `main` runs `.github/workflows/release.yml`, which does the full rebuild and tolerance check on Linux, packages the passing reports, then publishes the release. Releases can also be made from a local build:
 
 ```sh
-.venv/bin/python source/rebuild.py --freecad-python "$FREECAD_PYTHON"
+.venv/bin/python source/rebuild.py --freecad-python "$FREECAD_PYTHON" --tolerance
 git commit ... && git push                                   # release.py insists the source is committed and pushed
 .venv/bin/python source/release.py v5 --dry-run              # check and preview the release notes
 .venv/bin/python source/release.py v5                        # tag the current commit and upload the assets

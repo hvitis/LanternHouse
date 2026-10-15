@@ -63,8 +63,8 @@ def through_cuts(data,sheet):
     return [curve for name,curves in ops.items() if is_through(name,sheet['thickness']) for curve in curves]
 
 
-def draw(c,curves,scale,ox=0,oy=0):
-    c.setStrokeColorRGB(0,0,0);c.setLineWidth(.01*scale)
+def draw(c,curves,scale,ox=0,oy=0,line_width=.01,color=(0,0,0)):
+    c.setStrokeColorRGB(*color);c.setLineWidth(line_width*scale)
     for kind,curve in curves:
         if kind=='circle':
             x,y,r=curve;c.circle(ox+x*scale,oy+y*scale,r*scale,stroke=1,fill=0)

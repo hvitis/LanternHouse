@@ -6,7 +6,7 @@ Every file it mentions under `output/` is **generated**: it is not in the reposi
 
 ## What you are building
 
-A real plywood house, 838.4 mm tall. It has three main floors, an attic under a steep cone roof with a ball finial and two dormers, opening front walls, a permanent veranda, a stone plinth with a hidden drawer, and a round Ø522.7 grey base. The tower uses twelve flat facets so it can be built with a jigsaw.
+A plywood house with the dimensions listed in the generated table below. It has three main floors, an attic under a steep cone roof with a ball finial and two dormers, opening front walls, a permanent veranda, a stone plinth with a hidden drawer, and a round base. The tower uses twelve flat facets so it can be built with a jigsaw.
 
 The ground floor has five windows, the middle and bedroom floors have six each, and the attic has two dormer windows: one over W06, beside the veranda and next to the chimney, and one over W12 on the opposite side, above the main door. Both sit just above the eave cleats, each inside one roof panel. Every window keeps a solid cross of wall between four panes, with a one-piece cream surround and clear PET glazing. The veranda has a 149.3 × 84 deck and stands on the fixed back-left facet W07, so it never has to be removed: both front walls swing open past it. It has:
 
@@ -17,7 +17,7 @@ The ground floor has five windows, the middle and bedroom floors have six each, 
 
 Its door opens outward onto the deck. The main entrance on W12 has a separate small gabled canopy.
 
-The house stands on a 61.6 mm stone plinth on a 6 mm base, so the ground floor is at Z71.6. A drawer hidden in the plinth is about 46 mm deep inside and slides 200 mm out to the back-right, where a dowel in its bottom slot stops it; its front is two stone plinth panels with a finger notch underneath. Each storey has one room divider with a 38 × 93.3 doorway at its front end, 16 mm clear of the opening walls, with a 3 mm door leaf on cotton-tape hinges. The two front wall shells hang 1 mm above the plinth, click shut on catches under the attic floor and stop at 100° against two small garden posts on the base; the four magnets are sealed inside hardwood. Six thermo-clay (oven-hardening polymer clay) figures live in the house: Moominmamma and Snufkin on the ground floor, Moominpappa and the Snork Maiden in the living room, Moomintroll in the bedrooms and Little My in the attic. The veranda deck is level with the ground floor, on a blue skirt with a 4-step side stair, and a rope ladder runs from its roof to the eave beside the dormer. The main entrance and the back door (W09, kitchen side, with a lean-to canopy and a woodpile beside it) have 4 stone steps each. All three doors open outward.
+The house stands on a 61.6 mm stone plinth on a 6 mm base, with the floor levels listed below. A drawer hidden in the plinth is about 46 mm deep inside and slides 200 mm out to the back-right, where a dowel in its bottom slot stops it; its front is two stone plinth panels with a finger notch underneath. Each storey has one room divider with a 38 × 93.3 doorway at its front end, 16 mm clear of the opening walls, with a 3 mm door leaf on cotton-tape hinges. The two front wall shells hang 1 mm above the plinth, click shut on catches under the attic floor and stop at 100° against two small garden posts on the base; the four magnets are sealed inside hardwood. Six thermo-clay (oven-hardening polymer clay) figures live in the house: Moominmamma and Snufkin on the ground floor, Moominpappa and the Snork Maiden in the living room, Moomintroll in the bedrooms and Little My in the attic. The veranda deck is level with the ground floor, on a blue skirt with a 4-step side stair, and a rope ladder runs from its roof to the eave beside the dormer. The main entrance and the back door (W09, kitchen side, with a lean-to canopy and a woodpile beside it) have 4 stone steps each. All three doors open outward.
 
 The F01 floors have four pillar openings each. There are no stairs inside. Play access is through the opening walls and the lift-off roof. The furniture appears in the 3D viewer and renders only. It has no CAD plans, printouts or cutting sheets.
 
@@ -49,16 +49,27 @@ The F01 floors have four pillar openings each. There are no stairs inside. Play 
 
 ## Main dimensions
 
-- **Base:** Ø522.7, four 6 mm sections over 6 mm underside supports and rim pads. The horizontal seam is 4 mm below the centre.
-- **Plinth:** 61.6 mm above the base, with a divided 6 mm ground-floor plate.
-- **Tower:** 326.7 mm across vertices. Fixed walls are 420 mm tall. Opening walls are 418 mm tall.
-- **Floors:** 6 mm plywood. Tops are Z71.6, Z211.6, Z351.6, and Z491.6. Clear room height is 134 mm.
-- **Pillars:** four continuous 6 mm P01 parts, 402 mm long. Both F01 levels have matching 6.6 mm through-openings.
-- **Floor joints:** every floor is three pieces: a rear piece and, at the front you see when the house opens, two pieces joined on the house axis by a CNC puzzle joint (three rounded knobs, alternating sides, 0.1 mm gap). The ground floor's straight cross seam and its puzzle seam lie over 3 mm thick, 4 mm wide strips (each side has 2 mm bearing); the upper floors' finger joints over 3 × 12 mm strips, with the room divider standing 1 mm under each puzzle seam.
-- **Roof:** about 373.3 mm across, with an eave at Z491.6. The reinforcement ring uses two joined halves.
-- **Veranda:** 149.3 × 84 mm deck, with its top at Z77.6.
-- **Figures:** Pappa 60.7, Mamma 50.4, Troll 42.9, Snufkin 70, Snork Maiden 49 and Little My 62 mm target heights. All pass the 38 mm divider doorways and none fits the small-parts cylinder.
-- **Height:** 838.4 mm, including the D35 finial ball and base supports.
+<!-- specifications:start -->
+| Specification | Value |
+| --- | --- |
+| Finished height | 778.4 mm |
+| Base diameter / plywood | 522.7 mm / 6 mm |
+| Plinth height | 61.6 mm |
+| Tower diameter / wall plywood | 326.7 mm / 3 mm |
+| Fixed / opening wall height | 420 mm / 418 mm |
+| Floor plywood / floor tops | 6 mm / Z73.6, Z213.6, Z353.6, Z493.6 |
+| Clear room height | 134 mm |
+| Pillars: quantity / section / length | 4 / 6 × 16.8 mm / 402 mm |
+| Pillar slot clearance | 0.6 mm |
+| Roof diameter / eave height | 373.3 mm / Z493.6 |
+| Roof ring: sections / plywood | 3 / 3 mm |
+| Base sections | 8 |
+| Veranda deck / facet | 149.3 × 84 mm / W07 |
+| Drawer travel | 200 mm |
+| Opening wall stop | 100° |
+| Floor support strips: ground / upper | 3 × 4 mm / 3 × 12 mm |
+| Floor joint clearance | 0.1 mm |
+<!-- specifications:end -->
 
 These are the values for the default `source/config.json`. The book and the 3D viewer always show the values for your current config.
 
@@ -98,7 +109,7 @@ Interior pages have white backgrounds for economical printing. CAD diagrams have
 
 **A3 CNC sheets and A4 hand templates**
 
-All plywood stock has the A3 dimensions 297 × 420 mm and only two thicknesses, 3 and 6 mm, on separate sheets. The tower walls, corner ribs, room dividers, doors, railings, drawer bottom, veranda deck, skirts, headers, roof crossframe and seam strips are 3 mm; the floors, base, plinth, pillars and the supports under the base are 6 mm; each roof turn-button is a 6 mm and a 3 mm ply glued together. Fixed walls retain the supplied end edges. Moving walls have 1 mm end allowances. P01 pillars have 5 mm end margins. Other parts use 10 mm margins.
+All plywood stock has the A3 dimensions 297 × 420 mm and only two thicknesses, 3 and 6 mm, on separate sheets. The tower walls, corner ribs, room dividers, doors, railings, drawer bottom, veranda deck, skirts, headers, roof crossframe and seam strips are 3 mm; the floors, base, plinth, pillars and the supports under the base are 6 mm. Fixed walls retain the supplied end edges. Moving walls have 1 mm end allowances. P01 pillars have 5 mm end margins. Other parts use 10 mm margins.
 
 1. Send `Moomin-House-Supplier.pdf` and `Moomin-House-Supplier-Cut.dxf` (everything to cut, in one file) to the company. Both come with every release, or from `make build`; `make cutfile` rewrites the DXF from the last build's nesting. A shop that machines blind pockets also needs the operation CSV, DXF and SVG files.
 2. Use the operation schedule to identify each production page.
@@ -176,7 +187,7 @@ The hinge hole patterns, centers, pilots and packing all come from `config.json`
 1. **Base and plinth.** Join the four base quarters over the underside supports on a flat board. Then glue the ten stone panels, the two drawer guide walls and the back stop onto the grey base. Screw the four foot blocks to the ground-floor plate F00 from below, then glue F00 on top.
 2. **Drawer.** Build the drawer box with its stone front and slide it in from the back-right.
 3. **Fixed rear shell.** Glue up the six rear facets and glue them to F00. Identical walls share one ID, so the rear reads W04, W05, W06, W07, W06, W09; the wall map in the book shows each facet.
-4. **Floors and pillars.** Join the 6 mm floor sections over their seam strips (3 × 4 mm under the ground floor, 3 × 12 mm under the others). Use the positioning maps. Make a physical joint sample first. Install four continuous P01 pillars on the foot blocks. Slide both F01 levels over the rectangular openings. Seat F02 on the pillar tops. Fit metal floor supports under both F01 levels and F02; they are added after production and are not part of the kit.
+4. **Floors and pillars.** Join the 6 mm floor sections over their seam strips (3 × 4 mm under the ground floor, 3 × 12 mm under the others). Use the positioning maps. Make the [physical joint samples](JOINT-VALIDATION.md) first. Install four continuous P01 pillars on the foot blocks. Slide both F01 levels over the rectangular openings. Seat F02 on the pillar tops. Fit metal floor supports under both F01 levels and F02; they are added after production and are not part of the kit.
 5. **Opening shells.** Build the two front wall shells.
    - Square-edge wall corners use flat 3 mm corner ribs inside. A J01 rib lies across a whole facet and reaches about 30 mm onto both neighbours, so one rib holds two corners; dry-fit it, then glue all three walls to it at once so it sets both 150° angles. The one fixed-shell corner no rib can take gets a J02 bracket. Beside the three doors the ground-floor low braces sit just above the door openings and use the short-legged J03 and J04, which clear the windows beside the doors. Fill the small exterior seams where the walls are fixed; keep them clear where they move.
    - Glue backing blocks before drilling for hinges.
@@ -189,14 +200,14 @@ The hinge hole patterns, centers, pilots and packing all come from `config.json`
    - Cloth tape reinforces the interior roof seams.
    - Each dormer is glued onto its R06 panel round the opening; its window gets a DM06 frame and a GZ2 pane.
    - Fit the chimney, cap and finial ball permanently to the roof assembly.
-   - Two captive turn-buttons retain the roof over its ring. Glue each from its 6 mm E08 and 3 mm E09 ply first, an M3 screw through both holes to line them up; the book shows the complete M3 washer and spacer stack.
+   - The current model has no roof turn-button catches. The roof ring lifts off with the cone.
 9. **Veranda.** Glue the skirt and joists onto the base against the plinth, then the deck on top, level with the veranda door threshold. Add the side stair.
    - Glue eight 3 mm C01 pieces in pairs to make four 6 mm columns. Align the profiles and clamp flat.
    - After the glue cures, stand the four columns.
    - Glue the rear header flat to W07; this ties the veranda roof to the fixed shell.
    - Add the angled side headers, the crossframe, the roof panels and the hip caps, then the railings and steps.
 
-To play, swing both walls open until they rest against the garden posts at 100°, where the sealed magnets hold them. Strap the house to the room wall with the anti-tip kit. The veranda stays in place, and the hidden drawer pulls out to the back-right. Release the two attic turn-buttons before lifting the roof, and close in the reverse order. Lift the house by its base. The catches, door sweeps and hinge gaps must stay clear of furniture and paint buildup.
+To play, swing both walls open until they rest against the garden posts at 100°, where the sealed magnets hold them. Strap the house to the room wall with the anti-tip kit. The veranda stays in place, and the hidden drawer pulls out to the back-right. Lift the roof clear of the tower before reaching into the attic. Lift the house by its base. The catches, door sweeps and hinge gaps must stay clear of furniture and paint buildup.
 
 ## Example furniture
 
@@ -255,7 +266,7 @@ Every build writes `output/reports/cad-validation.json` and `release-validation.
 
 - **Parts and profiles:** valid one-solid profiles; native sketch features agree with the independent solids.
 - **Files:** the native document and the STEP files reopen correctly.
-- **Closed assembly:** no overlaps, with exact Ø522.666667 × 838.4 bounds.
+- **Closed assembly:** no overlaps, with bounds matching the generated specifications.
 - **Wall motion:** sampled every 5° from 0° to the 100° stop, with the veranda, the garden posts and the example furniture in place. The catches, the stops and their four sealed magnets are counted.
 - **Doors:** all three entrance doors and three room doors swing 0–90° clear of everything.
 - **Windows:** the veranda keeps 10 mm clear in front of every window.

@@ -4,19 +4,32 @@ FREECAD_PYTHON ?= /Applications/FreeCAD.app/Contents/Resources/bin/python
 PYTHON ?= .venv/bin/python
 FREECAD_ENV = MOOMIN_HEADLESS=1 QT_QPA_PLATFORM=offscreen
 
-.PHONY: all check build tolerance stackup cutfile clean viewer site stress images prints studio help
+.PHONY: all check build tolerance stackup cutfile clean viewer site stress images prints studio joints specs lint format help
 
-all: check build tolerance  ## Config check and tests, full rebuild, then the plywood thickness check
-	$(PYTHON) source/package.py
+all: check  ## Config and tests, isolated rebuild, thickness check, then package and publish output
+	$(PYTHON) source/rebuild.py --freecad-python "$(FREECAD_PYTHON)" --tolerance
 
 stress:  ## Physical real stress tests with FreeCAD FEM, CalculiX, and Eurocode 5 analytics
 	$(FREECAD_ENV) "$(FREECAD_PYTHON)" source/run_stress_tests.py
+
+joints:  ## Prepare laser-cut joint samples, full-size templates and a blank physical measurement log
+	$(PYTHON) source/joint_samples.py --process laser
 
 check:  ## Config schema and rules, then the model tests (seconds, no FreeCAD)
 	$(PYTHON) source/config_check.py
 	$(PYTHON) -m pytest -q
 
-build:  ## Empty output/, then CAD, sheets, renders, book, release checks and the build kit
+specs:  ## Update documentation specifications from a fresh model
+	$(PYTHON) source/specifications.py
+
+lint:  ## Lint and check formatting in the modules adopted for incremental cleanup
+	$(PYTHON) -m ruff check
+	$(PYTHON) -m ruff format --check
+
+format:  ## Format only the modules adopted for incremental cleanup
+	$(PYTHON) -m ruff format
+
+build:  ## Build in isolation and replace output/ only after all nominal checks and packaging succeed
 	$(PYTHON) source/rebuild.py --freecad-python "$(FREECAD_PYTHON)"
 
 tolerance:  ## The house from the nominal templates with the thinnest and thickest measured plywood

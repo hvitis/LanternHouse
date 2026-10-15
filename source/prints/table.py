@@ -6,7 +6,7 @@ underside of the top needs none. The top's upper edge and the foot are rounded.
 from build123d import Axis, Plane, Polygon, fillet, revolve
 
 TITLE='Round table'
-NOTES='Print upright, as shown. PLA, 0.2 mm layers, 3 walls, 15 % infill, no supports.'
+NOTES='Print upright, as shown, with no supports: the standard Ender 3 PLA profile (0.2 mm layers, 20 % infill) is fine.'
 COLOR='cream'
 PARAMS={
     'diameter':(52,40,90,1),

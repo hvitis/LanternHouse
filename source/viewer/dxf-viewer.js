@@ -51,7 +51,7 @@ export function parseDxf(text){
   return {entities,layers,units};
 }
 
-const dialog=$('dxfDialog'),viewport=$('dxfViewport'),status=$('dxfStatus');
+const panel=$('dxfPanel'),viewport=$('dxfViewport'),status=$('dxfStatus');
 let canvas,ctx,drawing,sourceText='',fileName='Moomin-House-Supplier-Cut.dxf',pending,needsFit=false;
 let scale=1,tx=0,ty=0,fitScale=1,width=1,height=1;
 let pieceLabels=[];
@@ -109,7 +109,7 @@ function zoom(factor,x=width/2,y=height/2){
   tx=x-wx*scale;ty=y+wy*scale;draw();
 }
 function resize(){
-  if(!canvas||!dialog.open)return;
+  if(!canvas||panel.hidden)return;
   const center=world(width/2,height/2);width=viewport.clientWidth;height=viewport.clientHeight;
   const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
   tx=width/2-center[0]*scale;ty=height/2+center[1]*scale;draw();
@@ -154,22 +154,24 @@ function load(text,name,labels=[]){
   const [x0,y0,x1,y1]=bounds(drawing.entities);
   status.textContent=`${name} · ${drawing.entities.length} paths · ${(x1-x0).toFixed(1)} × ${(y1-y0).toFixed(1)} ${drawing.units}`;
   status.setAttribute('role','status');viewport.setAttribute('aria-busy','false');viewport.dataset.ready='true';$('dxfDownload').disabled=false;
-  needsFit=true;if(dialog.open){resize();fit();needsFit=false;canvas.focus();}
+  needsFit=true;if(!panel.hidden){resize();fit();needsFit=false;}
 }
 function error(message){status.textContent=message;status.setAttribute('role','alert');viewport.setAttribute('aria-busy','false');}
 async function open(){
-  dialog.showModal();init();resize();
-  if(drawing){if(needsFit){fit();needsFit=false;}canvas.focus();return;}
+  init();resize();
+  if(drawing){if(needsFit){fit();needsFit=false;}return;}
   status.textContent='Loading the supplier drawing…';status.setAttribute('role','status');viewport.setAttribute('aria-busy','true');
   pending??=Promise.all([
     fetch('./data/house.dxf').then(async response=>{if(!response.ok)throw new Error(`Could not load the DXF (HTTP ${response.status}).`);return response.text();}),
     fetch('./data/dxf-labels.json').then(async response=>{if(!response.ok)throw new Error(`Could not load the piece IDs (HTTP ${response.status}).`);return response.json();})
   ]).finally(()=>{pending=null;});
-  try{const [text,labels]=await pending;if(!drawing)load(text,'Moomin-House-Supplier-Cut.dxf',labels);}catch(e){error(`${e.message} Retry by closing and reopening, or open a DXF file.`);}
+  try{const [text,labels]=await pending;if(!drawing)load(text,'Moomin-House-Supplier-Cut.dxf',labels);}catch(e){error(`${e.message} Switch tabs to retry, or open a DXF file.`);}
 }
-$('openDxf').addEventListener('click',open);
-$('closeDxf').addEventListener('click',()=>dialog.close());
-dialog.addEventListener('close',()=>{pointers.clear();$('openDxf').focus();});
+addEventListener('previewchange',event=>{
+  pointers.clear();
+  if(event.detail.preview==='dxf')open();
+});
+if(!panel.hidden)open();
 $('dxfZoomIn').addEventListener('click',()=>zoom(1.3));$('dxfZoomOut').addEventListener('click',()=>zoom(1/1.3));$('dxfFit').addEventListener('click',fit);
 $('dxfPieceIds').addEventListener('change',draw);
 $('dxfOpen').addEventListener('click',()=>$('dxfFile').click());

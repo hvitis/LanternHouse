@@ -2,77 +2,35 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Explore the Moomin House plywood dollhouse in 3D. Open the walls, lift the roof and inspect every part.">
-<title>Moomin House 3D</title>
-<style>
-  :root{--ink:#284849;--teal:#197F98;--rust:#B56535;--line:#d6ded4;--panel:#fbfaf6;--muted:#6b7f7f}
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:#eef2ee;color:var(--ink);font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
-  #view{position:fixed;inset:0}
-  #panel{position:fixed;top:12px;left:12px;width:280px;max-height:calc(100% - 24px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:0 4px 18px rgba(40,72,73,.12)}
-  h1{font-size:17px;margin:0 0 2px}
-  .sub{color:var(--muted);font-size:11px;margin-bottom:8px}
-  h2{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin:14px 0 6px}
-  label.row{display:flex;align-items:center;gap:8px;margin:4px 0}
-  .slider{display:grid;grid-template-columns:86px 1fr 46px;align-items:center;gap:6px;margin:5px 0}
-  .slider output{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
-  input[type=range]{width:100%;accent-color:var(--teal)}
-  input[type=checkbox]{accent-color:var(--teal)}
-  .seg{display:grid;grid-template-columns:repeat(2,1fr);gap:4px}
-  .views{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
-  button{font:inherit;font-size:12px;padding:5px 6px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:6px;cursor:pointer}
-  button:hover{border-color:var(--teal)}
-  button.on{background:var(--teal);border-color:var(--teal);color:#fff}
-  .actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
-  #elementSearch{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:5px}
-  #elementId{min-width:0;width:100%;font:inherit;padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);text-transform:uppercase}
-  #elementId:focus{outline:2px solid var(--teal);outline-offset:1px}
-  #elementId[aria-invalid=true]{border-color:var(--rust)}
-  #searchStatus{font-size:11px;color:var(--muted);margin:5px 0 8px}
-  #info{position:fixed;right:12px;bottom:12px;width:320px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:0 4px 18px rgba(40,72,73,.12);display:none}
-  #info b{font-size:14px}
-  #info .meta{color:var(--muted);font-size:12px;margin:2px 0 6px}
-  #info .note{font-size:12px}
-  #info .tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;background:#f3e3d5;color:var(--rust);margin-left:6px}
-  #hint{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;color:var(--muted);font-size:11px;background:rgba(251,250,246,.85);padding:4px 10px;border-radius:12px;pointer-events:none}
-  .dim{font:600 11px/1.2 system-ui,sans-serif;color:#126a84;background:rgba(255,255,255,.88);border:1px solid #9cc9d6;border-radius:4px;padding:1px 5px;white-space:nowrap;pointer-events:none}
-  .dim.mark{color:#284849;border-color:#c8d0c8}
-  .piece-id{font:600 10px/1.2 system-ui,sans-serif;color:#183b44;background:rgba(255,255,255,.92);border:1px solid #92aeb5;border-radius:3px;padding:2px 4px;white-space:nowrap;pointer-events:none}
-  .key{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px}
-  .key.new{background:#3fae6b}.key.changed{background:#f0b93a}
-  #thicknessLegend{margin:4px 0 8px 24px;font-size:11px;color:var(--muted)}
-  #thicknessLegend .key{border:1px solid rgba(0,0,0,.25);margin-right:5px}
-  #thicknessLegend p{margin:3px 0}
-  #changes{margin:0;padding-left:16px;font-size:11.5px;color:var(--ink)}#changes li{margin:2px 0}
-  #loading{position:fixed;inset:0;display:grid;place-items:center;font-size:15px;color:var(--muted)}
-  #openDxf{width:100%;text-align:left;padding:9px 10px}
-  #openPrints{display:block;font-size:12px;padding:9px 10px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:6px;text-decoration:none}
-  #openPrints:hover{border-color:var(--teal)}
-  #dxfDialog{width:calc(100% - 32px);height:calc(100% - 32px);max-width:1600px;max-height:none;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink)}
-  #dxfDialog::backdrop{background:rgba(15,30,35,.6)}
-  #dxfDialog[open]{display:flex;flex-direction:column}
-  .dxf-header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
-  .dxf-header h2{font-size:16px;letter-spacing:0;text-transform:none;color:var(--ink);margin:0;flex:1}
-  .dxf-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:10px 16px}
-  .dxf-toolbar button{min-height:34px;padding:6px 12px}
-  #dxfLayers{display:flex;flex-wrap:wrap;gap:12px;margin-left:auto}
-  #dxfLayers label{display:flex;align-items:center;gap:5px;font-size:12px}
-  #dxfLayers .key{border:1px solid #52666b}
-  #dxfViewport{position:relative;flex:1;min-height:180px;background:#101c23;overflow:hidden}
-  #dxfViewport canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab;outline-offset:-3px}
-  #dxfViewport canvas:active{cursor:grabbing}
-  #dxfStatus{margin:0;padding:8px 16px;font-size:12px;overflow-wrap:anywhere}
-  #dxfHelp{padding:0 16px 10px;color:var(--muted);font-size:11px}
-  #dxfZoom{min-width:52px;text-align:center;font-variant-numeric:tabular-nums}
-  @media (max-width:700px){#dxfDialog{width:calc(100% - 12px);height:calc(100% - 12px)}.dxf-toolbar{padding:8px;gap:4px}.dxf-toolbar button{padding:6px 9px}#dxfLayers{width:100%;margin:4px 0}#dxfHelp{font-size:10px}.dxf-header{padding:10px}}
-  @media (max-width:700px){#view{top:calc(45% + 24px)}#panel{width:auto;right:12px;max-height:45%}#info{left:12px;width:auto}#hint{width:max-content;max-width:calc(100% - 24px);text-align:center}}
-</style>
+<title>Moomin House · Workbench</title>
+<link rel="stylesheet" href="./workspace.css">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body>
-<div id="view"></div>
-<div id="loading" role="status" aria-live="polite">Loading the 3D house…</div>
+<header class="app-header">
+  <a class="brand" href="#house" aria-label="Moomin House home">
+    <svg viewBox="0 0 32 40" aria-hidden="true"><path d="M3 15 16 2l13 13M7 12v25h18V12M3 37h26M13 37V27h6v10M12 17h8v5h-8"/></svg>
+    <span>Moomin House<small>A SMALL HOUSE. A BIG ADVENTURE.</small></span>
+  </a>
+  <span class="workspace-label"><span class="status-dot"></span> The maker’s workbench</span>
+</header>
+<nav class="workspace-tabs" role="tablist" aria-label="Previews">
+  <button id="tab-house" role="tab" aria-selected="true" aria-controls="housePanel" data-preview="house"><span aria-hidden="true">01</span> Main view</button>
+  <button id="tab-dxf" role="tab" aria-selected="false" aria-controls="dxfPanel" tabindex="-1" data-preview="dxf"><span aria-hidden="true">02</span> DXF preview</button>
+  <button id="tab-printables" role="tab" aria-selected="false" aria-controls="printablesPanel" tabindex="-1" data-preview="printables"><span aria-hidden="true">03</span> 3D printables</button>
+  <span class="tabs-note">Explore. Make. Assemble.</span>
+</nav>
+<main id="workspace">
+<section id="housePanel" class="preview-panel" role="tabpanel" aria-labelledby="tab-house">
+  <div class="house-stage">
+    <header class="stage-heading"><div><p class="eyebrow">THE WHOLE HOUSE</p><h1>A closer look at home.</h1></div><span class="view-badge"><span class="status-dot"></span> Interactive 3D</span></header>
+    <div id="view" aria-label="Interactive 3D house preview"></div>
+    <div id="loading" role="status" aria-live="polite">Loading the 3D house…</div>
+    <div id="info" role="status" aria-live="polite"></div>
+    <footer class="stage-footer"><span id="hint">Drag to orbit · scroll to zoom · click a part to inspect</span><button data-view="fit" class="fit-button" aria-label="Fit house in view">↗ <span>Fit house</span></button></footer>
+  </div>
 <noscript><p>The 3D viewer needs JavaScript. Enable JavaScript and reload this page.</p><style>#loading,#panel,#hint{display:none}</style></noscript>
 <script>
   function showViewerError() {
@@ -80,7 +38,7 @@
     if (!status) {
       status = document.createElement('div');
       status.id = 'loading';
-      document.body.appendChild(status);
+      document.querySelector('.house-stage').appendChild(status);
     }
     status.setAttribute('role', 'alert');
     status.textContent = 'The 3D viewer could not load. Reload the page and make sure your browser supports WebGL.';
@@ -88,9 +46,11 @@
   addEventListener('error', showViewerError);
   addEventListener('unhandledrejection', showViewerError);
 </script>
-<aside id="panel">
-  <h1>Moomin House 3D</h1>
-  <div class="sub" id="stats"></div>
+<aside id="panel" aria-label="House tools">
+<details id="houseTools" open>
+  <summary class="tools-summary"><span>House tools<small>Explore &amp; inspect</small></span><span class="summary-chevron" aria-hidden="true">⌄</span></summary>
+  <div class="tools-content">
+  <p class="sub" id="stats"></p>
 
   <h2><label for="elementId">Find element ID</label></h2>
   <form id="elementSearch" role="search">
@@ -99,10 +59,12 @@
   </form>
   <p id="searchStatus" role="status" aria-live="polite">Exact ID → X-ray, yellow highlight and camera focus.</p>
 
-  <h2>Open</h2>
-  <div class="slider"><span>Front walls</span><input id="walls" type="range" min="0" max="110" value="0"><output id="wallsOut">0°</output></div>
-  <div class="slider"><span>Front doors</span><input id="doors" type="range" min="0" max="90" value="0"><output id="doorsOut">0°</output></div>
-  <div class="slider"><span>Drawer</span><input id="drawer" type="range" min="0" max="220" value="0"><output id="drawerOut">0 mm</output></div>
+  <section class="control-section"><h2>Open the house</h2>
+  <div class="slider"><label for="walls">Front walls</label><input id="walls" type="range" min="0" max="110" value="0"><output id="wallsOut">0°</output></div>
+  <div class="slider"><label for="wallLeft">Left wall</label><input id="wallLeft" type="range" min="0" max="110" value="0"><output id="wallLeftOut">0°</output></div>
+  <div class="slider"><label for="wallRight">Right wall</label><input id="wallRight" type="range" min="0" max="110" value="0"><output id="wallRightOut">0°</output></div>
+  <div class="slider"><label for="doors">Front doors</label><input id="doors" type="range" min="0" max="90" value="0"><output id="doorsOut">0°</output></div>
+  <div class="slider"><label for="drawer">Drawer</label><input id="drawer" type="range" min="0" max="220" value="0"><output id="drawerOut">0 mm</output></div>
   <div style="margin:6px 0 2px">Roof and attic</div>
   <div class="seg" id="roofSeg">
     <button data-roof="on" class="on">Roof on</button>
@@ -112,39 +74,46 @@
   </div>
   <div class="actions"><button id="openAll">Open everything</button><button id="closeAll">Close everything</button></div>
 
-  <h2>Show</h2>
+  </section>
+  <details class="control-section" id="displayTools"><summary>Display options</summary>
   <label class="row"><input type="checkbox" id="showPorch" checked> Veranda</label>
   <label class="row"><input type="checkbox" id="showFurniture" checked> Furniture &amp; scenery (view only)</label>
   <label class="row"><input type="checkbox" id="showFigures" checked> Thermo-clay Moomins (one per floor)</label>
+  <label class="row"><input type="checkbox" id="showPrintables" checked> 3D-printable objects</label>
   <label class="row"><input type="checkbox" id="showHardware"> Screws, bolts and hinge axes</label>
   <label class="row"><input type="checkbox" id="showEdges" checked> Plywood edges</label>
   <label class="row"><input type="checkbox" id="xray"> X-ray walls</label>
-  <label class="row"><input type="checkbox" id="showDims" checked> Dimensions</label>
+  <label class="row"><input type="checkbox" id="showDims"> Dimensions</label>
   <label class="row"><input type="checkbox" id="showPieceIds"> Piece IDs</label>
   <label class="row"><input type="checkbox" id="showThickness" aria-controls="thicknessLegend"> DXF colors by thickness</label>
   <div id="thicknessLegend" hidden></div>
   <label class="row"><input type="checkbox" id="highlight"> Highlight changes: <span class="key new"></span> new <span class="key changed"></span> changed</label>
 
-  <h2>Inspect</h2>
-  <div class="slider"><span>Explode</span><input id="explode" type="range" min="0" max="100" value="0"><output id="explodeOut">0%</output></div>
-  <div class="slider"><span>Cut above</span><input id="cut" type="range" min="0" max="710" value="710"><output id="cutOut">off</output></div>
+  </details>
+  <section class="control-section"><h2>Inspect the build</h2>
+  <div class="slider"><label for="explode">Explode</label><input id="explode" type="range" min="0" max="100" value="0"><output id="explodeOut">0%</output></div>
+  <div class="slider"><label for="cut">Cut above</label><input id="cut" type="range" min="0" max="710" value="710"><output id="cutOut">off</output></div>
 
-  <h2>View</h2>
+  </section>
+  <section class="control-section"><h2>Camera views</h2>
   <div class="views">
     <button data-view="iso">3/4</button><button data-view="front">Front</button><button data-view="back">Back</button><button data-view="top">Top</button>
-    <button data-view="left">Left</button><button data-view="right">Right</button><button data-view="veranda">Veranda</button><button data-view="fit">Fit</button>
+    <button data-view="left">Left</button><button data-view="right">Right</button><button data-view="veranda">Veranda</button>
   </div>
-  <h2>Settings</h2>
-  <button id="openDxf" aria-haspopup="dialog" aria-controls="dxfDialog">DXF · open 2D drawing ↗</button>
-  <h2>3D prints</h2>
-  <a id="openPrints" href="./prints.html">Printable furniture · STL, 3MF, STEP →</a>
-  <h2>What changed</h2>
-  <ul id="changes"></ul>
+  </section>
+  <details class="control-section"><summary>Design changes</summary><ul id="changes"></ul></details>
+  </div>
+</details>
+<section id="assemblyCompanion" aria-labelledby="assemblyTitle">
+  <div class="companion-label"><span aria-hidden="true">▤</span> FROM PREVIEW TO PROJECT <span class="soon-badge">Coming later</span></div>
+  <h2 id="assemblyTitle">A companion for your build.</h2>
+  <p>This is where step-by-step assembly instructions will live. For now, explore the house and get to know its parts.</p>
+</section>
 </aside>
-<div id="info"></div>
-<div id="hint">Drag to orbit · right-drag or shift-drag to pan · scroll to zoom · click a part to inspect it · Esc clears</div>
-<dialog id="dxfDialog" aria-labelledby="dxfTitle">
-  <header class="dxf-header"><h2 id="dxfTitle">DXF drawing</h2><button id="closeDxf" aria-label="Close DXF drawing">Close ✕</button></header>
+</section>
+<section id="dxfPanel" class="preview-panel" role="tabpanel" aria-labelledby="tab-dxf" hidden>
+
+  <header class="dxf-header"><div><p class="eyebrow">READY FOR THE CUTTING TABLE</p><h1 id="dxfTitle">Every piece starts here.</h1></div><span class="view-badge">2D cutting drawing</span></header>
   <div class="dxf-toolbar" aria-label="Drawing controls">
     <button id="dxfZoomOut" aria-label="Zoom out">−</button><output id="dxfZoom" aria-label="Drawing zoom">100%</output><button id="dxfZoomIn" aria-label="Zoom in">+</button>
     <button id="dxfFit">Fit drawing</button><button id="dxfOpen">Open DXF…</button><button id="dxfDownload" disabled>Download DXF</button>
@@ -154,8 +123,13 @@
   </div>
   <div id="dxfViewport" aria-busy="true"></div>
   <p id="dxfStatus" role="status" aria-live="polite">Loading the supplier drawing…</p>
-  <div id="dxfHelp">Drag to pan · scroll or pinch to zoom · + / − to zoom · F to fit · arrow keys to pan · Esc to return to 3D</div>
-</dialog>
+  <div id="dxfHelp">Drag to pan · scroll or pinch to zoom · + / − to zoom · F to fit · arrow keys to pan · Esc to return to the house</div>
+</section>
+<section id="printablesPanel" class="preview-panel" role="tabpanel" aria-labelledby="tab-printables" hidden>
+  <iframe id="printablesFrame" title="3D-printable furniture: previews, print checks and downloads" data-src="./prints.html?embedded=1"></iframe>
+</section>
+</main>
+<script type="module" src="./workspace.js"></script>
 <script type="module" src="./app.js"></script>
 <script type="module" src="./dxf-viewer.js"></script>
 </body>

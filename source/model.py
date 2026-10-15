@@ -529,7 +529,7 @@ def build():
       f'Stability: {CFG["stability"]["pads"]} rim pads under the base, steel ballast in the plinth and an anti-tip strap anchor in the rear shell; the opening shells hang {SL:g} mm above the plinth',
       f'CNC: finger joints with a fit clearance and cutter relief at every inside corner in both F01 and F02; {CFG["fabrication"]["floor_support"][0]:g} x {CFG["fabrication"]["floor_support"][1]:g} mm seam strips',
       'Optional LED lighting: a wire hole through every floor; faux cellar hatch on the plinth',
-      'Display only: tiled stove, chandelier, bathtub, attic bed and desk, and a garden scene round the base']
+      'Display only: bookcases, garden scene, and 3D-printable interior furniture']
     new={'DM06','GZ1','GZ2','WF1','RL1','E04','E11','GD03','GD04','PD1','DS1','HC1','WP1','WP2','WP3','BL2','AB1'}|{k for k in PARTS if k.startswith('BT')}
     changed={'R06','R01','DM01','DM02','DM04','DM05','FN01','E01','A02','A03','E07','MC1','GP1','DR1','F00','F01','F02','B01','PT1','PT2'}|{k for k in PARTS if k.startswith('W') and PARTS[k]['category']=='Walls'}
     for pid,p in PARTS.items():
@@ -729,7 +729,7 @@ def furnish(tops):
         put(prefix+'A',(x,y+4,z+18),group='Furniture');upright(prefix+'B',x,y+4,z,'Furniture');upright(prefix+'B',x,y+112,z,'Furniture')
         upright(prefix+'C',x+4,y+8,z,'Furniture',axis='yz');upright(prefix+'C',x+46,y+8,z,'Furniture',axis='yz')
     # Room layouts per storey; the divider runs along X0 with its door opening at Y-107 to -69 swinging into +X.
-    g,f1,f2,at=tops
+    f1=tops[1]
 
     book_colors=['red','blue','ochre','sage','rose','ink']
     for c in book_colors:
@@ -774,78 +774,12 @@ def furnish(tops):
                         bc=book_colors[(k+s_idx*2+p_off)%len(book_colors)]
                         put(f'BK_{bc}',(bx,y+10+k*5,sz+4),(1,0,0),(0,0,1),group='Furniture')
 
-    # Ground floor: Bookbindery & Reading Parlour along inner room wall
-    box('K2','Cooker',-125,36,g,44,37,48,'cream',has_back=False)
-    add('K7','Cooker burner discs',3,poly(12,5,5,5),color='ink',category='Furniture')
-    for x,y in [(-118,43),(-100,43),(-118,61),(-100,61)]:put('K7',(x,y,g+48),group='Furniture')
-
-    # Shelves along inner room wall (Ground floor)
-    wall_shelf('GL1','Bookbindery tools and materials bookcase',-65,g,65,26,92,side='left',shelves=3,color='wood',books=False)
-    wall_shelf('GL2','Card catalog shelving unit',10,g,55,26,88,side='left',shelves=3,color='ochre',books=False)
-
-    wall_shelf('GR1','Tea parlour library bookcase',-60,g,75,24,100,side='right',shelves=4,color='wood',books=False)
-    wall_shelf('GR2','Poetry and folio shelving',30,g,60,24,88,side='right',shelves=3,color='sage',books=False)
-
     # Floor 1: Grand Circular Library along inner room wall
     wall_shelf('L1L','Grand library west bookcase',-65,f1,80,26,110,side='left',shelves=4,color='wood')
     wall_shelf('L1M','Grand library north bookcase',30,f1,75,26,110,side='left',shelves=4,color='wood')
 
     wall_shelf('L1R','Reference collection bookcase',-60,f1,80,24,104,side='right',shelves=4,color='ochre')
     wall_shelf('L1S','Encyclopedic stacks bookcase',35,f1,70,24,104,side='right',shelves=4,color='cream')
-
-    part('SS1A','Library step stringer',28,26,4,'wood');part('SS1B','Library step tread',18,14,4,'wood')
-    upright('SS1A',-72,-50,f1,'Furniture',axis='yz');upright('SS1A',-50,-50,f1,'Furniture',axis='yz')
-    put('SS1B',(-68,-50,f1+8),group='Furniture');put('SS1B',(-68,-36,f1+20),group='Furniture')
-
-    part('LC1A','Lectern column',8,42,4,'wood');part('LC1B','Lectern base',24,24,4,'wood')
-    part('LC1C','Lectern reading deck',32,24,3,'ochre')
-    put('LC1B',(60,-30,f1),group='Furniture');upright('LC1A',68,-26,f1+4,'Furniture')
-    put('LC1C',(56,-30,f1+46),group='Furniture')
-
-    # Floor 2: Moominpappa’s Memoir Study & Scriptorium along inner room wall
-    box('U4','Dresser',-95.5,-112.5,f2,48,28,44,'cream',1,has_back=False)   # clear of the W11 corner rib
-
-    wall_shelf('L2L','Memoir manuscript bookcase',-65,f2,80,26,106,side='left',shelves=4,color='wood')
-    wall_shelf('L2M','Autobiographical archives bookcase',30,f2,70,26,106,side='left',shelves=4,color='ochre')
-
-    part('ST1A','Sorting tower gable',26,18,3,'sage');part('ST1B','Sorting tower shelf',19,16,3,'cream')
-    upright('ST1A',-89.5,-111.5,f2+44,'Furniture',axis='yz');upright('ST1A',-67.5,-111.5,f2+44,'Furniture',axis='yz')
-    for s_idx in range(3):put('ST1B',(-86.5,-111.5,f2+44+s_idx*7.5),group='Furniture')
-
-    wall_shelf('L2R','Scholarly research bookcase',-60,f2,80,24,102,side='right',shelves=4,color='sage')
-    wall_shelf('L2S','Cartographic journal bookcase',35,f2,70,24,102,side='right',shelves=4,color='wood')
-
-    # Attic: Cartographer’s Garret
-    box('AC1','Archival document chest',46,-42,at,46,26,30,'wood')
-    part('AC1R','Curved chest lid rib',44,10,3,'ochre')
-    upright('AC1R',47,-18,at+30,'Furniture')
-
-    part('SB1A','Scroll bin wall',16,32,3,'ochre');part('SB1B','Scroll bin bottom',24,24,3,'wood');part('SB1C','Rolled scroll bundle',18,36,3,'cream')
-    put('SB1B',(14,-26,at),group='Furniture');upright('SB1A',18,-23,at+3,'Furniture');upright('SB1A',18,-2,at+3,'Furniture');upright('SB1C',17,-11,at+3,'Furniture')
-
-    # Living room (floor 1): a tiled stove (kakelugn) in the left room and a chandelier over the right room.
-    part('KS1A','Tiled stove side',30,100,4,'cream');part('KS1B','Tiled stove front / back',22,100,4,'cream')
-    part('KS1C','Tiled stove crown',36,36,4,'sage');part('KS1D','Tiled stove plinth',34,34,4,'ochre');part('KS1E','Tiled stove fire door',12,14,3,'ink')
-    put('KS1D',(-97,55,f1),group='Furniture')
-    upright('KS1A',-95,57,f1+4,'Furniture',axis='yz');upright('KS1A',-69,57,f1+4,'Furniture',axis='yz')
-    upright('KS1B',-91,61,f1+4,'Furniture');upright('KS1B',-91,87,f1+4,'Furniture')
-    put('KS1C',(-98,54,f1+104),group='Furniture');upright('KS1E',-86,57,f1+24,'Furniture')
-    part('LG1','Chandelier ring',30,30,3,'ochre');part('LG2','Chandelier rod',3,22,3,'ink');part('LG3','Chandelier candle',4,8,4,'cream')
-    lz=f1+(CFG['floor_pitch']-CFG['thickness']['floor'])*450/CFG['wall_height']-22   # rod top just under the ceiling
-    upright('LG2',58,62,lz,'Furniture');put('LG1',(44,49,lz-3),group='Furniture')
-    for cx,cy in ((46,51),(68,51),(46,73),(68,73)):put('LG3',(cx,cy,lz),group='Furniture')
-    # Bedroom floor: a footed bathtub in the right room.
-    part('BA1A','Bathtub side',54,20,4,'cream');part('BA1B','Bathtub end',18,24,4,'cream');part('BA1C','Bathtub bottom',46,18,4,'cream');part('BA1D','Bathtub foot',6,4,4,'ochre')
-    upright('BA1A',40,44,f2+4,'Furniture');upright('BA1A',40,66,f2+4,'Furniture')
-    upright('BA1B',40,44,f2,'Furniture',axis='yz');upright('BA1B',90,44,f2,'Furniture',axis='yz');put('BA1C',(44,44,f2+4),group='Furniture')
-    for fx,fy in ((44,44),(84,44),(44,62),(84,62)):put('BA1D',(fx,fy,f2),group='Furniture')
-    # Attic: a bed by the rear and a writing desk.
-    bed('AB2','Attic bed',-30,18,at)
-    table('AD1','Attic writing desk',30,40,at,40,22,30,'wood')
-    box('N1','Attic chest',-61,-53,at,52,31,32,'wood',has_top=False)
-    add('N3','Telescope silhouette',4,[[0,0],[42,0],[48,8],[42,16],[0,16]],color='ochre',category='Furniture',note='Decorative plywood telescope silhouette on a broad glued pedestal.')
-    add('N4','Telescope pedestal',4,[[0,0],[32,0],[20,38],[12,38]],color='wood',category='Furniture')
-    upright('N4',-55,0,at,'Furniture');upright('N3',-63,0,at+38,'Furniture')
 
 
 if __name__=='__main__':

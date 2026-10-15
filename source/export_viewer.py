@@ -15,7 +15,7 @@ from serve import ROOT, VIEWER, model_data
 from viewer_dxf import preview as viewer_cut_file
 
 ASSETS = (
-    'index.html', 'app.js', 'dxf-viewer.js', 'prints.html', 'prints.js', 'vendor/three.module.js',
+    'index.html', 'workspace.css', 'workspace.js', 'app.js', 'dxf-viewer.js', 'prints.html', 'prints.js', 'vendor/three.module.js',
     'vendor/OrbitControls.js', 'vendor/CSS2DRenderer.js', 'vendor/THREE-LICENSE.txt',
 )
 MARKER = '.moomin-viewer-export'

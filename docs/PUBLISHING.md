@@ -106,7 +106,7 @@ Screenshots appear in `output/viewer-smoke/` and stay outside Git.
    ```
 
 9. Wait for the **CI** workflow to finish in **Actions**.
-10. Open <https://hvitis.github.io/moominshouse/>.
+10. Open <https://hvitis.github.io/MoominsHouse/>.
 
 If you use another owner or repository name, change the remote and the links in both README files.
 The static asset URLs need no change.
