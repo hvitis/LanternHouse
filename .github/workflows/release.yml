@@ -121,6 +121,7 @@ jobs:
           echo "Publishing GitHub Release for tag: $TAG_NAME"
           # Release notes from the build reports (file sizes, checks passed, plywood table).
           python -c "import sys; sys.path.insert(0, 'source'); import release; print(release.notes('$TAG_NAME'))" > release-notes.md
+          shopt -s nullglob
           ASSETS=(output/Moomin-House-Build-Kit.zip output/Moomin-House-Supplier-Cut.dxf output/pdf/*.pdf output/pdf/*.csv)
           if gh release view "$TAG_NAME" > /dev/null 2>&1; then
             echo "Release $TAG_NAME exists: replacing its assets."
