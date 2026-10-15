@@ -20,6 +20,7 @@
   <button id="tab-house" role="tab" aria-selected="true" aria-controls="housePanel" data-preview="house"><span aria-hidden="true">01</span> Main view</button>
   <button id="tab-dxf" role="tab" aria-selected="false" aria-controls="dxfPanel" tabindex="-1" data-preview="dxf"><span aria-hidden="true">02</span> DXF preview</button>
   <button id="tab-printables" role="tab" aria-selected="false" aria-controls="printablesPanel" tabindex="-1" data-preview="printables"><span aria-hidden="true">03</span> 3D printables</button>
+  <button id="tab-instructions" role="tab" aria-selected="false" aria-controls="instructionsPanel" tabindex="-1" data-preview="instructions"><span aria-hidden="true">04</span> Instructions</button>
   <span class="tabs-note">Explore. Make. Assemble.</span>
 </nav>
 <main id="workspace">
@@ -105,9 +106,9 @@
   </div>
 </details>
 <section id="assemblyCompanion" aria-labelledby="assemblyTitle">
-  <div class="companion-label"><span aria-hidden="true">▤</span> FROM PREVIEW TO PROJECT <span class="soon-badge">Coming later</span></div>
+  <div class="companion-label"><span aria-hidden="true">▤</span> FROM PREVIEW TO PROJECT </div>
   <h2 id="assemblyTitle">A companion for your build.</h2>
-  <p>This is where step-by-step assembly instructions will live. For now, explore the house and get to know its parts.</p>
+  <p>Gather your supplies, follow the assembly steps and pick up where you left off. <a href="#instructions">Open the build companion →</a></p>
 </section>
 </aside>
 </section>
@@ -128,9 +129,47 @@
 <section id="printablesPanel" class="preview-panel" role="tabpanel" aria-labelledby="tab-printables" hidden>
   <iframe id="printablesFrame" title="3D-printable furniture: previews, print checks and downloads" data-src="./prints.html?embedded=1"></iframe>
 </section>
+<section id="instructionsPanel" class="preview-panel" role="tabpanel" aria-labelledby="tab-instructions" hidden>
+  <header class="instruction-header"><div><p class="eyebrow">FROM PREVIEW TO PROJECT</p><h1>A companion for your build.</h1></div><span id="instructionTotal" class="view-badge">Your build, one step at a time</span></header>
+  <div class="instruction-notices"><p id="instructionStorage" role="status" aria-live="polite"></p><button id="instructionAccept" hidden>Keep progress and accept updated instructions</button><button id="instructionReset" hidden>Start a new build</button></div>
+  <p id="instructionLoad" role="status">Loading the build instructions…</p>
+  <section id="instructionPrep" hidden>
+    <div class="preparation-intro"><div><h2>Before you start</h2><p>Check the plywood kit against its part IDs. Gather the supplies below. Quantities come from this model.</p><p>Use the full-size templates for cutting and drilling. The 3D view shows placement and orientation.</p><p>Your checklist and build progress stay in this browser. You can read ahead without marking steps complete.</p></div><div class="start-build"><button id="instructionStart" class="primary">Start building</button><p id="instructionChecklistStatus" role="status"></p></div></div>
+    <aside id="instructionIssues" class="instruction-warning" aria-label="Design requirements to resolve"></aside>
+    <div id="instructionChecklist"></div>
+  </section>
+  <section id="instructionBuild" hidden>
+    <div class="instruction-stage">
+      <div class="instruction-stage-heading"><span id="instructionCount"></span><span id="instructionChapterLabel"></span></div>
+      <div id="instructionView"></div>
+      <div class="instruction-view-tools"><button id="instructionPlay" aria-pressed="false" disabled>▶ Play step</button><button id="instructionReplay" disabled>Replay</button><button id="instructionFit">Reset view</button><button id="instructionCloseup">Joint close-up</button></div>
+      <p id="instructionSceneStatus" role="status">Loading the assembly view…</p>
+      <div id="instructionInspect" hidden role="status"></div>
+    </div>
+    <div class="instruction-rail"><aside class="instruction-copy" aria-label="Current build step">
+      <label for="instructionStepSelect">Browse chapters and steps</label><select id="instructionStepSelect"></select>
+      <div class="instruction-progress"><progress id="instructionProgress" value="0" max="1" aria-label="Completed build steps"></progress><span id="instructionProgressText"></span></div>
+      <h2 id="instructionStepTitle" tabindex="-1"></h2><span id="instructionOptional" class="view-badge" hidden>Optional · mark complete to skip</span>
+      <p id="instructionRepeat" class="instruction-repeat" role="status" hidden></p>
+      <p id="instructionDescription"></p><p id="instructionWarning" class="instruction-warning" hidden></p>
+      <h3>Parts for this operation</h3><ul id="instructionParts"></ul>
+      <details><summary>Supplies and tools</summary><ul id="instructionSupplies"></ul></details>
+      <details><summary>Joint and fastener details</summary><ul id="instructionJoints"></ul></details>
+      <details><summary>Detailed chapter instructions</summary><p id="instructionReference"></p><p id="instructionHint"></p></details>
+      <section class="instruction-check"><h3>Before you continue</h3><p id="instructionCheck"></p><p>Dry-fit before gluing. Let each joint cure before loading it. Use the adhesive maker’s curing time.</p></section>
+      <p id="instructionDone" role="status" hidden>All steps are marked complete. Check the moving parts and anchor before use.</p>
+      <div class="instruction-navigation"><button id="instructionPrevious">← Previous</button><button id="instructionNext">Next →</button><button id="instructionComplete" class="primary">Mark complete &amp; next</button></div>
+
+      <div class="instruction-secondary"><button id="instructionPreparation">Preparation checklist</button><button id="instructionRestart">Restart build</button></div>
+    </aside>
+      <aside id="instructionFieldHints" class="instruction-field-hints" aria-labelledby="instructionFieldHintsTitle"><h3 id="instructionFieldHintsTitle">HINTS <small>From real builds</small></h3><div id="instructionFieldHintsContent"></div></aside>
+    </div>
+  </section>
+</section>
 </main>
 <script type="module" src="./workspace.js"></script>
 <script type="module" src="./app.js"></script>
+<script type="module" src="./instructions.js"></script>
 <script type="module" src="./dxf-viewer.js"></script>
 </body>
 </html>

@@ -178,6 +178,22 @@ def update(data, root=ROOT, check=False):
         path = root / name
         original = path.read_text()
         generated = replace_block(original, table(data, language))
+        if name == "docs/BUILD-GUIDE.md":
+            from assembly import content
+
+            start, end = "<!-- assembly-hardware:start -->", "<!-- assembly-hardware:end -->"
+            before, tail = generated.split(start)
+            _, after = tail.split(end)
+            hardware = content(data)["hardware"]
+            lines = [
+                "| ID | Hardware or material | Required | Purchase allowance |",
+                "| --- | --- | --- | --- |",
+            ]
+            lines.extend(
+                f"| {pid} | {description} | {quantity} | {purchase} |"
+                for pid, description, quantity, purchase, _ in hardware
+            )
+            generated = before + start + "\n" + "\n".join(lines) + "\n" + end + after
         if generated != original:
             changed.append(name)
             if not check:

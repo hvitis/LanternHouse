@@ -15,7 +15,7 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 VIEWER=(ROOT/'source/viewer').resolve()
-DATA={'/data/parts.json':ROOT/'output/parts.json','/data/house.dxf':ROOT/'output/viewer/house.dxf','/data/dxf-labels.json':ROOT/'output/viewer/dxf-labels.json'}
+DATA={'/data/assembly.json':ROOT/'output/viewer/assembly.json','/data/parts.json':ROOT/'output/parts.json','/data/house.dxf':ROOT/'output/viewer/house.dxf','/data/dxf-labels.json':ROOT/'output/viewer/dxf-labels.json'}
 PRINTS=(ROOT/'prints').resolve()   # the published 3D prints, for prints.html
 mimetypes.add_type('text/javascript','.js')
 
@@ -61,6 +61,9 @@ def main():
     p.add_argument('--rebuild',action='store_true',help='regenerate output/parts.json from source/model.py before serving (run source/rebuild.py again before making PDFs)')
     args=p.parse_args()
     if args.rebuild or not DATA['/data/parts.json'].exists():build_data(DATA['/data/parts.json'])
+    import assembly
+    assembly_path=DATA['/data/assembly.json'];assembly_path.parent.mkdir(parents=True,exist_ok=True)
+    assembly_path.write_text(json.dumps(assembly.manifest(json.loads(DATA['/data/parts.json'].read_text()))),encoding='utf-8')
     from viewer_dxf import preview
     drawing=preview(json.loads(DATA['/data/parts.json'].read_text()))
     cut=DATA['/data/house.dxf'];cut.parent.mkdir(parents=True,exist_ok=True)

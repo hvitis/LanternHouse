@@ -17,7 +17,7 @@ The ground floor has five windows, the middle and bedroom floors have six each, 
 
 Its door opens outward onto the deck. The main entrance on W12 has a separate small gabled canopy.
 
-The house stands on a 61.6 mm stone plinth on a 6 mm base, with the floor levels listed below. A drawer hidden in the plinth is about 46 mm deep inside and slides 200 mm out to the back-right, where a dowel in its bottom slot stops it; its front is two stone plinth panels with a finger notch underneath. Each storey has one room divider with a 38 × 93.3 doorway at its front end, reaching the edge of the floors to the opening walls, with a 3 mm door leaf on cotton-tape hinges. The two front wall shells hang 1 mm above the plinth, click shut on catches under the attic floor and stop at 100° against two small garden posts on the base; the four magnets are sealed inside hardwood. Six thermo-clay (oven-hardening polymer clay) figures live in the house: Moominmamma and Snufkin on the ground floor, Moominpappa and the Snork Maiden in the living room, Moomintroll in the bedrooms and Little My in the attic. The veranda deck is level with the ground floor, on a blue skirt with a 4-step side stair, and a rope ladder runs from its roof to the eave beside the dormer. The main entrance and the back door (W09, kitchen side, with a lean-to canopy and a woodpile beside it) have 4 stone steps each. All three doors open outward.
+The house stands on a 61.6 mm stone plinth on a 6 mm base, with the floor levels listed below. A drawer hidden in the plinth is about 46 mm deep inside and slides 200 mm out to the back-right, where a dowel in its bottom slot stops it; its front is two stone plinth panels with a finger notch underneath. Each storey has one room divider with a 38 × 93.3 doorway at its front end, reaching the edge of the floors to the opening walls, with a 3 mm door leaf on cotton-tape hinges. The two front wall shells hang 1 mm above the plinth, click shut on wall catches under the attic floor and stop at 100° against two small garden posts on the base; the four magnets are sealed inside hardwood. Six thermo-clay (oven-hardening polymer clay) figures live in the house: Moominmamma and Snufkin on the ground floor, Moominpappa and the Snork Maiden in the living room, Moomintroll in the bedrooms and Little My in the attic. The veranda deck is level with the ground floor, on a blue skirt with a 4-step side stair, and a rope ladder runs from its roof to the eave beside the dormer. The main entrance and the back door (W09, kitchen side, with a lean-to canopy and a woodpile beside it) have 4 stone steps each. All three doors open outward.
 
 The F01 floors have four pillar openings each. There are no stairs inside. Play access is through the opening walls and the lift-off roof. The furniture appears in the 3D viewer and renders only. It has no CAD plans, printouts or cutting sheets.
 
@@ -156,21 +156,27 @@ Measure your plywood before cutting. `make tolerance` rebuilds the house from th
 
 Installed metal hardware (the instruction book starts with exact specifications, purchase examples and spare-pack quantities):
 
-| Item | Quantity |
-| --- | --- |
-| Nominal 25 × 40 wall butt hinges | 6 |
-| Nominal 20 × 20 door butt hinges | 4 |
-| Countersunk D2 × 12 wood screws | 24 |
-| Countersunk D1.6 × 8 wood screws | 16 |
-| Countersunk D3 × 16 wood screws | 6 |
-| M3 × 30 pan-head bolts | 2 |
-| M3 cap nuts | 2 |
-| 0.5 mm steel washers | 4, plus spares to set the thread under the cap nut |
-| 0.5 mm nylon washers | 2 |
-| D12 × 1 mm M3 fender washers | 4 |
-| 8 mm nylon spacers | 2 |
-| D8 × 3 neodymium disc magnets (N35–N42, axially magnetised) | 4 |
-| D10 × 1 plain steel discs (magnet counter plates) | 4 |
+<!-- assembly-hardware:start -->
+| ID | Hardware or material | Required | Purchase allowance |
+| --- | --- | --- | --- |
+| HG1 | Small butt hinge, 25 mm high; nominal 40 mm open width. Two countersunk D2.5 screw holes per leaf; compare actual hole centers. | 6 | 8 |
+| HG2 | Miniature butt hinge, 20 mm high; nominal 20 mm open width. Two countersunk holes per leaf for D2 screws. | 6 | 8 |
+| SC1 | D2.5 x 12 mm countersunk wood screw, head D5 (bolt option: M2.5 x 16 countersunk machine screw with an M2.5 dome cap nut). | 24 | 30 |
+| SC2 | D2 x 10 mm countersunk wood screw, head about D4. | 24 | 30 |
+| SC3 | D3 x 16 mm countersunk wood screw; head about D6. | 6 | 10 |
+| SP2 | Rigid 0.9 mm packing sheet; cut A06 x12, 10 x25 mm. Card, veneer or plastic. | 12 | 1 A4 sheet |
+| MG1 | Neodymium disc magnet D8 x 3 mm, N35-N42, nickel plated, axially magnetised. Only ever fitted enclosed in wood. | 4 | 4 |
+| SD1 | Plain steel disc D10 x 1 mm, sold as a magnet counter plate; not a magnet itself. | 4 | 6 |
+| DW1 | Hardwood dowel rod D8: plugs behind the magnets; D4: stop-post dowels; D6: drawer stop and finial. | 1 m each | - |
+| FB1 | Turned beech ball D35 mm with one flat (craft bead without a through hole, or drill blind). | 1 | 1 |
+| CB1 | Greyboard (bookbinding board) 2 mm, A3. Glue the 1:1 template on and cut with a knife. | 1 sheet | 1 |
+| PG1 | Clear PET or PETG sheet 0.5 mm, A4. Never glass or acrylic. | 1 sheet | 1 |
+| TP1 | Cotton tape 15 mm, about 1 m. | 1 m | 1 m |
+| FT1 | Self-adhesive felt dots D10-12 mm, about 1 mm thick. | 10 | 12 |
+| BL2 | Flat steel bar 150 x 40 x 8 mm, drilled D3.5 twice; two 3 x 12 wood screws each. | 2 | 2 |
+| AT1 | Furniture anti-tip strap kit (strap, screw eye, wall plug and screw). | 1 | 1 |
+| LT1 | Optional: warm-white LED string or 3 mm LEDs with resistors; thin wire. | 1 set | - |
+<!-- assembly-hardware:end -->
 
 Countersunk screw length includes the head; bolt length is measured below the head.
 
@@ -184,10 +190,14 @@ The hinge hole patterns, centers, pilots and packing all come from `config.json`
 
 ## Assembly and play access
 
-1. **Base and plinth.** Join the four base quarters over the underside supports on a flat board. Then glue the ten stone panels, the two drawer guide walls and the back stop onto the grey base. Screw the four foot blocks to the ground-floor plate F00 from below, then glue F00 on top.
+The elevated floors use small metal angle brackets fitted after production. Check bracket fit, screw length and clearance during the dry fit.
+The roof can remain removable. Magnets or a hinge-style attachment are optional choices. Check their fit before a permanent connection.
+The build is not glued yet. The web companion reserves a HINTS area for future notes from real builds.
+
+1. **Base and plinth.** Join the eight base sections over the underside supports on a flat board. Then glue the ten stone panels, the two drawer guide walls and the back stop onto the grey base. Screw the four foot blocks to the ground-floor plate F00 from below, then glue F00 on top.
 2. **Drawer.** Build the drawer box with its stone front and slide it in from the back-right.
 3. **Fixed rear shell.** Glue up the six rear facets and glue them to F00. Identical walls share one ID, so the rear reads W04, W05, W06, W07, W06, W09; the wall map in the book shows each facet.
-4. **Floors and pillars.** Join the 6 mm floor sections over their seam strips (3 × 4 mm under the ground floor, 3 × 12 mm under the others). Use the positioning maps. Make the [physical joint samples](JOINT-VALIDATION.md) first. Install four continuous P01 pillars on the foot blocks. Slide both F01 levels over the rectangular openings. Seat F02 on the pillar tops. Fit metal floor supports under both F01 levels and F02; they are added after production and are not part of the kit.
+4. **Floors and pillars.** Join the 6 mm floor sections over their seam strips (3 × 4 mm under the ground floor, 3 × 12 mm under the others). Use the positioning maps. Make the [physical joint samples](JOINT-VALIDATION.md) first. Install four continuous P01 pillars on the foot blocks. Slide both F01 levels over the rectangular openings. Seat F02 on the pillar tops. Fit small metal angle brackets under both F01 levels and F02; they are added after production and are not part of the kit.
 5. **Opening shells.** Build the two front wall shells.
    - Square-edge wall corners use flat 3 mm corner ribs inside. A J01 rib lies across a whole facet and reaches about 30 mm onto both neighbours, so one rib holds two corners; dry-fit it, then glue all three walls to it at once so it sets both 150° angles. The one fixed-shell corner no rib can take gets a J02 bracket. Beside the three doors the ground-floor low braces sit just above the door openings and use the short-legged J03 and J04, which clear the windows beside the doors. Fill the small exterior seams where the walls are fixed; keep them clear where they move.
    - Glue backing blocks before drilling for hinges.

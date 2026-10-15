@@ -7,7 +7,7 @@ const touch = matchMedia('(pointer: coarse)');
 function updateHint(){ document.getElementById('hint').textContent = touch.matches ? 'Drag to orbit · pinch to zoom · tap a part to inspect' : 'Drag to orbit · scroll to zoom · click a part to inspect'; }
 updateHint();touch.addEventListener('change', updateHint);
 mobile.addEventListener('change', event => { houseTools.open = !event.matches; });
-// The future assembly companion can occupy the tools rail without changing viewer navigation.
+// Each preview, including the build companion, owns its inspection state.
 export function showPreview(name, {focus = false} = {}) {
   const active = tabs.find(tab => tab.dataset.preview === name) ?? tabs[0];
   for (const tab of tabs) {
@@ -16,6 +16,7 @@ export function showPreview(name, {focus = false} = {}) {
     tab.tabIndex = selected ? 0 : -1;
     document.getElementById(tab.getAttribute('aria-controls')).hidden = !selected;
   }
+  active.scrollIntoView({block: 'nearest', inline: 'nearest'});
   const preview = active.dataset.preview;
   if (preview === 'printables') {
     const frame = document.getElementById('printablesFrame');

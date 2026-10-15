@@ -4,7 +4,8 @@
   "scripts": {
     "test:viewer": "node tests/check-viewer-syntax.mjs && node tests/viewer-smoke.mjs",
     "test:prints": "node tests/prints-smoke.mjs",
-    "test:mobile": "node tests/check-viewer-syntax.mjs && node tests/mobile-smoke.mjs"
+    "test:mobile": "node tests/check-viewer-syntax.mjs && node tests/mobile-smoke.mjs",
+    "test:instructions": "node tests/check-viewer-syntax.mjs && node tests/instructions-smoke.mjs"
   },
   "devDependencies": {
     "playwright": "1.63.0"

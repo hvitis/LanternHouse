@@ -2,6 +2,8 @@
 // thicknesses and placements the CAD export uses). Walls and doors turn about their real hinge axes,
 // the hidden plinth drawer slides along its guides, and dimension annotations come from the model.
 import * as THREE from 'three';
+import {geometryOf,matrixOf} from './geometry.js';
+import {hingeRadians,drawerOffset} from './motion.js';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {CSS2DRenderer,CSS2DObject} from './vendor/CSS2DRenderer.js';
 
@@ -33,28 +35,9 @@ const fill=new THREE.DirectionalLight(0xffffff,.45);fill.position.set(900,700,50
 const grid=new THREE.GridHelper(1800,36,0xc9d3c9,0xdde4dc);grid.rotation.x=Math.PI/2;grid.position.z=-.5;scene.add(grid);
 
 // ---------- geometry from 2D profiles ----------
-function profileShape(p){
-  const shape=new THREE.Shape();
-  if(p.outercircle){const [cx,cy,r]=p.outercircle;shape.absarc(cx,cy,r,0,Math.PI*2,false);}
-  else{p.outer.forEach(([x,y],k)=>k?shape.lineTo(x,y):shape.moveTo(x,y));shape.closePath();}
-  for(const cut of p.cuts){const h=new THREE.Path();cut.forEach(([x,y],k)=>k?h.lineTo(x,y):h.moveTo(x,y));h.closePath();shape.holes.push(h);}
-  // Through holes only; blind pilots would need a boolean cut.
-  for(const hole of p.holes){if(hole.depth==null||hole.depth>=p.thickness-1e-6){const h=new THREE.Path();h.absarc(hole.x,hole.y,hole.diameter/2,0,Math.PI*2,true);shape.holes.push(h);}}
-  return shape;
-}
 const geometry={},edges={};
-function compoundGeometry(boxes){
-  const positions=[];
-  for(const box of boxes){
-    const g=new THREE.BoxGeometry(...box.size).toNonIndexed();
-    g.translate(...box.origin.map((value,k)=>value+box.size[k]/2));
-    positions.push(...g.attributes.position.array);g.dispose();
-  }
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.computeVertexNormals();return g;
-}
 for(const [pid,p] of Object.entries(parts)){
-  geometry[pid]=p.boxes?compoundGeometry(p.boxes):p.sphere?new THREE.SphereGeometry(p.sphere,48,24).rotateX(Math.PI/2).translate(p.sphere,p.sphere,p.sphere):new THREE.ExtrudeGeometry(profileShape(p),{depth:p.thickness,bevelEnabled:false,curveSegments:p.outercircle?96:20});
-  edges[pid]=new THREE.EdgesGeometry(geometry[pid],25);
+  geometry[pid]=geometryOf(p);edges[pid]=new THREE.EdgesGeometry(geometry[pid],25);
 }
 const materials={};
 function material(p){
@@ -97,7 +80,6 @@ for(const f of fasteners){
   const pivot=new THREE.Group(),inner=new THREE.Group();pivot.position.set(f.origin[0],f.origin[1],0);inner.position.set(-f.origin[0],-f.origin[1],0);
   pivot.add(inner);nodes.RoofLocks.inner.add(pivot);catches[tab]={pivot,inner};
 }
-function matrixOf(i){const [u,v,w,o]=[i.u,i.v,i.w,i.origin];return new THREE.Matrix4().set(u[0],v[0],w[0],o[0],u[1],v[1],w[1],o[1],u[2],v[2],w[2],o[2],0,0,0,1).scale(new THREE.Vector3(...(i.scale??[1,1,1])));}
 const meshes=[],lines=[],pieceLabels=[],parentOf={};
 for(const i of instances){
   if(!nodes[i.group])continue;   // jigs, test coupons and the loose accessory tray are not in the house
@@ -331,9 +313,9 @@ function recolour(){for(const m of meshes)m.material=m===picked&&!searchMatches.
 const cutPlane=new THREE.Plane(new THREE.Vector3(0,0,-1),total);
 function apply(){
   const rad=THREE.MathUtils.degToRad;
-  nodes.WallRight.pivot.rotation.z=rad(state.wallRight);nodes.WallLeft.pivot.rotation.z=-rad(state.wallLeft);
-  for(const d of Object.values(doors))d.pivot.rotation.z=d.sign*rad(state.doors);
-  const dir=derived.drawer.direction;nodes.Drawer.pivot.position.set(dir[0]*state.drawer,dir[1]*state.drawer,0);
+  nodes.WallRight.pivot.rotation.z=hingeRadians(state.wallRight);nodes.WallLeft.pivot.rotation.z=hingeRadians(state.wallLeft,-1);
+  for(const d of Object.values(doors))d.pivot.rotation.z=hingeRadians(state.doors,d.sign);
+  nodes.Drawer.pivot.position.set(...drawerOffset(derived.drawer.direction,state.drawer));
   // The roof rises after both catches turn inward by 90 degrees.
   const release=Math.min(1,state.lift/20);for(const c of Object.values(catches))c.pivot.rotation.z=rad(90*release);
   nodes.Roof.pivot.position.z=Math.max(0,state.lift-20)*1.1;

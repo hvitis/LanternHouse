@@ -38,7 +38,8 @@ On Windows, use `.venv\Scripts\python` in place of `.venv/bin/python`.
 Without Make, run `python source/config_check.py`, `python -m pytest` and `python source/export_viewer.py _site` with the virtual environment interpreter.
 Opening `index.html` directly from the filesystem does not support the module and model requests. Use an HTTP server.
 
-The `_site/` folder contains HTML, JavaScript, local three.js files, license files and `data/parts.json`.
+The `_site/` folder contains HTML, JavaScript, local three.js files, license files, `data/parts.json` and `data/assembly.json`.
+The assembly manifest is regenerated on every export, including exports that reuse cached geometry.
 Every asset URL is relative, so the site works at `/` and at `/moominshouse/`.
 The export builds the model from the source. It does not use the existing `output/parts.json`.
 The export replaces `_site/`. Outside the repository, it replaces only folders that contain its export marker.
@@ -52,6 +53,7 @@ npm ci
 npx playwright install chromium
 make site
 npm run test:viewer
+npm run test:instructions
 ```
 
 On Linux, use `npx playwright install --with-deps chromium` to install the browser and its system dependencies.
@@ -134,3 +136,23 @@ make all
 If the build changes source or documentation, commit and push those changes before you run the release command.
 Review the draft assets on GitHub before you publish the release.
 The README download link becomes available after the first published release.
+
+## Maintain the build companion
+
+The Instructions tab uses the same chapter descriptions and purchasing list as the PDF book.
+`source/assembly.py` defines the individual operations, part references and repeat batches.
+The export checks that each physical model instance belongs to one operation.
+
+Keep step IDs stable when editing text. Progress uses these IDs rather than step numbers.
+A changed manifest revision shows an update notice. Incompatible saved progress requires an explicit restart.
+Progress stays in local storage for this browser and site origin. It does not sync between devices.
+
+Add verified field notes to `FIELD_HINTS` in `source/assembly.py`, keyed by stable step ID.
+Each note has a `text` field and an optional `author` field.
+The HINTS area shows these notes below the current instructions. No public submission service is included.
+Do not add simulated field reports. The current build has not been glued yet.
+
+The 3D assembly view is separate from the main preview. Play animates only the current step.
+Next browses ahead. Mark complete records the whole operation or repeat batch.
+The elevated floors use small metal angle brackets. The builder checks their fit and fixings during the dry fit.
+Roof magnets or a hinge-style attachment remain optional builder choices.
