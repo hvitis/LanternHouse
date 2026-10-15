@@ -30,11 +30,11 @@ def main():
     for folder in ('source','docs','tests','output'):
         for p in (ROOT/folder).rglob('*'):
             if not p.is_file() or p==dest or '__pycache__' in p.parts or p.name=='.DS_Store' or p.suffix in ('.FCBak','.FCStd1','.zip'):continue
-            if p.name=='build-manifest.json':continue
+            if p.name in ('build-manifest.json','release-validation.json','checksums.txt'):continue
             files.append(p)
     files.extend(ROOT/name for name in ('README.md','README.pl.md','TODO.md','LICENSE','Makefile','requirements.txt','requirements-dev.txt','package.json','package-lock.json','pytest.ini','.gitignore') if (ROOT/name).exists())
     manifest={'validation':'output/reports/release-validation.json','files':[{'path':str(p.relative_to(ROOT)),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(files)]}
-    mp=ROOT/'output/reports/build-manifest.json';mp.write_text(json.dumps(manifest,indent=2));files.append(mp)
+    mp=ROOT/'output/reports/build-manifest.json';mp.write_text(json.dumps(manifest,indent=2))
     with zipfile.ZipFile(dest,'w',zipfile.ZIP_DEFLATED,compresslevel=7) as z:
         for p in files:z.write(p,'Moomin-House/'+str(p.relative_to(ROOT)))
     print(f'Packaged {len(files)} files / {dest.stat().st_size/1024/1024:.1f} MB / {dest}')

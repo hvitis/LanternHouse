@@ -8,7 +8,8 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
-from reportlab.lib.utils import simpleSplit
+from reportlab.lib.utils import simpleSplit, ImageReader
+from PIL import Image, ImageOps
 from pypdf import PdfReader, PdfWriter
 from pypdf.generic import NameObject, TextStringObject
 
@@ -19,6 +20,15 @@ REGULAR='MoominSans';BOLD='MoominSans-Bold'
 def fonts():
     for name,file in ((REGULAR,'DejaVuSans.ttf'),(BOLD,'DejaVuSans-Bold.ttf')):
         if name not in pdfmetrics.getRegisteredFontNames():pdfmetrics.registerFont(TTFont(name,str(ROOT/'source/fonts'/file)))
+
+def house_bw_image():
+    for p in (ROOT/'output/previews/house-closed-veranda.png',ROOT/'output/previews/house-closed.png',ROOT/'docs/images/house-closed.webp'):
+        if p.exists():
+            im=Image.open(p).convert('RGBA')
+            r,g,b,a=im.split()
+            gray=ImageOps.grayscale(Image.merge('RGB',(r,g,b)))
+            return Image.merge('RGBA',(gray,gray,gray,a))
+    return None
 
 def languages():return tuple(sorted(p.stem for p in (ROOT/'source/locales').glob('*.json')))
 def catalog(lang):
@@ -102,10 +112,56 @@ def build(data,nest,cfg,lang='pl',output=None):
         pages.append({'page':len(pages)+1,'role':role,'title':title,'size_mm':[210,297]})
     def finish():
         text('Moomin House / '+options['revision'],40,24,8);text(len(pages),width-55,24,8);c.showPage()
-    start(tr['title'],'specification');y=paragraph(tr['status'],height-112)
-    for value in (tr['material']+': '+tr[options['material']],tr['thickness']+': 3 / 4 / 6 / 8 mm',tr['cnc_process'],tr['a3_stock'],tr['retained_edges'],tr['machining_faces'],tr['kerf'],tr['spacing'],tr['no_engraving'],tr['one_piece'],tr['production_only']):y=paragraph(value,y,9.5)
-    for key,setting in [('cut_tolerance','cutting_tolerance_mm'),('thickness_tolerance','thickness_tolerance_mm')]:
-        y=paragraph(tr[key]+': '+(tr['pending'] if options[setting] is None else f'±{options[setting]:g} mm'),y,9.5)
+    start(tr['title'],'specification')
+    bw_house=house_bw_image()
+    # Info about the license is preserved here but hidden for now:
+    show_license=False
+    if bw_house:
+        img_w,img_h=(330,440) if show_license else (360,480)
+        img_x=(width-img_w)/2;img_y=225 if show_license else (height-img_h)/2-15
+        c.drawImage(ImageReader(bw_house),img_x,img_y,width=img_w,height=img_h,mask='auto')
+    if show_license:
+        c.setStrokeColorRGB(.78,.78,.78);c.setLineWidth(.6);c.line(40,205,width-40,205)
+        text(tr['copyright_title'],40,190,8.5,bold=True);y_copy=176
+        for block in tr['copyright_notice'].split('\n'):
+            y_copy=paragraph(block,y_copy,7.5)+3
+    finish()
+    start(tr['summary_title'],'summary');y=paragraph(tr['summary_desc'],height-112)
+    thicknesses=sorted(set(s['thickness'] for s in sheets))
+    x0,w1,w2,w3=40,155,180,180
+    x1,x2,x3=x0+w1,x0+w1+w2,x0+w1+w2+w3
+    y-=14;y_top=y;h_head=26;h_row=24;h_tot=26
+    c.setFillColorRGB(.93,.94,.95);c.rect(x0,y_top-h_head,w1+w2+w3,h_head,fill=1,stroke=0)
+    c.setFillColorRGB(0,0,0);c.setFont(BOLD,9.5)
+    c.drawString(x0+12,y_top-17,tr['col_thickness'])
+    c.drawCentredString(x1+w2/2,y_top-17,tr['col_sheets'])
+    c.drawCentredString(x2+w3/2,y_top-17,tr['col_elements'])
+    curr_y=y_top-h_head
+    for i,t in enumerate(thicknesses):
+        t_sheets=[s for s in sheets if s['thickness']==t]
+        s_count=len(t_sheets);e_count=sum(len(s['items']) for s in t_sheets)
+        if i%2==1:
+            c.setFillColorRGB(.98,.98,.98);c.rect(x0,curr_y-h_row,w1+w2+w3,h_row,fill=1,stroke=0)
+        c.setFillColorRGB(0,0,0);c.setFont(REGULAR,9.5)
+        c.drawString(x0+12,curr_y-16,f'{t:g} mm')
+        c.drawCentredString(x1+w2/2,curr_y-16,str(s_count))
+        c.drawCentredString(x2+w3/2,curr_y-16,str(e_count))
+        c.setStrokeColorRGB(.82,.82,.82);c.setLineWidth(.5);c.line(x0,curr_y-h_row,x3,curr_y-h_row)
+        curr_y-=h_row
+    tot_sheets=len(sheets);tot_elements=sum(quantities.values())
+    c.setFillColorRGB(.93,.94,.95);c.rect(x0,curr_y-h_tot,w1+w2+w3,h_tot,fill=1,stroke=0)
+    c.setFillColorRGB(0,0,0);c.setFont(BOLD,10)
+    c.drawString(x0+12,curr_y-17,tr['total'])
+    c.drawCentredString(x1+w2/2,curr_y-17,str(tot_sheets))
+    c.drawCentredString(x2+w3/2,curr_y-17,str(tot_elements))
+    c.setStrokeColorRGB(0,0,0);c.setLineWidth(1)
+    c.line(x0,curr_y,x3,curr_y);c.line(x0,curr_y-h_tot,x3,curr_y-h_tot)
+    curr_y-=h_tot
+    c.rect(x0,curr_y,w1+w2+w3,y_top-curr_y,fill=0,stroke=1)
+    c.setStrokeColorRGB(.82,.82,.82);c.setLineWidth(.5)
+    c.line(x1,curr_y,x1,y_top);c.line(x2,curr_y,x2,y_top)
+    y_note=curr_y-24
+    paragraph(tr['summary_footnote'].format(sheets=tot_sheets,parts=len(quantities),elements=tot_elements),y_note,8.5)
     finish()
     ordered=sorted(quantities,key=lambda pid:(parts[pid]['thickness'],pid))
     for first in range(0,len(ordered),20):

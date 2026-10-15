@@ -52,7 +52,7 @@
     "$schema": {"type": "string"},
     "title": {"type": "string", "description": "Project title"},
     "height": {"$ref": "#/$defs/mm", "description": "Finished height including the finial. The roof takes up any change above the walls."},
-    "base_diameter": {"$ref": "#/$defs/mm", "description": "Round grey base under everything"},
+    "base_diameter": {"$ref": "#/$defs/mm", "description": "Round green base under everything"},
     "plinth": {
       "type": "object",
       "description": "Stone plinth between the base and the ground floor, with the hidden drawer",

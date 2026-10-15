@@ -116,14 +116,33 @@ for(const d of Object.values(doors)){
   d.sign=((rx-c.x)*d.hinge.outward[0]+(ry-c.y)*d.hinge.outward[1])>0?1:-1;
 }
 
-// ---------- hardware: screw / bolt solids and hinge axes ----------
+// ---------- hardware: screw / bolt solids, heads, nuts and hinge axes ----------
 const hardwareObjects=[];
 const metal=new THREE.MeshStandardMaterial({color:0xc19a55,metalness:.6,roughness:.4});
+const brass=new THREE.MeshStandardMaterial({color:0xd4af37,metalness:.85,roughness:.25});
 for(const f of fasteners){
   const parent=parentOf[f.parts[0]];if(!parent)continue;
   const axis=new THREE.Vector3(...f.axis).normalize();
-  const shank=new THREE.Mesh(new THREE.CylinderGeometry(f.diameter/2,f.diameter/2,f.length,10),metal);
-  shank.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),axis);shank.position.copy(new THREE.Vector3(...f.origin).addScaledVector(axis,f.length/2));
+  const shank=new THREE.Mesh(new THREE.CylinderGeometry(f.diameter/2,f.diameter/2,f.length,12),metal);
+  shank.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),axis);
+  shank.position.copy(new THREE.Vector3(...f.origin).addScaledVector(axis,f.length/2));
+  if(f.head_diameter){
+    const headH=f.head_height||1.2;
+    const headGeom=new THREE.CylinderGeometry(f.head_diameter/2,f.diameter/2,headH,12);
+    const headMesh=new THREE.Mesh(headGeom,brass);
+    headMesh.position.set(0,-f.length/2-headH/2,0);
+    shank.add(headMesh);
+  }
+  if(f.nut||f.type==='SC1'){
+    const nutD=f.nut?.diameter??5.0, nutH=f.nut?.height??3.5;
+    const nutCyl=new THREE.Mesh(new THREE.CylinderGeometry(nutD/2,nutD/2,nutH*0.6,12),brass);
+    const nutDome=new THREE.Mesh(new THREE.SphereGeometry(nutD/2,12,8,0,Math.PI*2,0,Math.PI/2),brass);
+    nutDome.position.y=nutH*0.3;
+    const nutGroup=new THREE.Group();
+    nutGroup.add(nutCyl);nutGroup.add(nutDome);
+    nutGroup.position.set(0,f.length/2+nutH*0.3,0);
+    shank.add(nutGroup);
+  }
   shank.userData={kind:'fastener',fastener:f,owners:f.parts,base:metal};parent.add(shank);hardwareObjects.push(shank);meshes.push(shank);shank.visible=false;
 }
 const axisMaterial=new THREE.LineDashedMaterial({color:0xb56535,dashSize:8,gapSize:5});

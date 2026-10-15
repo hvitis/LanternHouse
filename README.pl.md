@@ -188,3 +188,8 @@ Copyright © 2026 hvitis. Kod, projekt i wygenerowane z nich pliki są objęte l
 Pliki three.js w `source/viewer/vendor/` zachowują własną licencję MIT (`THREE-LICENSE.txt`). Czcionki DejaVu zachowują licencję z `source/fonts/LICENSE_DEJAVU`.
 
 Moomin, postacie Muminków i domek Muminków są znakami towarowymi i utworami chronionymi prawem autorskim Moomin Characters Oy. Licencja projektu nie przyznaje praw do tych elementów. To osobisty, niekomercyjny projekt fanowski. Repozytorium nie zawiera oficjalnych ilustracji ani zdjęć produktów i nie służy do ich rozpowszechniania. Nie sprzedawaj zestawów, książek ani figurek wykonanych na podstawie tego projektu.
+
+<p align="center">
+  <img src="docs/images/social-preview.png" width="800" alt="Domek Muminków: drewniany domek dla lalek ze sklejki wygenerowany z kodu">
+</p>
+

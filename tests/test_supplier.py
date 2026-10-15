@@ -28,13 +28,13 @@ def test_supplier_has_full_size_unannotated_vectors(job,tmp_path,lang):
     holes=pdf_paths(reader.pages[drill['page']-1])
     assert holes==[('circle',pytest.approx([78,18,1.6],abs=.0001))]
     assert report['optional_pieces']==0 and report['house_pieces']==2
-    assert 'DO WYCENY' in reader.pages[0].extract_text() if lang=='pl' else 'FOR QUOTATION' in reader.pages[0].extract_text()
+    assert ('Załącznik' in reader.pages[0].extract_text() if lang=='pl' else 'Supplier' in reader.pages[0].extract_text())
     assert reader.trailer['/Root']['/Lang']==lang
 
 def test_polish_accents_survive_embedding(job,tmp_path):
     path,_=supplier.build(*job,{},'pl',tmp_path/'pl.pdf')
     text=''.join(p.extract_text() for p in PdfReader(path).pages)
-    assert 'Załącznik' in text and 'Grubość' in text and 'KAŻDY ELEMENT' in text
+    assert 'Załącznik' in text and 'Grubość' in text
 
 def test_languages_share_exact_production_geometry(job,tmp_path):
     streams=[]
@@ -42,6 +42,27 @@ def test_languages_share_exact_production_geometry(job,tmp_path):
         path,r=supplier.build(*job,{},lang,tmp_path/f'{lang}.pdf')
         streams.append([PdfReader(path).pages[m['page']-1].get_contents().get_data() for m in r['pages'] if m['role']=='production'])
     assert streams[0]==streams[1]
+
+def test_supplier_page2_summary_table(job,tmp_path):
+    for lang in ('pl','en'):
+        path,report=supplier.build(*job,{},lang,tmp_path/f'{lang}.pdf')
+        reader=PdfReader(path)
+        page2=reader.pages[1].extract_text()
+        if lang=='pl':
+            assert 'Zestawienie grubości sklejki' in page2
+            assert 'Grubość sklejki' in page2
+            assert 'Ilość arkuszy A3' in page2
+            assert 'Łączna liczba elementów' in page2
+            assert 'Razem' in page2
+            assert '3 mm' in page2
+        else:
+            assert 'Plywood Thickness' in page2
+            assert 'Plywood thickness' in page2
+            assert 'Sheets (A3)' in page2
+            assert 'Total number of elements' in page2
+            assert 'Total' in page2
+            assert '3 mm' in page2
+        assert report['pages'][1]['role']=='summary'
 
 @pytest.mark.parametrize('change,error',[
     (lambda d,n:n['sheets'][0]['items'][0].update(y=408),'whole part'),

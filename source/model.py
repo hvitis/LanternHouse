@@ -1,8 +1,10 @@
 """Single source of truth for fabrication profiles and assembled placements (mm)."""
 from __future__ import annotations
-import json, math
+import json, math, sys
 from collections import Counter
 from pathlib import Path
+
+sys.modules.setdefault('model', sys.modules[__name__])
 
 ROOT = Path(__file__).resolve().parents[1]
 CFG = json.loads((ROOT / 'source/config.json').read_text())
@@ -27,6 +29,14 @@ def edge_distance(x,y,poly):
         distances.append(math.hypot(x-a[0]-t*dx,y-a[1]-t*dy))
     return min(distances)
 def cutrect(x,y,w,h): return [[x,y],[x+w,y],[x+w,y+h],[x,y+h]]
+def cutrect_dogbone(x,y,w,h,r=2.0):
+    from shapely.geometry import box, Point
+    from shapely.ops import unary_union
+    rect = box(x, y, x+w, y+h)
+    corners = [(x, y), (x+w, y), (x+w, y+h), (x, y+h)]
+    circles = [Point(cx, cy).buffer(r, quad_segs=8) for cx, cy in corners]
+    u = unary_union([rect] + circles)
+    return list(u.exterior.coords)[:-1]
 def add(pid,name,t,outer,cuts=None,holes=None,color='wood',category='Structure',note=''):
     if outer[-1]==outer[0]:outer=outer[:-1]
     x0,y0,x1,y1=bounds(outer)
@@ -35,11 +45,12 @@ def add(pid,name,t,outer,cuts=None,holes=None,color='wood',category='Structure',
     holes=[dict(h,x=h['x']-x0,y=h['y']-y0) for h in (holes or [])]
     starters=[]
     for i,c in enumerate(cuts):
-        a,b,d,e=bounds(c); diameter=min(CFG['starter_diameter'],d-a-4,e-b-4)
+        cx=sum(v[0] for v in c)/len(c);cy=sum(v[1] for v in c)/len(c)
+        r_fit=edge_distance(cx,cy,c) if inside_polygon(cx,cy,c) else 0
+        a,b,d,e=bounds(c); diameter=min(CFG['starter_diameter'],d-a-4,e-b-4,2*(r_fit-2))
         if diameter>=6:
             sx,sy=a+diameter/2+2,b+diameter/2+2
             if not inside_polygon(sx,sy,c) or edge_distance(sx,sy,c)<diameter/2+1.99:
-                cx=sum(v[0] for v in c)/len(c);cy=sum(v[1] for v in c)/len(c)
                 vx,vy=min(c,key=lambda v:(v[1],v[0]))
                 for step in range(1,101):
                     f=step/100;sx=vx+(cx-vx)*f;sy=vy+(cy-vy)*f
@@ -98,7 +109,7 @@ def build():
     reach=a+ver['wall_gap']+ver['depth']
     po=(pn[0]*reach-pu[0]*ver['width']/2,pn[1]*reach-pu[1]*ver['width']/2,G)
     # Round foundation: a fine polygon for nesting/templates, a true circle for CAD and DXF.
-    add('B01','Round grey base',bt,poly(180,half,half,half),color='gray',note=f'Circle D{2*half:g}, centered on the tower; paint plain grey. The stone plinth, the veranda skirt and both entrance stairs are glued on top, and the hidden drawer slides on it. Cut with a jigsaw or router trammel, then sand the edge fair.')
+    add('B01','Round green base',bt,poly(180,half,half,half),color='green',note=f'Circle D{2*half:g}, centered on the tower; paint plain green. The stone plinth, the veranda skirt and both entrance stairs are glued on top, and the hidden drawer slides on it. Cut with a jigsaw or router trammel, then sand the edge fair.')
     PARTS['B01']['outercircle']=[half,half,half]
     put('B01',(-half,-half,0))
     # Stone plinth: 12 facet panels between B01 and a 12-sided ground-floor plate, with a hidden drawer bay.
@@ -136,8 +147,8 @@ def build():
     for w in (hw+1,-hw-1):vertical_plate('DG1',dpt(back-6.5,w),dpt(gfront,w),bt,dpt(0,w*2))
     vertical_plate('DB1',dpt(back-.5,-hw-1),dpt(back-.5,hw+1),bt,dpt(back-10,0))
     allowance=CFG['fabrication']['pillar_clearance']
-    post_slots=[cutrect(floor_r+x-allowance/2,floor_r+y-post_t-allowance/2,post_width+allowance,post_t+allowance) for x,y in posts]
-    add('F01','First / second floor',base,floor_points,cuts=post_slots,color='wood',note='Slide both levels over the four continuous P01 pillars. Glue divided panels over 4 x4 mm supports; dry-fit the pillar openings with measured plywood.')
+    post_slots=[cutrect_dogbone(floor_r+x-allowance/2,floor_r+y-post_t-allowance/2,post_width+allowance,post_t+allowance,r=2.0) for x,y in posts]
+    add('F01','First / second floor',base,floor_points,cuts=post_slots,color='wood',note='Slide both levels over the four continuous P01 pillars. Glue divided panels over interlocking finger joints and seam supports; pillar openings feature CNC dogbone fillets (R2.0 mm corner relief) at all four inside corners.')
     attic_holes=[]
     for angle in (60,120):
         th=math.radians(angle);attic_holes.append(hole(floor_r+q(145)*math.cos(th),floor_r+q(145)*math.sin(th),3.2,None,'BL1 roof turn-button pivot clearance'))
@@ -170,7 +181,7 @@ def build():
         origin=(n[0]*(a-wall)-u[0]*width/2,n[1]*(a-wall)-u[1]*width/2,G)
         wallinst=put(pid,origin,u,(0,0,1),group,label=f'Wall facet {i+1:02}');WALLS.append(wallinst)
         if hinge_end:
-            if 'A02' not in PARTS:add('A02','Hinge backing block (solid wood)',8,rect(18,28),holes=[hole(9,14-WH['height']/2+dy,WH['pilot_diameter'],WH['pilot_depth']-wall,'Hinge backing pilot') for dy in WH['hole_y']],category='Purchased wood',note='Buy 8 x 18 mm solid wood strip; cut twelve 28 mm blocks. Glue to wall inside before drilling from actual hinge leaf.')
+            if 'A02' not in PARTS:add('A02','Hinge backing block (solid wood)',8,rect(18,28),holes=[hole(9,14-WH['height']/2+dy,WH['pilot_diameter'],WH['pilot_depth']-wall,'Hinge backing through bore') for dy in WH['hole_y']],category='Purchased wood',note='Buy 8 x 18 mm solid wood strip; cut twelve 28 mm blocks. Glue to wall inside before drilling from actual hinge leaf. Through-bored for 16 mm screws / M2.5 brass through-machine screws with decorative dome cap nuts.')
             hx=holes[0]['x']
             for cy in WH['centers']:
                 bo=(origin[0]+u[0]*(hx-9)-n[0]*8,origin[1]+u[1]*(hx-9)-n[1]*8,G+cy-14)
@@ -182,7 +193,7 @@ def build():
             stand=wall+WH['leaf_thickness']+WH['packing_thickness']
             for h in PARTS[pid]['holes']:
                 head=[origin[0]+u[0]*h['x']+n[0]*stand,origin[1]+u[1]*h['x']+n[1]*stand,G+h['y']]
-                FASTENERS.append({'id':f'FS-{pid}-{h["id"]}','type':'SC1','diameter':2.0,'length':12.0,'head_diameter':4.0,'head_height':1.0,'origin':head,'axis':[-n[0],-n[1],0],'parts':[wallinst['id']],'pilot':WH['pilot_diameter'],'pilot_depth':WH['pilot_depth'],'note':'2 x 12 mm countersunk wood screw; nominal length includes head. Passes hinge, packing, 6 mm wall, into 8 mm backing.'})
+                FASTENERS.append({'id':f'FS-{pid}-{h["id"]}','type':'SC1','diameter':2.5,'length':16.0,'head_diameter':5.0,'head_height':1.2,'origin':head,'axis':[-n[0],-n[1],0],'parts':[wallinst['id']],'pilot':WH['pilot_diameter'],'pilot_depth':WH['pilot_depth'],'nut':{'type':'dome_cap_nut','diameter':5.0,'height':3.5},'note':'2.5 x 16 mm countersunk screw (or M2.5 brass through-machine screw with decorative dome cap nut); nominal length includes head. Passes hinge, packing, 6 mm wall, engaging full 8 mm backing block A02.'})
         # Window: horizontal bars at the bottom and top, vertical bars at the sides and one in the middle (inside the
         # frame, touching both horizontal bars), and a horizontal bar glued across the outside at mid-height.
         for j,c in enumerate(cuts):
@@ -378,7 +389,7 @@ def build():
     def mark(label,p,group=None):dims.append({'kind':'label','label':label,'p':list(p),'group':group})
     sx,sy=Ap+40,40
     dim(f'{total:g} total height',(-half-30,60,0),(-half-30,60,total))
-    dim(f'D{2*half:g} grey base',(-half,-half-40,0),(half,-half-40,0),[((-half,0,0),(-half,-half-40,0)),((half,0,0),(half,-half-40,0))])
+    dim(f'D{2*half:g} green base',(-half,-half-40,0),(half,-half-40,0),[((-half,0,0),(-half,-half-40,0)),((half,0,0),(half,-half-40,0))])
     dim(f'Plinth {G:g} (base {bt:g} + stone {PL["height"]:g})',(0,-Ap-25,0),(0,-Ap-25,G))
     names=['Ground floor','Floor 1','Floor 2','Attic floor']
     for k in range(3):dim(f'{pitch:g}',(sx,sy,tops[k]),(sx,sy,tops[k+1]))
@@ -415,7 +426,7 @@ def build():
       f'Hidden drawer turned to {DR["direction"]:g} degrees ({side}) so it slides out clear of the stop posts and veranda',
       f'Clay figures are smaller so each passes upright through every doorway, including the {PT["door_width"]:g} mm room-divider doorways: '+', '.join(f'{clay.NAMES[k]} {fh[k]:g} mm' for k in ('pappa','mamma','troll'))+' (were 80 / 66 / 56)',
       'Toy-safe finish: the book asks for primer, paint and varnish declared to EN 71-3 and names example products of each type']
-    new={'MC1','GP1'};changed={'F02','B01',WALLS[2]['part'],WALLS[9]['part']}
+    new={'MC1','GP1'};changed={'F01','F01B','A02','F02','B01',WALLS[2]['part'],WALLS[9]['part']}
     for pid,p in PARTS.items():
         if pid in new:p['revision']='new'
         elif pid in changed:p['revision']='changed'
@@ -561,41 +572,132 @@ def furnish(tops):
         part(prefix+'A',name+' mattress platform',54,104,color='cream');part(prefix+'B',name+' head / foot',54,34,color='ochre');part(prefix+'C',name+' support',96,18,color='wood')
         put(prefix+'A',(x,y+4,z+18),group='Furniture');upright(prefix+'B',x,y+4,z,'Furniture');upright(prefix+'B',x,y+112,z,'Furniture')
         upright(prefix+'C',x+4,y+8,z,'Furniture',axis='yz');upright(prefix+'C',x+46,y+8,z,'Furniture',axis='yz')
-    # Room layouts per storey; the divider runs along X0 with its door opening at Y20-60 swinging into +X.
+    # Room layouts per storey; the divider runs along X0 with its door opening at Y-135 to -97 swinging into +X.
     g,f1,f2,at=tops
-    # Small size adjustments make furniture blanks interchangeable. Cabinets and
-    # dining-table supports share 37 x48 sides; sink shelves share the bed ends.
+
+    def wall_shelf(prefix,name,y,z,w,d,h,side='left',shelves=3,color='wood'):
+        """Bookshelf placed flush against the inner room wall (divider along X=0).
+        side='left': stands in the left room (-X), back at X=-2, front at X=-2-d.
+        side='right': stands in the right room (+X), back at X=2, front at X=2+d.
+        w runs along Y from y to y+w. h is height in Z.
+        """
+        part(prefix+'A',name+' gable end',d,h,color=color)
+        part(prefix+'B',name+' shelf / top / bottom',d-3,w-8,color=color)
+        part(prefix+'C',name+' back panel',w-8,h-8,3,color=color)
+        if side=='left':
+            upright(prefix+'A',-2-d,y,z,'Furniture',axis='xz')
+            upright(prefix+'A',-2-d,y+w-4,z,'Furniture',axis='xz')
+            upright(prefix+'C',-5,y+4,z+4,'Furniture',axis='yz')
+            for zz in [z,z+h-4]+[z+(j+1)*(h-8)/(shelves+1) for j in range(shelves)]:
+                put(prefix+'B',(-2-d+3,y+4,zz),group='Furniture')
+        else:
+            upright(prefix+'A',2,y,z,'Furniture',axis='xz')
+            upright(prefix+'A',2,y+w-4,z,'Furniture',axis='xz')
+            upright(prefix+'C',2,y+4,z+4,'Furniture',axis='yz')
+            for zz in [z,z+h-4]+[z+(j+1)*(h-8)/(shelves+1) for j in range(shelves)]:
+                put(prefix+'B',(2,y+4,zz),group='Furniture')
+
+    def fill_shelf_books(shelf_y,shelf_z,w,side='left',colors=('ink','red','sage','ochre')):
+        """Place multi-colored book rows on an inner wall shelf."""
+        n_books=max(1,int((w-12)/16))
+        for j in range(n_books):
+            c=colors[j%len(colors)];pid=f'BK_{c}';bh=14+(j*3)%7;bw=14
+            part(pid,f'Book block {c}',bw,bh,3,color=c)
+            by=shelf_y+6+j*(bw+2)
+            if side=='left':upright(pid,-7,by,shelf_z+4,'Furniture',axis='yz')
+            else:upright(pid,4,by,shelf_z+4,'Furniture',axis='yz')
+
+    # Ground floor: Bookbindery & Reading Parlour along inner room wall
     box('K1','Kitchen cupboard',-118,-20,g,76,37,48,'sage',1)
     box('K2','Cooker',-125,36,g,44,37,48,'cream')
-    table('K3','Dining table',10,-110,g,90,60,41)
-    for x,y in [(30,-44),(66,-44),(-50,-135)]:seat('K4','Dining chair',x,y,g,28,28,24,53,'ochre')
     box('K5','Sink cabinet',60,22,g,62,37,48,'sage')
     add('K6','Sink rim',3,rect(26,20),[cutrect(5,5,16,10)],color='cream',category='Furniture',note='Drill small interior opening and file; glue a painted card basin beneath.')
     put('K6',(82,32,g+48),group='Furniture')
     add('K7','Cooker burner discs',3,poly(12,5,5,5),color='ink',category='Furniture')
     for x,y in [(-118,43),(-100,43),(-118,61),(-100,61)]:put('K7',(x,y,g+48),group='Furniture')
-    seat('V1','Sofa',-122,-43,f1,88,44,25,55,'rose')
-    seat('V2','Armchair',58,-118,f1,40,40,25,55,'sage')
-    # Coffee table and desk share tops; their centered supports reuse chair parts.
-    table('V3','Coffee table',10,-70,f1,60,38,24,'ochre',support_depth=28)
-    box('V4','Bookcase',-119,36,f1,48,28,98,'cream',3)
-    table('V5','Writing desk',67,4,f1,60,38,44,support_depth=21)
-    seat('K4','Dining chair',94,-36,f1,28,28,24,53,'ochre')
+
+    # Shelves along inner room wall (Ground floor)
+    wall_shelf('GL1','Bookbindery tools and materials bookcase',-85,g,65,26,92,side='left',shelves=3,color='wood')
+    fill_shelf_books(-85,g,65,side='left')
+    wall_shelf('GL2','Card catalog shelving unit',-10,g,55,26,88,side='left',shelves=3,color='ochre')
+    fill_shelf_books(-10,g,55,side='left')
+
+    part('BP1A','Book press base',34,24,6,'wood',note='Heavy base platen for book press')
+    part('BP1B','Book press upright',6,26,4,'wood');part('BP1C','Book press top crossbar',34,8,4,'wood')
+    part('BP1D','Book press screw platen',22,18,4,'ink');part('BP1E','Book press turn wheel',14,14,3,'ink')
+    put('BP1A',(-95,-12,g+48),group='Furniture')
+    upright('BP1B',-93,-12,g+54,'Furniture',axis='yz');upright('BP1B',-67,-12,g+54,'Furniture',axis='yz')
+    put('BP1C',(-95,-12,g+76),group='Furniture');put('BP1D',(-89,-9,g+60),group='Furniture');put('BP1E',(-85,-6,g+80),group='Furniture')
+
+    wall_shelf('GR1','Tea parlour library bookcase',-80,g,75,24,100,side='right',shelves=4,color='wood')
+    fill_shelf_books(-80,g,75,side='right')
+    wall_shelf('GR2','Poetry and folio shelving',10,g,60,24,88,side='right',shelves=3,color='sage')
+    fill_shelf_books(10,g,60,side='right')
+
+    # Floor 1: Grand Circular Library along inner room wall
     box('V6','Decorative stove',-50,-128,f1,32,29,56,'ink')
-    bed('U1','Bed',-122,-76,f2);bed('U1','Bed',59,-76,f2)
+    wall_shelf('L1L','Grand library west bookcase',-85,f1,80,26,110,side='left',shelves=4,color='wood')
+    fill_shelf_books(-85,f1,80,side='left')
+    wall_shelf('L1M','Grand library north bookcase',10,f1,75,26,110,side='left',shelves=4,color='wood')
+    fill_shelf_books(10,f1,75,side='left')
+
+    wall_shelf('L1R','Reference collection bookcase',-80,f1,80,24,104,side='right',shelves=4,color='ochre')
+    fill_shelf_books(-80,f1,80,side='right')
+    wall_shelf('L1S','Encyclopedic stacks bookcase',15,f1,70,24,104,side='right',shelves=4,color='cream')
+    fill_shelf_books(15,f1,70,side='right')
+
+    part('SS1A','Library step stringer',28,26,4,'wood');part('SS1B','Library step tread',22,14,4,'wood')
+    upright('SS1A',-32,-50,f1,'Furniture',axis='yz');upright('SS1A',-10,-50,f1,'Furniture',axis='yz')
+    put('SS1B',(-30,-50,f1+12),group='Furniture');put('SS1B',(-30,-36,f1+24),group='Furniture')
+
+    part('LC1A','Lectern column',8,42,4,'wood');part('LC1B','Lectern base',24,24,4,'wood')
+    part('LC1C','Lectern reading deck',32,24,3,'ochre');part('LC1D','Open folio leaves',26,18,3,'cream')
+    put('LC1B',(60,-30,f1),group='Furniture');upright('LC1A',68,-26,f1+4,'Furniture')
+    put('LC1C',(56,-30,f1+46),group='Furniture');put('LC1D',(59,-27,f1+49),group='Furniture')
+
+    part('BC1A','Carousel base plate',36,36,4,'wood');part('BC1B','Carousel middle shelf',32,32,3,'ochre')
+    part('BC1C','Carousel top plate',28,28,3,'wood');part('BC1D','Carousel vertical fins',24,20,3,'ink')
+    put('BC1A',(-40,20,f1),group='Furniture');upright('BC1D',-36,22,f1+4,'Furniture');upright('BC1D',-36,22,f1+4,'Furniture',axis='yz')
+    put('BC1B',(-38,22,f1+24),group='Furniture');upright('BC1D',-36,22,f1+27,'Furniture');put('BC1C',(-36,24,f1+47),group='Furniture')
+
+    # Floor 2: Moominpappa’s Memoir Study & Scriptorium along inner room wall
     box('U2','Wardrobe',8,-125,f2,64,32,100,'sage',1)
-    # Bedside sides reuse chair seats. Dresser shelves reuse bookcase shelves,
-    # its back reuses the cooker back, and its sides reuse washstand/chest panels.
-    box('U3','Bedside table',-59,-35,f2,26,28,28,'ochre')
-    box('U3','Bedside table',27,-35,f2,26,28,28,'ochre')
     box('U4','Dresser',-98,-115,f2,48,28,44,'cream',1)
-    table('U5','Washstand',89,42,f2,44,28,40,'cream')
+
+    wall_shelf('L2L','Memoir manuscript bookcase',-85,f2,80,26,106,side='left',shelves=4,color='wood')
+    fill_shelf_books(-85,f2,80,side='left')
+    wall_shelf('L2M','Autobiographical archives bookcase',10,f2,70,26,106,side='left',shelves=4,color='ochre')
+    fill_shelf_books(10,f2,70,side='left')
+
+    box('SC1','Secretary desk carcass',-70,55,f2,58,32,52,'wood',shelves=1)
+    part('SC1S','Secretary slanted lid',56,26,4,'ochre');part('SC1P','Secretary pigeonholes',50,18,3,'cream')
+    put('SC1S',(-69,57,f2+38),group='Furniture');upright('SC1P',-66,71,f2+34,'Furniture')
+
+    part('WS1A','Portable writing slope',28,22,3,'wood');part('IS1A','Quill and inkstand',16,8,3,'ink')
+    put('WS1A',(-55,59,f2+42),group='Furniture');put('IS1A',(-65,77,f2+42),group='Furniture')
+
+    part('ST1A','Sorting tower gable',26,18,3,'sage');part('ST1B','Sorting tower shelf',22,16,3,'cream')
+    upright('ST1A',-92,-114,f2+44,'Furniture',axis='yz');upright('ST1A',-70,-114,f2+44,'Furniture',axis='yz')
+    for s_idx in range(3):put('ST1B',(-90,-114,f2+44+s_idx*8),group='Furniture')
+
+    wall_shelf('L2R','Scholarly research bookcase',-80,f2,80,24,102,side='right',shelves=4,color='sage')
+    fill_shelf_books(-80,f2,80,side='right')
+    wall_shelf('L2S','Cartographic journal bookcase',15,f2,70,24,102,side='right',shelves=4,color='wood')
+    fill_shelf_books(15,f2,70,side='right')
+
+    # Attic: Cartographer’s Garret
+    box('AC1','Archival document chest',46,-42,at,46,26,30,'wood')
+    part('AC1R','Curved chest lid rib',44,10,3,'ochre')
+    upright('AC1R',47,-18,at+30,'Furniture')
+
+    part('SB1A','Scroll bin wall',16,32,3,'ochre');part('SB1B','Scroll bin bottom',24,24,3,'wood');part('SB1C','Rolled scroll bundle',18,36,3,'cream')
+    put('SB1B',(-18,-26,at),group='Furniture');upright('SB1A',-18,-26,at+3,'Furniture');upright('SB1A',-6,-26,at+3,'Furniture');upright('SB1C',-14,-22,at+3,'Furniture')
+
     box('N1','Attic chest',-61,-53,at,52,31,32,'wood')
-    # Bench sides reuse chair sides; its seat and back use the same blank.
-    seat('N2','Attic bench',35,-39,at,62,28,24,28,'ochre')
     add('N3','Telescope silhouette',4,[[0,0],[42,0],[48,8],[42,16],[0,16]],color='ochre',category='Furniture',note='Decorative plywood telescope silhouette on a broad glued pedestal.')
     add('N4','Telescope pedestal',4,[[0,0],[32,0],[20,38],[12,38]],color='wood',category='Furniture')
     upright('N4',-55,0,at,'Furniture');upright('N3',-63,0,at+38,'Furniture')
+
     # Separate supervised-use accessory kit, shown in CAD outside assembly.
     add('X01','Miniature book',3,rect(12,18),color='ochre',category='Accessories',note='Small part: separate adult-supervised accessory set for ages 3-5.')
     add('X02','Miniature picture frame',3,rect(24,30),[cutrect(5,5,14,20)],color='cream',category='Accessories')

@@ -16,28 +16,24 @@ def test_all_interchangeable_profiles_share_an_id(data):
 def test_shared_build_quantities_and_design_roles(data):
     parts=data['parts']
     assert {pid:parts[pid]['quantity'] for pid in ('J01','P01','DM06','PC01','PC02','PC03','K1A')}=={
-        'J01':54,'P01':4,'DM06':4,'PC01':9,'PC02':14,'PC03':5,'K1A':8,
+        'J01':54,'P01':4,'DM06':4,'PC01':1,'PC02':2,'PC03':1,'K1A':6,
     }
     assert not {'DM07','K4A','K4B','K4C','K5A'} & parts.keys()
-    chairs=[i for i in data['instances'] if i['design_part'] in ('PC01','K4A')]
-    assert Counter(i['design_part'] for i in chairs)=={'PC01':1,'K4A':4}
+    chairs=[i for i in data['instances'] if i['design_part']=='PC01']
+    assert Counter(i['design_part'] for i in chairs)=={'PC01':1}
     assert Counter(i.get('color',parts[i['part']]['color']) for i in chairs)=={
-        data['config']['colors']['cream']:1,data['config']['colors']['ochre']:4,
+        data['config']['colors']['cream']:1,
     }
 
 
 @pytest.mark.parametrize('build_id,design_parts,size,quantity',[
-    ('PC01',{'PC01','K4A','U3A'},(28,28,4),9),
-    ('PC02',{'PC02','K4B','V3B','N2B'},(28,20,4),14),
-    ('K1A',{'K1A','K2A','K5A','K3B'},(37,48,4),8),
-    ('K5B',{'K5B','U1B'},(54,34,4),6),
-    ('V2B',{'V2B','V5B'},(40,21,4),4),
-    ('V3A',{'V3A','V5A'},(60,38,4),2),
-    ('V4B',{'V4B','U4B'},(40,25,4),8),
+    ('PC01',{'PC01'},(28,28,4),1),
+    ('PC02',{'PC02'},(28,20,4),2),
+    ('K1A',{'K1A','K2A','K5A'},(37,48,4),6),
+    ('K5B',{'K5B'},(54,34,4),2),
     ('K2C',{'K2C','U4C'},(36,40,3),2),
-    ('U4A',{'U4A','U5A','N1B'},(28,44,4),5),
+    ('U4A',{'U4A','N1B'},(28,44,4),4),
     ('V6A',{'V6A','U2B'},(29,56,4),5),
-    ('N2A',{'N2A','N2C'},(62,28,4),2),
 ])
 def test_standard_furniture_blanks_have_shared_ids(data,build_id,design_parts,size,quantity):
     p=data['parts'][build_id]
@@ -48,18 +44,6 @@ def test_standard_furniture_blanks_have_shared_ids(data,build_id,design_parts,si
     assert {i['design_part'] for i in uses}==design_parts
     assert all(i['part']==build_id for i in data['instances'] if i['design_part'] in design_parts)
 
-
-def test_table_supports_are_centered_and_touch_the_top(data):
-    for family in ('K3','V3','V5','U5'):
-        top=next(i for i in data['instances'] if i['design_part']==family+'A')
-        supports=[i for i in data['instances'] if i['design_part']==family+'B']
-        a,b=model.instance_box(top)
-        for support in supports:
-            c,d=model.instance_box(support)
-            assert d[2]==pytest.approx(a[2])
-            assert (c[1]+d[1])/2==pytest.approx((a[1]+b[1])/2)
-            assert a[0]<=c[0]<d[0]<=b[0]
-            assert a[1]<=c[1]<d[1]<=b[1]
 
 
 def test_furniture_is_only_for_display(data):

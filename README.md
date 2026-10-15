@@ -185,3 +185,8 @@ The vendored three.js files in `source/viewer/vendor/` keep their own MIT licenc
 The DejaVu fonts keep their own licence in `source/fonts/LICENSE_DEJAVU`.
 
 Moomin, the Moomin characters and the Moomin house are trademarks and copyrighted works of Moomin Characters Oy. This licence does not and cannot grant any rights in them. This repository is a personal, non-commercial fan project. It does not include, and must not be used to distribute, official artwork or product photos. Do not sell kits, books or figures made from it.
+
+<p align="center">
+  <img src="docs/images/social-preview.png" width="800" alt="Moomin House: a plywood dollhouse generated entirely from code">
+</p>
+

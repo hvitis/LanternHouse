@@ -1,0 +1,113 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name to release (e.g. v1.0.0)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build deliverables and publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Verify tag is on main branch
+        run: |
+          TAG_NAME="${{ inputs.tag_name || github.ref_name }}"
+          echo "Verifying that tag '$TAG_NAME' (commit $GITHUB_SHA) is on main branch..."
+          git fetch origin main
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::Tag '$TAG_NAME' is not on the main branch! Releases must only be cut from main."
+            exit 1
+          fi
+          echo "Tag verified on main branch."
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Run fast checks & unit tests
+        run: |
+          python source/config_check.py
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q
+
+      - name: Install system dependencies for FreeCAD
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libopengl0 \
+            libglu1-mesa \
+            libgl1 \
+            libxcb-cursor0 \
+            xvfb
+
+      - name: Cache FreeCAD AppImage
+        id: cache-freecad
+        uses: actions/cache@v4
+        with:
+          path: FreeCAD-squashfs
+          key: freecad-1.1.4-linux-x86_64
+
+      - name: Download & extract FreeCAD AppImage
+        if: steps.cache-freecad.outputs.cache-hit != 'true'
+        run: |
+          echo "Downloading FreeCAD 1.1.4 AppImage..."
+          curl -sL -o FreeCAD.AppImage "https://github.com/FreeCAD/FreeCAD/releases/download/1.1.4/FreeCAD_1.1.4-Linux-x86_64-py311.AppImage"
+          chmod +x FreeCAD.AppImage
+          ./FreeCAD.AppImage --appimage-extract
+          mv squashfs-root FreeCAD-squashfs
+          rm FreeCAD.AppImage
+
+      - name: Verify FreeCAD Python runtime
+        run: |
+          ./FreeCAD-squashfs/usr/bin/python -c "import sys,pathlib; sys.path.insert(0,str(pathlib.Path(sys.executable).resolve().parent.parent/'lib')); import FreeCAD, Part, Sketcher, numpy, shapely; print('FreeCAD runtime version:', '.'.join(str(x) for x in FreeCAD.Version()[:3]))"
+
+      - name: Rebuild all deliverables
+        env:
+          MOOMIN_HEADLESS: "1"
+          QT_QPA_PLATFORM: "offscreen"
+        run: |
+          xvfb-run python source/rebuild.py --freecad-python "$PWD/FreeCAD-squashfs/usr/bin/python"
+
+      - name: Run plywood tolerance check
+        env:
+          MOOMIN_HEADLESS: "1"
+          QT_QPA_PLATFORM: "offscreen"
+        run: |
+          xvfb-run ./FreeCAD-squashfs/usr/bin/python source/thickness_check.py
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="${{ inputs.tag_name || github.ref_name }}"
+          echo "Publishing GitHub Release for tag: $TAG_NAME"
+
+          gh release create "$TAG_NAME" \
+            --title "Release $TAG_NAME" \
+            --generate-notes \
+            output/Moomin-House-Build-Kit.zip \
+            output/pdf/*.pdf \
+            output/pdf/*.csv

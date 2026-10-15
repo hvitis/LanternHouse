@@ -11,6 +11,22 @@ def polygons(shape):
     return [p for p in shape.geoms if p.geom_type=='Polygon' and p.area>0.01]
 
 
+def finger_joint_regions(width, height, seam, tab_w=20.0, tab_h=10.0, margin=35.0):
+    xmin, xmax = -10.0, width + 10.0
+    path = [(xmin, seam), (margin, seam)]
+    x = margin
+    up = True
+    while x + tab_w <= width - margin:
+        ytab = seam + (tab_h / 2.0 if up else -tab_h / 2.0)
+        path.extend([(x, ytab), (x + tab_w, ytab)])
+        x += tab_w
+        up = not up
+    path.extend([(x, seam), (xmax, seam)])
+    poly_lower = Polygon([(xmin, -10.0), (xmax, -10.0)] + list(reversed(path)))
+    poly_upper = Polygon([(xmax, height + 10.0), (xmin, height + 10.0)] + path)
+    return [poly_lower, poly_upper]
+
+
 def redesign_panels(data):
     import model as m
     cfg=data['config'];parts=data['parts'];instances=data['instances'];fab=cfg['fabrication']
@@ -31,6 +47,9 @@ def redesign_panels(data):
             # countersinks remain wholly inside their fabrication sections.
             sy=cy+fab['base_seam_y']
             regions=[box(x0,y0,x1,y1) for x0,y0,x1,y1 in [(0,0,cx,sy),(cx,0,original['width'],sy),(0,sy,cx,original['height']),(cx,sy,original['width'],original['height'])]]
+        elif parent=='F01':
+            seam=cy+fab['seam_y']
+            regions=finger_joint_regions(original['width'],original['height'],seam)
         else:
             seam=cy+(0 if parent=='R02' else fab['seam_y'])
             regions=[box(-1,-1,original['width']+1,seam),box(-1,seam,original['width']+1,original['height']+1)]
@@ -39,8 +58,9 @@ def redesign_panels(data):
         del parts[parent];ids=[]
         for k,section in enumerate(sections):
             pid=parent if k==0 else f'{parent}{chr(65+k)}';ids.append(pid)
-            m.add(pid,original['name']+f' / section {k+1}',original['thickness'],list(section.exterior.coords)[:-1],cuts=[list(r.coords)[:-1] for r in section.interiors],color='gray' if parent=='B01' else 'red' if parent=='R02' else 'stone' if parent=='F00' else 'wood',note='Straight seam: glue over the supplied support pieces. Match the assembly positioning template. '+original['note'])
-            p=parts[pid];dx,dy=p['origin_shift'];p['assembly_panel']=parent;p['optional']=False;p['render_only']=False
+            note=('CNC interlocking puzzle / finger joint seam: interlock the CNC teeth and glue with PVA over the seam supports. Match the assembly positioning template. ' if parent=='F01' else 'Straight seam: glue over the supplied support pieces. Match the assembly positioning template. ')+original['note']
+            m.add(pid,original['name']+f' / section {k+1}',original['thickness'],list(section.exterior.coords)[:-1],cuts=[list(r.coords)[:-1] for r in section.interiors],color='green' if parent=='B01' else 'red' if parent=='R02' else 'stone' if parent=='F00' else 'wood',note=note)
+            p=parts[pid]=m.PARTS[pid];dx,dy=p['origin_shift'];p['assembly_panel']=parent;p['optional']=False;p['render_only']=False
             p['holes']=[]
             for h in original['holes']:
                 centre=Point(h['x'],h['y'])
@@ -122,7 +142,7 @@ def redesign_panels(data):
             for point in line:point[2]+=lift
     d['dimensions'][0]['a'][2]=0
     d['dimensions'][0]['label']=f'{d["total_height"]:g} total height'
-    d['changes'][:]=['A3 plywood only; 420 /418 mm walls and 140 mm storeys.','Four continuous 8 mm P01 pillars pass through rectangular openings in both F01 levels.','6 mm floors join over 4 x4 mm seam supports; make a physical glued-joint sample.','Quartered base with 4 mm underside supports; divided floors and roof ring.']
+    d['changes'][:]=['A3 plywood only; 420 /418 mm walls and 140 mm storeys.','Four continuous 8 mm P01 pillars pass through rectangular openings with CNC dogbone fillets (R2.0 mm corner relief) in both F01 levels.','F01 and F01B floor halves join with CNC interlocking puzzle/finger joints for rigid cantilever support during open play.','Wall butt hinges upgraded to 16 mm fasteners / M2.5 brass through-machine screws with decorative dome cap nuts on backing block A02.','Quartered base with 4 mm underside supports; divided floors and roof ring.']
     d['panels']=panels
     d['pillars']={'part':'P01','quantity':4,'length':parts['P01']['height'],'width':parts['P01']['width'],'thickness':parts['P01']['thickness'],'clearance':fab['pillar_clearance'],'floor_slots':4,'passes_through':['F01'],'seats_under':'F02'}
     for p in parts.values():
