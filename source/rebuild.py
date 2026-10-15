@@ -17,6 +17,6 @@ def main():
     clean();env=dict(os.environ,MOOMIN_HEADLESS='1',QT_QPA_PLATFORM='offscreen')
     for script in ('build_cad.py','nest.py','audit_connections.py'):
         subprocess.run([args.freecad_python,str(ROOT/'source'/script)],cwd=ROOT,env=env,check=True)
-    for script in ('render.py','cover.py','decorate_cad.py','book.py','verify.py','package.py'):
+    for script in ('render.py','cover.py','readme_images.py','decorate_cad.py','book.py','verify.py','package.py'):
         subprocess.run([sys.executable,str(ROOT/'source'/script)]+(['--lang',args.lang] if script=='book.py' else []),cwd=ROOT,check=True)
 if __name__=='__main__':main()

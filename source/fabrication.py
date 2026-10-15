@@ -102,20 +102,27 @@ def redesign_panels(data):
     support_t,support_w=fab['floor_support'];support_copies=[]
     for parent in ('F00','F01','F02'):
         panel=panels[parent];o=panel['origin'];world_shape=Polygon([(x+o[0],y+o[1]) for x,y in panel['outline']]);seam=fab['seam_y']
-        strip=world_shape.intersection(box(-1000,seam-support_w/2,1000,seam+support_w/2))
-        zs=([data['derived']['floor_tops'][k]-panel['thickness'] for k in (1,2)] if parent=='F01' else [o[2]])
-        for z in zs:
+        if parent=='F00':
+            strip=world_shape.intersection(box(-1000,seam-support_w/2,1000,seam+support_w/2))
             free=strip
             for inst in list(instances):
                 p=parts[inst['part']]
                 if inst['group']!='Fixed' or p.get('assembly_panel') or p.get('render_only'):continue
                 pts=[[inst['origin'][n]+inst['u'][n]*x+inst['v'][n]*y+inst['w'][n]*depth for n in range(3)] for x,y in p['outer'] for depth in (0,p['thickness'])]
-                if min(v[2] for v in pts)<z-.001 and max(v[2] for v in pts)>z-support_t+.001:
+                if min(v[2] for v in pts)<o[2]-.001 and max(v[2] for v in pts)>o[2]-support_t+.001:
                     free=free.difference(MultiPoint([(v[0],v[1]) for v in pts]).convex_hull.buffer(.3))
             for shape in polygons(free):
                 pid=f'FS{len(support_copies)+1:02}'
-                inst=sheet_part(pid,'Floor seam support 4 x4 mm',shape,support_t,(0,0,z-support_t),'Fixed','Centre on the seam: 2 mm bearing on each half. Leave gaps at existing supports. Make a glued joint sample before assembly.',parent)
+                inst=sheet_part(pid,'Floor seam support 4 x4 mm',shape,support_t,(0,0,o[2]-support_t),'Fixed','Centre on the seam: 2 mm bearing on each half. Leave gaps at existing supports. Make a glued joint sample before assembly.',parent)
                 support_copies.append(inst['id'])
+        else:
+            zs=([data['derived']['floor_tops'][k]-panel['thickness'] for k in (1,2)] if parent=='F01' else [o[2]])
+            for z in zs:
+                for x in (40, 70, -40, -70):
+                    shape=world_shape.intersection(box(x-support_w/2,-1000,x+support_w/2,1000))
+                    pid=f'FS{len(support_copies)+1:02}'
+                    inst=sheet_part(pid,'Floor seam support 4 x4 mm',shape,support_t,(0,0,z-support_t),'Fixed','Glue perpendicularly across the seam bridging both floor halves. Make a glued joint sample before assembly.',parent)
+                    support_copies.append(inst['id'])
     # Ring seam bridges sit above the ring between the sloping cleats.
     panel=panels['R02'];o=panel['origin'];ring=Polygon([(x+o[0],y+o[1]) for x,y in panel['outline']],[[[x+o[0],y+o[1]] for x,y in cut] for cut in panel['cuts']])
     for k,side in enumerate((-1,1),1):

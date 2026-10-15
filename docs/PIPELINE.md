@@ -27,6 +27,9 @@ flowchart LR
   parts --> render[render.py<br/>clay_render.py]
   render --> previews[previews/*.png]
   previews --> cover[cover.py]
+  previews --> readme[readme_images.py<br/>social_preview.py]
+  cover --> readme
+  readme --> readme_docs[docs/images/*<br/>.github/social-preview.png]
   parts --> book[book.py<br/>shingles.py]
   nesting --> book
   previews --> book
@@ -48,10 +51,11 @@ flowchart LR
 | 3 | `audit_connections.py` | FreeCAD | `parts.json` | `reports/furniture-connections.json` |
 | 4 | `render.py` (+ `clay_render.py`) | venv | `parts.json`, `previews/mesh.json` | the CAD-derived illustrations and the clay figure renders in `output/previews/` |
 | 5 | `cover.py` | venv | `previews/cover-house.png` | `previews/cover.png` |
-| 6 | `decorate_cad.py` | venv | `MoominHouse.FCStd`, `parts.json` | GUI colours and visibility saved into the `.FCStd`, `reports/native-materials.json` |
-| 7 | `book.py` (+ `shingles.py`, `supplier.py`, `pdf_assembly.py`) | venv | `parts.json`, `nesting.json`, previews, CAD report, locale catalogs | eight PDFs, supplier CSV, PDF report, template indices, supplier index and clickable contents index |
-| 8 | `verify.py` | venv | everything above | `reports/release-validation.json`, `parts.csv`, `hardware.csv`, `stock.csv` |
-| 9 | `package.py` | venv | the validation report, `nesting.json` | `output/Moomin-House-Build-Kit.zip`, `reports/build-manifest.json`, and the stock tables in `docs/BUILD-GUIDE.md` |
+| 6 | `readme_images.py` (+ `social_preview.py`) | venv | `output/previews/` | web-optimised illustrations in `docs/images/` and `.github/social-preview.png` for the README |
+| 7 | `decorate_cad.py` | venv | `MoominHouse.FCStd`, `parts.json` | GUI colours and visibility saved into the `.FCStd`, `reports/native-materials.json` |
+| 8 | `book.py` (+ `shingles.py`, `supplier.py`, `pdf_assembly.py`) | venv | `parts.json`, `nesting.json`, previews, CAD report, locale catalogs | eight PDFs, supplier CSV, PDF report, template indices, supplier index and clickable contents index |
+| 9 | `verify.py` | venv | everything above | `reports/release-validation.json`, `parts.csv`, `hardware.csv`, `stock.csv` |
+| 10 | `package.py` | venv | the validation report, `nesting.json` | `output/Moomin-House-Build-Kit.zip`, `reports/build-manifest.json`, and the stock tables in `docs/BUILD-GUIDE.md` |
 
 `package.py` refuses to package if any release check failed. After the build, `thickness_check.py` (FreeCAD) rebuilds every plywood part at the thinnest and thickest end of `thickness_tolerance`, about its mid-plane, reruns the CAD checks and writes `reports/thickness-tolerance.json`. Overlaps between parts that already touch at nominal size count as shifts; an overlap where the design had a gap fails the check. `verify_gui.py` is an optional extra: run it with FreeCAD's Python to check that the saved GUI document restores.
 
@@ -126,7 +130,7 @@ To add a part, call `add(...)` to define its profile and `put(...)` (or `upright
 | `wall_catch` | The MC1 catch blocks under the attic floor: size, distance from the front seam, air gap. |
 | `wall_stop` | The GP1 garden stop posts: opening `angle` (also the open angle of the renders, viewer and swing check), post section and height, contact point, gap. |
 | `thickness_tolerance` | Measured plywood band per nominal thickness, `[minus, plus]` mm, for `make tolerance`. |
-| `veranda` | Facet, deck size, column height, roof pitch, overhang, column positions and chair position. |
+| `veranda` | Facet, deck size, column height, roof pitch, overhang and column positions. |
 | `stock.main`, `stock.optional` | The plywood sheets available per thickness. `stock.main` covers the house. `stock.optional` remains for compatibility and is unused. |
 | `colors` | The palette used by CAD, the renders, the viewer and the book. |
 

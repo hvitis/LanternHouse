@@ -221,10 +221,9 @@
         "overhang": {"$ref": "#/$defs/mm0"},
         "front_column_x": {"type": "number"},
         "rear_column_x": {"type": "number"},
-        "chair": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2, "description": "Veranda chair position on the deck"},
         "permanent": {"type": "boolean", "description": "The veranda is glued on permanently (the only option the model builds)"}
       },
-      "required": ["facet", "width", "depth", "wall_gap", "column_height", "pitch", "overhang", "front_column_x", "rear_column_x", "chair"],
+      "required": ["facet", "width", "depth", "wall_gap", "column_height", "pitch", "overhang", "front_column_x", "rear_column_x"],
       "additionalProperties": false
     },
     "stock": {

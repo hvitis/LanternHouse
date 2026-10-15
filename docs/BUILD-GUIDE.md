@@ -202,8 +202,7 @@ The 3D viewer and preview images show example furniture:
 - the kitchen and dining set;
 - the living room, bookcase, writing desk and stove;
 - two beds, a wardrobe, bedside tables, a dresser and a washstand;
-- an attic chest, a bench and a decorative telescope;
-- the veranda chair.
+- an attic chest, a bench and a decorative telescope.
 
 Furniture models share IDs when their dimensions match. Several close dimensions use standard sizes after adjustments of 1–3 mm. The furniture appears only in the 3D view. CAD plans, parts lists, supplier sheets and printouts cover the house and clay family. Clearance checks still include the furniture models.
 

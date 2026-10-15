@@ -555,11 +555,17 @@ def place_figures(tops,inner):
 def furnish(tops):
     def part(pid,name,w,h,t=4,color='wood',note=''):
         if pid not in PARTS:add(pid,name,t,rect(w,h),color=color,category='Furniture',note=note)
-    def box(prefix,name,x,y,z,w,d,h,color='cream',shelves=0,group='Furniture'):
-        part(prefix+'A',name+' side',d,h,color=color);part(prefix+'B',name+' top / bottom / shelf',w-8,d-3,color=color);part(prefix+'C',name+' back',w-8,h-8,3,color)
+    def box(prefix,name,x,y,z,w,d,h,color='cream',shelves=0,group='Furniture',has_back=True,has_shelves=True,has_top=True):
+        part(prefix+'A',name+' side',d,h,color=color)
+        if has_shelves:
+            part(prefix+'B',name+' top / bottom / shelf',w-8,d-3,color=color)
+            levels=[z]+([z+h-4] if has_top else [])+[z+(j+1)*(h-8)/(shelves+1) for j in range(shelves)]
+            for zz in levels:put(prefix+'B',(x+4,y,zz),group=group)
+        if has_back:
+            part(prefix+'C',name+' back',w-8,h-8,3,color)
+            upright(prefix+'C',x+4,y+d,z+4,group)
         upright(prefix+'A',x,y,z,group,axis='yz');upright(prefix+'A',x+w-4,y,z,group,axis='yz')
-        for zz in [z,z+h-4]+[z+(j+1)*(h-8)/(shelves+1) for j in range(shelves)]:put(prefix+'B',(x+4,y,zz),group=group)
-        upright(prefix+'C',x+4,y+d,z+4,group)
+
     def table(prefix,name,x,y,z,w,d,h,color='wood',support_depth=None):
         support_depth=d-12 if support_depth is None else support_depth
         part(prefix+'A',name+' tabletop',w,d,color=color);part(prefix+'B',name+' pedestal side',support_depth,h-4,color=color)
@@ -575,7 +581,10 @@ def furnish(tops):
     # Room layouts per storey; the divider runs along X0 with its door opening at Y-135 to -97 swinging into +X.
     g,f1,f2,at=tops
 
-    def wall_shelf(prefix,name,y,z,w,d,h,side='left',shelves=3,color='wood'):
+    book_colors=['red','blue','ochre','sage','rose','ink']
+    for c in book_colors:
+        part(f'BK_{c}',f'Book block {c}',16,13,3,color=c)
+    def wall_shelf(prefix,name,y,z,w,d,h,side='left',shelves=3,color='wood',books=True):
         """Bookshelf placed flush against the inner room wall (divider along X=0).
         side='left': stands in the left room (-X), back at X=-2, front at X=-2-d.
         side='right': stands in the right room (+X), back at X=2, front at X=2+d.
@@ -584,106 +593,76 @@ def furnish(tops):
         part(prefix+'A',name+' gable end',d,h,color=color)
         part(prefix+'B',name+' shelf / top / bottom',d-3,w-8,color=color)
         part(prefix+'C',name+' back panel',w-8,h-8,3,color=color)
+        shelf_zs=[z]+[z+(j+1)*(h-8)/(shelves+1) for j in range(shelves)]
         if side=='left':
             upright(prefix+'A',-2-d,y,z,'Furniture',axis='xz')
             upright(prefix+'A',-2-d,y+w-4,z,'Furniture',axis='xz')
             upright(prefix+'C',-5,y+4,z+4,'Furniture',axis='yz')
-            for zz in [z,z+h-4]+[z+(j+1)*(h-8)/(shelves+1) for j in range(shelves)]:
+            for zz in shelf_zs+[z+h-4]:
                 put(prefix+'B',(-2-d+3,y+4,zz),group='Furniture')
+            if books:
+                bx=-2-d+5
+                p_off=sum(ord(ch) for ch in prefix)
+                for s_idx,sz in enumerate(shelf_zs):
+                    n_books=max(3,min(6,int((w-16)/8)))
+                    for k in range(n_books):
+                        bc=book_colors[(k+s_idx*2+p_off)%len(book_colors)]
+                        put(f'BK_{bc}',(bx,y+10+k*5,sz+4),(1,0,0),(0,0,1),group='Furniture')
         else:
             upright(prefix+'A',2,y,z,'Furniture',axis='xz')
             upright(prefix+'A',2,y+w-4,z,'Furniture',axis='xz')
             upright(prefix+'C',2,y+4,z+4,'Furniture',axis='yz')
-            for zz in [z,z+h-4]+[z+(j+1)*(h-8)/(shelves+1) for j in range(shelves)]:
+            for zz in shelf_zs+[z+h-4]:
                 put(prefix+'B',(2,y+4,zz),group='Furniture')
-
-    def fill_shelf_books(shelf_y,shelf_z,w,side='left',colors=('ink','red','sage','ochre')):
-        """Place multi-colored book rows on an inner wall shelf."""
-        n_books=max(1,int((w-12)/16))
-        for j in range(n_books):
-            c=colors[j%len(colors)];pid=f'BK_{c}';bh=14+(j*3)%7;bw=14
-            part(pid,f'Book block {c}',bw,bh,3,color=c)
-            by=shelf_y+6+j*(bw+2)
-            if side=='left':upright(pid,-7,by,shelf_z+4,'Furniture',axis='yz')
-            else:upright(pid,4,by,shelf_z+4,'Furniture',axis='yz')
+            if books:
+                bx=5
+                p_off=sum(ord(ch) for ch in prefix)
+                for s_idx,sz in enumerate(shelf_zs):
+                    n_books=max(3,min(6,int((w-16)/8)))
+                    for k in range(n_books):
+                        bc=book_colors[(k+s_idx*2+p_off)%len(book_colors)]
+                        put(f'BK_{bc}',(bx,y+10+k*5,sz+4),(1,0,0),(0,0,1),group='Furniture')
 
     # Ground floor: Bookbindery & Reading Parlour along inner room wall
-    box('K1','Kitchen cupboard',-118,-20,g,76,37,48,'sage',1)
-    box('K2','Cooker',-125,36,g,44,37,48,'cream')
-    box('K5','Sink cabinet',60,22,g,62,37,48,'sage')
-    add('K6','Sink rim',3,rect(26,20),[cutrect(5,5,16,10)],color='cream',category='Furniture',note='Drill small interior opening and file; glue a painted card basin beneath.')
-    put('K6',(82,32,g+48),group='Furniture')
+    box('K2','Cooker',-125,36,g,44,37,48,'cream',has_back=False)
     add('K7','Cooker burner discs',3,poly(12,5,5,5),color='ink',category='Furniture')
     for x,y in [(-118,43),(-100,43),(-118,61),(-100,61)]:put('K7',(x,y,g+48),group='Furniture')
 
     # Shelves along inner room wall (Ground floor)
-    wall_shelf('GL1','Bookbindery tools and materials bookcase',-85,g,65,26,92,side='left',shelves=3,color='wood')
-    fill_shelf_books(-85,g,65,side='left')
-    wall_shelf('GL2','Card catalog shelving unit',-10,g,55,26,88,side='left',shelves=3,color='ochre')
-    fill_shelf_books(-10,g,55,side='left')
+    wall_shelf('GL1','Bookbindery tools and materials bookcase',-85,g,65,26,92,side='left',shelves=3,color='wood',books=False)
+    wall_shelf('GL2','Card catalog shelving unit',-10,g,55,26,88,side='left',shelves=3,color='ochre',books=False)
 
-    part('BP1A','Book press base',34,24,6,'wood',note='Heavy base platen for book press')
-    part('BP1B','Book press upright',6,26,4,'wood');part('BP1C','Book press top crossbar',34,8,4,'wood')
-    part('BP1D','Book press screw platen',22,18,4,'ink');part('BP1E','Book press turn wheel',14,14,3,'ink')
-    put('BP1A',(-95,-12,g+48),group='Furniture')
-    upright('BP1B',-93,-12,g+54,'Furniture',axis='yz');upright('BP1B',-67,-12,g+54,'Furniture',axis='yz')
-    put('BP1C',(-95,-12,g+76),group='Furniture');put('BP1D',(-89,-9,g+60),group='Furniture');put('BP1E',(-85,-6,g+80),group='Furniture')
-
-    wall_shelf('GR1','Tea parlour library bookcase',-80,g,75,24,100,side='right',shelves=4,color='wood')
-    fill_shelf_books(-80,g,75,side='right')
-    wall_shelf('GR2','Poetry and folio shelving',10,g,60,24,88,side='right',shelves=3,color='sage')
-    fill_shelf_books(10,g,60,side='right')
+    wall_shelf('GR1','Tea parlour library bookcase',-80,g,75,24,100,side='right',shelves=4,color='wood',books=False)
+    wall_shelf('GR2','Poetry and folio shelving',10,g,60,24,88,side='right',shelves=3,color='sage',books=False)
 
     # Floor 1: Grand Circular Library along inner room wall
-    box('V6','Decorative stove',-50,-128,f1,32,29,56,'ink')
     wall_shelf('L1L','Grand library west bookcase',-85,f1,80,26,110,side='left',shelves=4,color='wood')
-    fill_shelf_books(-85,f1,80,side='left')
     wall_shelf('L1M','Grand library north bookcase',10,f1,75,26,110,side='left',shelves=4,color='wood')
-    fill_shelf_books(10,f1,75,side='left')
 
     wall_shelf('L1R','Reference collection bookcase',-80,f1,80,24,104,side='right',shelves=4,color='ochre')
-    fill_shelf_books(-80,f1,80,side='right')
     wall_shelf('L1S','Encyclopedic stacks bookcase',15,f1,70,24,104,side='right',shelves=4,color='cream')
-    fill_shelf_books(15,f1,70,side='right')
 
     part('SS1A','Library step stringer',28,26,4,'wood');part('SS1B','Library step tread',22,14,4,'wood')
     upright('SS1A',-32,-50,f1,'Furniture',axis='yz');upright('SS1A',-10,-50,f1,'Furniture',axis='yz')
     put('SS1B',(-30,-50,f1+12),group='Furniture');put('SS1B',(-30,-36,f1+24),group='Furniture')
 
     part('LC1A','Lectern column',8,42,4,'wood');part('LC1B','Lectern base',24,24,4,'wood')
-    part('LC1C','Lectern reading deck',32,24,3,'ochre');part('LC1D','Open folio leaves',26,18,3,'cream')
+    part('LC1C','Lectern reading deck',32,24,3,'ochre')
     put('LC1B',(60,-30,f1),group='Furniture');upright('LC1A',68,-26,f1+4,'Furniture')
-    put('LC1C',(56,-30,f1+46),group='Furniture');put('LC1D',(59,-27,f1+49),group='Furniture')
-
-    part('BC1A','Carousel base plate',36,36,4,'wood');part('BC1B','Carousel middle shelf',32,32,3,'ochre')
-    part('BC1C','Carousel top plate',28,28,3,'wood');part('BC1D','Carousel vertical fins',24,20,3,'ink')
-    put('BC1A',(-40,20,f1),group='Furniture');upright('BC1D',-36,22,f1+4,'Furniture');upright('BC1D',-36,22,f1+4,'Furniture',axis='yz')
-    put('BC1B',(-38,22,f1+24),group='Furniture');upright('BC1D',-36,22,f1+27,'Furniture');put('BC1C',(-36,24,f1+47),group='Furniture')
+    put('LC1C',(56,-30,f1+46),group='Furniture')
 
     # Floor 2: Moominpappa’s Memoir Study & Scriptorium along inner room wall
-    box('U2','Wardrobe',8,-125,f2,64,32,100,'sage',1)
-    box('U4','Dresser',-98,-115,f2,48,28,44,'cream',1)
+    box('U4','Dresser',-98,-115,f2,48,28,44,'cream',1,has_back=False)
 
     wall_shelf('L2L','Memoir manuscript bookcase',-85,f2,80,26,106,side='left',shelves=4,color='wood')
-    fill_shelf_books(-85,f2,80,side='left')
     wall_shelf('L2M','Autobiographical archives bookcase',10,f2,70,26,106,side='left',shelves=4,color='ochre')
-    fill_shelf_books(10,f2,70,side='left')
-
-    box('SC1','Secretary desk carcass',-70,55,f2,58,32,52,'wood',shelves=1)
-    part('SC1S','Secretary slanted lid',56,26,4,'ochre');part('SC1P','Secretary pigeonholes',50,18,3,'cream')
-    put('SC1S',(-69,57,f2+38),group='Furniture');upright('SC1P',-66,71,f2+34,'Furniture')
-
-    part('WS1A','Portable writing slope',28,22,3,'wood');part('IS1A','Quill and inkstand',16,8,3,'ink')
-    put('WS1A',(-55,59,f2+42),group='Furniture');put('IS1A',(-65,77,f2+42),group='Furniture')
 
     part('ST1A','Sorting tower gable',26,18,3,'sage');part('ST1B','Sorting tower shelf',22,16,3,'cream')
     upright('ST1A',-92,-114,f2+44,'Furniture',axis='yz');upright('ST1A',-70,-114,f2+44,'Furniture',axis='yz')
     for s_idx in range(3):put('ST1B',(-90,-114,f2+44+s_idx*8),group='Furniture')
 
     wall_shelf('L2R','Scholarly research bookcase',-80,f2,80,24,102,side='right',shelves=4,color='sage')
-    fill_shelf_books(-80,f2,80,side='right')
     wall_shelf('L2S','Cartographic journal bookcase',15,f2,70,24,102,side='right',shelves=4,color='wood')
-    fill_shelf_books(15,f2,70,side='right')
 
     # Attic: Cartographer’s Garret
     box('AC1','Archival document chest',46,-42,at,46,26,30,'wood')
@@ -693,7 +672,7 @@ def furnish(tops):
     part('SB1A','Scroll bin wall',16,32,3,'ochre');part('SB1B','Scroll bin bottom',24,24,3,'wood');part('SB1C','Rolled scroll bundle',18,36,3,'cream')
     put('SB1B',(-18,-26,at),group='Furniture');upright('SB1A',-18,-26,at+3,'Furniture');upright('SB1A',-6,-26,at+3,'Furniture');upright('SB1C',-14,-22,at+3,'Furniture')
 
-    box('N1','Attic chest',-61,-53,at,52,31,32,'wood')
+    box('N1','Attic chest',-61,-53,at,52,31,32,'wood',has_top=False)
     add('N3','Telescope silhouette',4,[[0,0],[42,0],[48,8],[42,16],[0,16]],color='ochre',category='Furniture',note='Decorative plywood telescope silhouette on a broad glued pedestal.')
     add('N4','Telescope pedestal',4,[[0,0],[32,0],[20,38],[12,38]],color='wood',category='Furniture')
     upright('N4',-55,0,at,'Furniture');upright('N3',-63,0,at+38,'Furniture')

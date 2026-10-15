@@ -6,7 +6,7 @@ FREECAD_ENV = MOOMIN_HEADLESS=1 QT_QPA_PLATFORM=offscreen
 # The venv also sees other projects' site-packages; their pytest plugins must not load here.
 TEST_ENV = PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
 
-.PHONY: all check build tolerance clean viewer site stress help
+.PHONY: all check build tolerance clean viewer site stress images help
 
 all: check build tolerance  ## Config check and tests, full rebuild, then the plywood thickness check
 	$(PYTHON) source/package.py
@@ -32,6 +32,9 @@ viewer:  ## Open the 3D viewer in the browser
 
 site:  ## Export the static 3D viewer to _site/ (no FreeCAD)
 	$(PYTHON) source/export_viewer.py _site
+
+images:  ## Rerender and update README images in docs/images/
+	$(PYTHON) source/readme_images.py --rerender
 
 help:  ## List the targets
 	@grep -E '^[a-z]+:.*## ' Makefile | sed 's/:.*## /\t/'

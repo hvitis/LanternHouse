@@ -15,25 +15,43 @@ def test_all_interchangeable_profiles_share_an_id(data):
 
 def test_shared_build_quantities_and_design_roles(data):
     parts=data['parts']
-    assert {pid:parts[pid]['quantity'] for pid in ('J01','P01','DM06','PC01','PC02','PC03','K1A')}=={
-        'J01':54,'P01':4,'DM06':4,'PC01':1,'PC02':2,'PC03':1,'K1A':6,
+    assert {pid:parts[pid]['quantity'] for pid in ('J01','P01','DM06','K2A')}=={
+        'J01':54,'P01':4,'DM06':4,'K2A':2,
     }
-    assert not {'DM07','K4A','K4B','K4C','K5A'} & parts.keys()
-    chairs=[i for i in data['instances'] if i['design_part']=='PC01']
-    assert Counter(i['design_part'] for i in chairs)=={'PC01':1}
-    assert Counter(i.get('color',parts[i['part']]['color']) for i in chairs)=={
-        data['config']['colors']['cream']:1,
-    }
+    assert not {'DM07','K1A','K4A','K4B','K4C','K5A','K5B','PC01','PC02','PC03','V6A'} & parts.keys()
+
+
+def test_floor_seam_supports_orientation_and_quantities(data):
+    parts = data['parts']
+    instances = data['instances']
+    assert parts['FS04']['quantity'] == 6
+    assert parts['FS05']['quantity'] == 6
+    assert parts['FS04']['thickness'] == 4
+    assert parts['FS05']['thickness'] == 4
+    assert parts['FS04']['width'] == 4.0
+    assert parts['FS05']['width'] == 4.0
+    assert parts['FS04']['height'] > parts['FS05']['height']
+
+    by_floor = {}
+    seam_y = data['config']['fabrication']['seam_y']
+    for inst in instances:
+        if inst['part'] in ('FS04', 'FS05'):
+            z = round(inst['origin'][2], 1)
+            by_floor.setdefault(z, []).append(inst['part'])
+            p = parts[inst['part']]
+            ys = [inst['origin'][1] + inst['u'][1]*x + inst['v'][1]*y for x, y in p['outer']]
+            assert min(ys) < seam_y < max(ys), "Must cross seam perpendicularly"
+
+    assert len(by_floor) == 3
+    for z, plist in by_floor.items():
+        assert len(plist) == 4
+        assert plist.count('FS04') == 2
+        assert plist.count('FS05') == 2
 
 
 @pytest.mark.parametrize('build_id,design_parts,size,quantity',[
-    ('PC01',{'PC01'},(28,28,4),1),
-    ('PC02',{'PC02'},(28,20,4),2),
-    ('K1A',{'K1A','K2A','K5A'},(37,48,4),6),
-    ('K5B',{'K5B'},(54,34,4),2),
-    ('K2C',{'K2C','U4C'},(36,40,3),2),
-    ('U4A',{'U4A','N1B'},(28,44,4),4),
-    ('V6A',{'V6A','U2B'},(29,56,4),5),
+    ('K2A',{'K2A'},(37,48,4),2),
+    ('U4A',{'U4A','N1B'},(28,44,4),3),
 ])
 def test_standard_furniture_blanks_have_shared_ids(data,build_id,design_parts,size,quantity):
     p=data['parts'][build_id]
@@ -59,7 +77,7 @@ def test_furniture_is_only_for_display(data):
 @pytest.mark.parametrize('optional',[False,True])
 def test_supplier_rejects_stale_furniture_cutting_sheets(data,optional):
     import supplier
-    sheet={'thickness':3,'items':[{'part':'K2C'}]}
+    sheet={'thickness':4,'items':[{'part':'K2A'}]}
     nest={'sheets':[] if optional else [sheet],'optional_sheets':[sheet] if optional else []}
     with pytest.raises(ValueError,match='View-only furniture'):
         supplier.sheets_for(data,nest,dict(supplier.settings(data['config']),include_optional=True))

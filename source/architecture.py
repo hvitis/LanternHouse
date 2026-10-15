@@ -163,14 +163,6 @@ def veranda(api,a,base,pu,pv,po,G):
     cap('C11','Veranda hip cap',fl,apex,nfront,nside,1,6)
     cap('C11','Veranda hip cap',fr,apex,nfront,mside,1,6)
     cap('C12','Veranda ridge cap',apex,ridge,nside,mside,6,0)
-    # Optional furniture: the veranda chair stands clear of the door sweep.
-    cx,cy=ver['chair']
-    add('PC01','Veranda chair seat',q(4),rect(q(28),q(28)),color='cream',category='Furniture')
-    add('PC02','Veranda chair side',q(4),rect(q(28),q(20)),color='cream',category='Furniture')
-    add('PC03','Veranda chair back',q(4),rect(q(28),q(53)),color='cream',category='Furniture')
-    put('PC01',P(cx,cy,deck_top+q(20)),pu,pv,'Furniture')
-    for x in (cx,cx+q(24)):put('PC02',P(x,cy,deck_top),pv,(0,0,1),'Furniture')
-    put('PC03',P(cx,cy+q(32),deck_top),pu,(0,0,1),'Furniture')
 
 def dormer_layout(roof):
     """Dormer on the front-right roof facet (normal -45 degrees), derived from the actual roof pitch.

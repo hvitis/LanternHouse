@@ -24,7 +24,7 @@
   "wall_stop": {"angle": 100.0, "post": 20.0, "top": 30.0, "contact_x": 12.0, "gap": 0.3},
   "thickness_tolerance": {"3": [-0.3, 0.3], "4": [-0.3, 0.3], "6": [-0.5, 0.4], "8": [-0.5, 0.4]},
   "doors": {"main": "W12", "veranda": "W07"},
-  "veranda": {"facet": "W07", "width": 149.333333, "depth": 84.0, "wall_gap": 0.5, "column_height": 117.6, "pitch": 45.0, "overhang": 3.733333, "front_column_x": 3.733333, "rear_column_x": 32.666667, "chair": [18.666666666666668, 9.333333333333334], "permanent": true},
+  "veranda": {"facet": "W07", "width": 149.333333, "depth": 84.0, "wall_gap": 0.5, "column_height": 117.6, "pitch": 45.0, "overhang": 3.733333, "front_column_x": 3.733333, "rear_column_x": 32.666667, "permanent": true},
   "stock": {"main": {"3": {"primary": [297, 420], "count": 999, "extra": []}, "4": {"primary": [297, 420], "count": 999, "extra": []}, "6": {"primary": [297, 420], "count": 999, "extra": []}, "8": {"primary": [297, 420], "count": 999, "extra": []}}, "optional": {"3": {"primary": [297, 420], "count": 999, "extra": []}, "4": {"primary": [297, 420], "count": 999, "extra": []}, "6": {"primary": [297, 420], "count": 999, "extra": []}, "8": {"primary": [297, 420], "count": 999, "extra": []}}},
   "supplier": {"revision": "SUP-002", "material": "birch_plywood_raw", "include_optional": false, "engraving": "none", "maximum_sheet_mm": [297, 420], "stock_sizes_mm": [[297, 420]], "cutting_tolerance_mm": null, "thickness_tolerance_mm": null},
   "colors": {"gray": "#8F9493", "stone": "#B8B4A8", "blue": "#4A94BC", "red": "#BD5147", "cream": "#FFF3DB", "wood": "#BD8B5D", "green": "#8EAC72", "sage": "#7C9B84", "rose": "#CA8B8A", "ochre": "#D2AD63", "ink": "#284849"},

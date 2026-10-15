@@ -108,5 +108,10 @@ def main():
     ImageDraw.Draw(img).text(((W-tw)/2,y0+300),text,font=sub,fill=(40,72,73,255))
     img.convert('RGB').save(ROOT/'output/previews/cover.png',optimize=True)
     print('Cover saved: output/previews/cover.png')
+    try:
+        import readme_images
+        readme_images.update_readme_images(ROOT)
+    except Exception as e:
+        print(f'Note: readme images update skipped ({e})')
 
 if __name__=='__main__':main()

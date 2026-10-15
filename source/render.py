@@ -120,12 +120,16 @@ def main():
     render('locks',lambda m:m['group']=='RoofLocks' or panel(m)=='F02',overlay=True)
     render('catches',lambda m:m['group'] in ('WallRight','WallLeft') or panel(m) in ('MC1','GP1','F02','F00','B01'),mode='open',overlay=True)
     render('porch',lambda m:m['group']=='Porch',overlay=True)
-    render('porch-chair',lambda m:m['group']=='Porch' or m.get('design_part',m['part']).startswith('PC'))
     render('roof-underside',lambda m:m['group']=='Roof',overlay=True,view=[[.866,.5,0],[.25,-.433,.866],[.433,-.75,-.5]])
-    for (name,prefixes),z in zip([('kitchen',('K',)),('living',('V','K4')),('bedroom',('U',)),('attic',('N',))],DATA['derived']['floor_tops']):
-        render(name,lambda m,p=prefixes,zz=z: m['group']=='Furniture' and m.get('design_part',m['part']).startswith(p) and min(v[2] for v in m['vertices'])>=zz-.1 and max(v[2] for v in m['vertices'])<zz+DATA['config']['floor_pitch'])
+    for (name,prefixes),z in zip([('kitchen',('K','GL','GR')),('living',('V','K4','L1','SS','LC','BK')),('bedroom',('U','L2','ST','BK')),('attic',('N','AC','SB'))],DATA['derived']['floor_tops']):
+        render(name,lambda m,p=prefixes,zz=z: m['group']=='Furniture' and any(m.get('design_part',m['part']).startswith(prefix) for prefix in p) and min(v[2] for v in m['vertices'])>=zz-.1 and max(v[2] for v in m['vertices'])<zz+DATA['config']['floor_pitch'])
     import clay_render
     clay_render.main()
     print('Rendered',len(list((ROOT/'output/previews').glob('*.png'))),'CAD-derived illustrations')
+    try:
+        import readme_images
+        readme_images.update_readme_images(ROOT)
+    except Exception as e:
+        print(f'Note: readme images update skipped ({e})')
 
 if __name__=='__main__':main()
