@@ -76,7 +76,7 @@ def main():
     check(f'A3 sheet bounds and {cfg["nest_spacing"]:g} mm lanes',all(c['bounds_and_spacing']=='PASS' and c['spacing_mm']==cfg['nest_spacing'] for c in nest['validation']) and len(nest['validation'])==len(nest['sheets'])+len(optional))
     check('All plywood uses native A3 CNC stock',all((s['width'],s['height'])==(297,420) and s.get('cnc') for s in nest['sheets']) and all((ROOT/'output/dxf'/op['dxf']).exists() and (ROOT/'output/dxf'/op['svg']).exists() for s in nest['sheets'] for op in s['operations']))
     check('No larger-stock fallback',all(spec['primary']==[297,420] and not spec['extra'] for spec in cfg['stock']['main'].values()))
-    fast=Counter(f['type'] for f in data['fasteners']);check('Installed hardware counts',fast=={'SC1':24,'SC2':24,'SC3':6,'BL1':2},str(dict(fast)))
+    fast=Counter(f['type'] for f in data['fasteners']);check('Installed hardware counts',fast=={'SC1':24,'SC2':24,'SC3':6},str(dict(fast)))
     check('Every entrance door has two hinges',sum(h['kind']=='Door butt hinge' for h in data['hardware'])==6)
     kinds=Counter(h['kind'] for h in data['hardware']);stop=data['config']['wall_stop']['angle']
     check(f'Magnetic walls: 2 catch + 2 stop magnets, 4 steel discs, walls open to the {stop:g}-degree stop posts',kinds['Catch magnet']==2 and kinds['Stop magnet']==2 and kinds['Steel disc']==4 and data['derived']['views']['open_angle']==stop and all(w['range_degrees']==[0,stop] for w in cad['wall_swing']),str(dict(kinds)))

@@ -21,7 +21,7 @@ TOPS=DER['floor_tops'];G0=TOPS[0];PITCH=CFG['floor_pitch'];EAVE=DER['roof_eave']
 GUSSETS=(26*CFG['wall_height']/450,PITCH-CFG['thickness']['floor']-20*CFG['wall_height']/450);HINGES=[G0+c for c in CFG['wall_hinge']['centers']];DRAWER=CFG['plinth']['drawer']
 MAG,CATCH,STOP=CFG['magnets'],CFG['wall_catch'],CFG['wall_stop'];OPEN=DER['views']['open_angle'];SIDE=DER['drawer']['side']
 # Roof pivot: the bolt's washer stack (WS1 under the head plus the packing ones), the laminated turn-button and the pillar.
-BL1=next(f for f in DATA['fasteners'] if f['type']=='BL1');SC1=next(f for f in DATA['fasteners'] if f['type']=='SC1');WS1=1+len(BL1['stack_mm'])-8;LOCK=P['E08']['thickness']+P.get('E09',{}).get('thickness',0);PT=P['P01']['thickness']
+BL1=next((f for f in DATA['fasteners'] if f['type']=='BL1'),None);SC1=next(f for f in DATA['fasteners'] if f['type']=='SC1');WS1=(1+len(BL1['stack_mm'])-8) if BL1 else 0;LOCK=(P.get('E08',{}).get('thickness',0)+P.get('E09',{}).get('thickness',0));PT=P['P01']['thickness']
 STOPWALLS=' and '.join(k for k,v in P.items() if any('garden stop' in h['purpose'] for h in v['holes']));CATCHHOLES=' and '.join(f'{pid}/{h["id"]}' for pid,p in P.items() if p.get('assembly_panel')=='F02' for h in p['holes'] if 'catch' in h['purpose'])
 def zl(values):return ', '.join(f'Z{v:g}' for v in values[:-1])+f' and Z{values[-1]:g}'
 # The book covers the house and clay family; furnishings only appear in the 3D view.
@@ -201,7 +201,7 @@ def hardware_rows():
       ['FT1','Self-adhesive felt dots D10-12 mm, about 1 mm thick.',ST['pads']+2,str(ST['pads']+4),'Under the base rim pads and on the stop-post faces'],
       ['BL2',f'Flat steel bar {ST["ballast"][1][0]:g} x {ST["ballast"][1][1]:g} x {ST["ballast"][1][2]:g} mm, drilled D3.5 twice; two 3 x 12 wood screws each.',bars,str(bars),'Ballast inside the plinth'],
       ['AT1','Furniture anti-tip strap kit (strap, screw eye, wall plug and screw).',1,'1','From AB1 in the rear shell to the room wall'],
-      ['LT1','Optional: 2 x AA battery box with screw-on lid and switch; warm-white LED string or 3 mm LEDs with resistors; thin wire; two 2.5 x 8 screws.','1 set','-','BH1 battery hatch and the wire holes behind the left rear pillar'],
+      ['LT1','Optional: warm-white LED string or 3 mm LEDs with resistors; thin wire.','1 set','-','Wire holes behind the left rear pillar'],
     ]
 
 def paint_page(b):
@@ -403,24 +403,28 @@ def manual():
     screw_section(c,400,300,3,16,6,[(6,'B01 base: 6'),(14,'GP1 post end grain')],6,'SC3 / 2 stop-post screws')
     para(c,'Blue outlines show the complete fastener; the dashed arrow is its drilling and insertion axis. Nominal mm, enlarged; not cutting templates. The stop-post screw goes into end grain, which holds only about half as well: the two D4 dowels beside it take the side load and the glue holds the foot. Tighten by hand after pilot drilling; stop when the head seats.',M,140,size=9,leading=13)
     b.end()
-    b.page('Build the captive roof pivots','BL1 x 2 / actual section / no exposed thread')
-    x=190;y=690;s_=7.2
-    st=BL1['stack_mm'];packing=sum(st[8:])
-    stack=[(st[0],'WS1 steel washer / under head'),(st[1],'F02 attic floor'),(st[2],'SP1 nylon spacer'),(st[3],'WS3 D12 fender washer'),(st[4],f'E08 turn-button ply, {st[4]:g} mm'),(st[5],f'E09 ply glued on top, {st[5]:g} mm'),(st[6],'WS3 D12 fender washer'),(st[7],'WS2 nylon washer'),(packing,f'WS1 steel washer{"s" if WS1>2 else ""} x{WS1-1}; {packing:g} mm')]
-    cursor=y;previous_label=y+20
-    for j,(thick,text) in enumerate(stack):
-        h=thick*s_;c.setFillColor(colors.HexColor('#DCC19D') if j in (1,4,5) else colors.HexColor('#DCE8E8'));c.setStrokeColor(INK);c.rect(x-40,cursor-h,80,h,fill=1,stroke=1)
-        center=cursor-h/2;ly=min(center,previous_label-15);previous_label=ly
-        c.setStrokeColor(TEAL);c.setLineWidth(.4);c.line(x+40,center,x+52,ly);label(c,text,x+56,ly-3,9);cursor-=h
-    c.setFillColor(colors.HexColor('#B9C7C6'));c.setStrokeColor(INK);c.roundRect(x-24,cursor-6*s_,48,6*s_,10,fill=1,stroke=1);label(c,'NT1 cap nut',x+56,min(cursor-20,previous_label-17),9)
-    c.setStrokeColor(TEAL);c.setLineWidth(1.1);c.rect(x-3*s_/2,y-30*s_,3*s_,30*s_,fill=0,stroke=1);c.rect(x-3*s_,y,6*s_,2*s_,fill=0,stroke=1)
-    arrow(c,(x,y+35),(x,y-30*s_-25),TEAL,True);dimension(c,(x-55,y),(x-55,y-30*s_),'30 mm below head',-15)
-    para(c,f'Stack {sum(st):g} mm, so {BL1["length"]-sum(st):g} mm of thread is left for the cap nut. Check that its cavity is at least 3.8 mm deep and that it seats on the washer, not on the screw tip.',M,355,size=10)
-    para(c,f'Set light pivot friction, then lock the cap nut with permanent threadlocker: the washers and nut can then never come loose as small parts. Do not glue the moving tab. Roof ring top is Z{EAVE+6:g}; tab underside is Z{EAVE+9:g}: a 3 mm retaining gap. The {LOCK:g} mm tab is a {st[4]:g} mm E08 ply and a {st[5]:g} mm E09 ply glued face to face (line the holes up with an M3 screw while the glue sets), with a 22 mm neck round the pivot and a fender washer on each face. A single 3 mm tab broke when the house was lifted by its roof, and a single 6 mm tab falls short of the safety margin.',M,300,size=10)
-    para(c,'Locked: tab points outward and overlaps the roof ring. Unlocked: rotate each tab 90 degrees toward the center, then lift the roof vertically. The tapered tip keeps the turned tab inside the ring.',M,200,size=10)
-    b.end()
-    b.page('Five joints used in this house','Orange marks identify glue joints in the diagrams')
-    y=table(c,[['J1','Supported edge-to-face butt joint','Floor rests on its supports and posts. Glue both support faces; do not depend on a thin plywood edge alone.'],['J2','150-degree faceted corner + ribs','Adjacent square-edged panels meet with a small seam. A flat J01 rib glues along three inner wall faces and holds two corners at once (a J02 bracket takes a single corner); outside, a batten covers the seam.'],['J3','Reinforced screwed hinge joint','Glue hardwood backing first, let it cure, then drill pilots through the hinge leaf and wall into the backing.'],['J4','Captive machine-screw pivot','BL1 passes through F02, washers, spacer and E08; NT1 covers its threaded end.'],['J5','Glued trim and veranda joint','Dry-fit trim, headers and rails on a flat board. Apply thin PVA over the whole face, clamp gently and wipe squeeze-out.']],M,714,[35,175,305],['Code','Joint','How it works'],9)
+    if BL1:
+        b.page('Build the captive roof pivots','BL1 x 2 / actual section / no exposed thread')
+        x=190;y=690;s_=7.2
+        st=BL1['stack_mm'];packing=sum(st[8:])
+        stack=[(st[0],'WS1 steel washer / under head'),(st[1],'F02 attic floor'),(st[2],'SP1 nylon spacer'),(st[3],'WS3 D12 fender washer'),(st[4],f'E08 turn-button ply, {st[4]:g} mm'),(st[5],f'E09 ply glued on top, {st[5]:g} mm'),(st[6],'WS3 D12 fender washer'),(st[7],'WS2 nylon washer'),(packing,f'WS1 steel washer{"s" if WS1>2 else ""} x{WS1-1}; {packing:g} mm')]
+        cursor=y;previous_label=y+20
+        for j,(thick,text) in enumerate(stack):
+            h=thick*s_;c.setFillColor(colors.HexColor('#DCC19D') if j in (1,4,5) else colors.HexColor('#DCE8E8'));c.setStrokeColor(INK);c.rect(x-40,cursor-h,80,h,fill=1,stroke=1)
+            center=cursor-h/2;ly=min(center,previous_label-15);previous_label=ly
+            c.setStrokeColor(TEAL);c.setLineWidth(.4);c.line(x+40,center,x+52,ly);label(c,text,x+56,ly-3,9);cursor-=h
+        c.setFillColor(colors.HexColor('#B9C7C6'));c.setStrokeColor(INK);c.roundRect(x-24,cursor-6*s_,48,6*s_,10,fill=1,stroke=1);label(c,'NT1 cap nut',x+56,min(cursor-20,previous_label-17),9)
+        c.setStrokeColor(TEAL);c.setLineWidth(1.1);c.rect(x-3*s_/2,y-30*s_,3*s_,30*s_,fill=0,stroke=1);c.rect(x-3*s_,y,6*s_,2*s_,fill=0,stroke=1)
+        arrow(c,(x,y+35),(x,y-30*s_-25),TEAL,True);dimension(c,(x-55,y),(x-55,y-30*s_),'30 mm below head',-15)
+        para(c,f'Stack {sum(st):g} mm, so {BL1["length"]-sum(st):g} mm of thread is left for the cap nut. Check that its cavity is at least 3.8 mm deep and that it seats on the washer, not on the screw tip.',M,355,size=10)
+        para(c,f'Set light pivot friction, then lock the cap nut with permanent threadlocker: the washers and nut can then never come loose as small parts. Do not glue the moving tab. Roof ring top is Z{EAVE+6:g}; tab underside is Z{EAVE+9:g}: a 3 mm retaining gap. The {LOCK:g} mm tab is a {st[4]:g} mm E08 ply and a {st[5]:g} mm E09 ply glued face to face (line the holes up with an M3 screw while the glue sets), with a 22 mm neck round the pivot and a fender washer on each face. A single 3 mm tab broke when the house was lifted by its roof, and a single 6 mm tab falls short of the safety margin.',M,300,size=10)
+        para(c,'Locked: tab points outward and overlaps the roof ring. Unlocked: rotate each tab 90 degrees toward the center, then lift the roof vertically. The tapered tip keeps the turned tab inside the ring.',M,200,size=10)
+        b.end()
+    b.page('Joints used in this house','Orange marks identify glue joints in the diagrams')
+    joint_rows=[['J1','Supported edge-to-face butt joint','Floor rests on its supports and posts. Glue both support faces; do not depend on a thin plywood edge alone.'],['J2','150-degree faceted corner + ribs','Adjacent square-edged panels meet with a small seam. A flat J01 rib glues along three inner wall faces and holds two corners at once (a J02 bracket takes a single corner); outside, a batten covers the seam.'],['J3','Reinforced screwed hinge joint','Glue hardwood backing first, let it cure, then drill pilots through the hinge leaf and wall into the backing.']]
+    if BL1:joint_rows.append(['J4','Captive machine-screw pivot','BL1 passes through F02, washers, spacer and E08; NT1 covers its threaded end.'])
+    joint_rows.append([f'J{len(joint_rows)+1}','Glued trim and veranda joint','Dry-fit trim, headers and rails on a flat board. Apply thin PVA over the whole face, clamp gently and wipe squeeze-out.'])
+    y=table(c,joint_rows,M,714,[35,175,305],['Code','Joint','How it works'],9)
     y=para(c,'Clamping hints: use scrap pads to avoid dents; check square with a small square; keep all pieces flat until the glue cures. Painted or paper-covered surfaces must not lie inside structural glue joints.',M,y-25,size=10)
     cx=180;cy=y-110;r=90
     a=(cx+r,cy);d=(cx+r*math.cos(math.radians(150)),cy+r*math.sin(math.radians(150)))
@@ -530,7 +534,7 @@ def manual():
       'locks':('Install the captive roof catches','locks',f'Fit BL1 x2 upward through the F02 holes. Follow the washer/spacer stack on the pivot page. Glue each E09 ply on its E08 ply first, an M3 screw through both holes to line them up. Fit the {LOCK:g} mm tabs horizontally at underside Z{EAVE+9:g}, between D12 fender washers. Locked tabs point outward over the roof ring; rotate 90 degrees inward to release.',f'BL1 x2, NT1 x2, WS1 x{2*WS1}, WS2 x2, WS3 x4, SP1 x2. Set pivot friction, then permanent threadlocker on the nuts.'),
       'veranda':('Build and fix the veranda','porch',f'Glue the VS1 front skirt, the two VS2 side skirts and the two VJ1 joists upright on B01 against the plinth, then glue the E03 deck on top (top Z{G0+6:g}, level with the {vd} threshold). Glue the eight 3 mm C01 pieces in pairs to make four 6 mm columns. Align the profiles and clamp flat until cured. Stand two columns at the front corners and two against {vd}. Fit the C02 front header, glue the C10 rear header flat to {vd}, then the two angled C03 side headers. Add the C07 crossframe, the C04 front roof panel, the two C05 side panels (one turned over), the C11 hip caps and the C12 ridge cap. Fit C06 x2 front rails and C08 x2 side rails with {bal} C09 balusters, and the VS3 stair with three ET1 treads ({st["risers"]} risers) on the open end beside {facet_ref((VER_FACET-1)%12)}; paint those treads cream.',f'J5 glued joints. The veranda is permanent: both front walls open past it. The {vd} door opens outward onto the deck; keep its sweep clear.'),
       'woodpile':('Woodpile and cellar hatch','house-closed-veranda',f'Glue the WP1 back against the plinth beside the {bd} back door, the two WP2 sides on B01 and the WP3 roof on top. Glue the HC1 cellar hatch flat on the plinth panel beside the hidden drawer and paint it as old planks.','Logs in the woodpile are for the picture; any you add must be too big to swallow (more than 32 mm across).'),
-      'lighting':('Optional LED lighting','plinth-drawer',f'Thread a thin wire from the plinth up through the D{CFG["lighting"]["wire_hole"]:g} holes in F00, both F01 levels and F02 behind the left rear pillar; fix LEDs under each ceiling. Glue a screw-lid 2 x AA battery box on the BH1 cover and screw the cover under B01 with two 2.5 x 8 screws, behind the drawer back stop.','Only an adult reaches the batteries: the house must be turned over and two screws undone. Never use coin cells.'),
+      'lighting':('Optional LED lighting','plinth-drawer',f'Thread a thin wire from the plinth up through the D{CFG["lighting"]["wire_hole"]:g} holes in F00, both F01 levels and F02 behind the left rear pillar; fix LEDs under each ceiling.','Only an adult reaches the wiring. Never use coin cells.'),
       'paint':('Paint and add paper details','house-open','Prime plywood, fill non-moving seams, sand lightly and apply blue exterior, red roof, cream trim, green base and stone plinth. Glue the printed stone panels on the plinth and, if you like, the fish-scale shingle strips on the roof (decor book) after structural glue and paint cure. Add a compatible clear finish. Stick felt dots under the rim pads.','Keep glue faces, pilots, hinges, catches, the drawer gaps and mating clearances clear of paint build-up. Recheck movement after every coat.'),
       'check':('Open, close and check','house-open',f'To play: swing both walls outward until they rest against the GP1 garden posts, rotate the roof catches inward, and lift the roof if needed. Pull the hidden drawer out to the {SIDE} by its finger notch; it stops at {bt:g} mm. The veranda stays in place. To close: seat the roof, rotate the catches outward and close the walls gently until the catches click. Strap the house to the room wall with the anti-tip kit.',f'The walls stop at the GP1 posts ({OPEN:g} degrees), where the enclosed magnets hold them open. Do the dry-fit and safety checks page. Do not lift the house by its roof, veranda or opening walls.'),
     }
@@ -543,10 +547,10 @@ def manual():
         y=para(c,hint,M,y-6,size=9.5,leading=13,color=TEAL)
         if per[key]:para(c,'Parts: '+steplib.listing(per[key]),M,y-4,size=8,leading=11)
         b.end()
-    b.page('Roof ring and cleats from below','R02 (2x3 mm) + R04 x12 / cone bearing faces / retaining gap')
+    b.page('Roof ring and cleats from below','R02 (3 mm) + R04 x12 / cone bearing faces / retaining gap')
     imagebox(c,'roof-underside',M,280,W-2*M,431)
-    para(c,f'R02 ring: underside Z{EAVE:g}, thickness 6 (two 3 mm plies), outer vertex radius {182*CFG["wall_height"]/450:g}. Laminated from two 3 mm layers of three 120-degree sections each (R02-R02C lower, R02D-R02F upper), glued face to face with seams staggered by 60 degrees into a rigid composite ring without seam bridges. Center it on the cone. R04 cleats start at radial {170*CFG["wall_height"]/450:g}, bottom Z{EAVE+6:g}. Place one cleat in the center of each cone facet. Glue its level bottom to the ring and its slope to the roof skin. The dormer openings stop {dmr["cleat_clearance"]:g} mm short of their cleats.',M,244,size=10,leading=15)
-    para(c,f'Use R05 angle gauges to hold the cone while its taped seams cure. Make the ring and all twelve cleats part of the removable roof. The turn-button underside is Z{EAVE+9:g}, giving 3 mm above the ring. The finial ball top is Z{DER["total_height"]:g}.',M,152,size=10,leading=15)
+    para(c,f'R02 ring: underside Z{EAVE:g}, thickness 3, outer vertex radius {182*CFG["wall_height"]/450:g}. Three 120-degree sections (R02, R02B, R02C), centered on the cone. R04 cleats start at radial {170*CFG["wall_height"]/450:g}, bottom Z{EAVE+3:g}. Place one cleat in the center of each cone facet. Glue its level bottom to the ring and its slope to the roof skin. The dormer openings stop {dmr["cleat_clearance"]:g} mm short of their cleats.',M,244,size=10,leading=15)
+    para(c,f'Use R05 angle gauges to hold the cone while its taped seams cure. Make the ring and all twelve cleats part of the removable roof. The turn-button underside is Z{EAVE+9:g}, giving 6 mm above the ring. The finial ball top is Z{DER["total_height"]:g}.',M,152,size=10,leading=15)
     b.end()
     b.page('Validation and workshop checks','CAD checks do not replace a physical dry fit')
     r=json.loads((ROOT/'output/reports/cad-validation.json').read_text())
@@ -615,8 +619,8 @@ def assembly_maps(b):
         loop(c,[xy(x,y) for x,y in outline],stroke=colors.black)
         for cut in panel['cuts']:loop(c,[xy(x,y) for x,y in cut],stroke=colors.black)
         datum=panel['origin'];panel_z=datum[2]+lift
-        sections=[i for i in DATA['instances'] if i['design_part']==parent and (abs(i['origin'][2]-panel_z)<.001 or (parent=='R02' and abs(i['origin'][2]-panel_z-3)<.001))]
-        supports=[i for i in DATA['instances'] if P[i['part']].get('assembly_panel')==parent and i['design_part']!=parent and abs(i['origin'][2]+P[i['part']]['thickness']-panel_z)<.001]
+        sections=[i for i in DATA['instances'] if i['design_part']==parent and abs(i['origin'][2]-panel_z)<.001]
+        supports=[i for i in DATA['instances'] if P[i['part']].get('assembly_panel')==parent and i['design_part']!=parent and (abs(i['origin'][2]+P[i['part']]['thickness']-panel_z)<.001 or parent=='R02' and abs(i['origin'][2]-panel_z-panel['thickness'])<.001)]
         for inst in sections+supports:
             part=P[inst['part']]
             pts=[[inst['origin'][0]+inst['u'][0]*x+inst['v'][0]*y-datum[0],inst['origin'][1]+inst['u'][1]*x+inst['v'][1]*y-datum[1]] for x,y in part['outer']]

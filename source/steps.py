@@ -25,10 +25,10 @@ STEPS=[
     ('battens',lambda i,p:p['id'].startswith('BT') or p['id']=='RL1'),
     ('roof',lambda i,p:i['group']=='Roof' and not p['id'].startswith('CH') and p['id']!='E07'),
     ('chimney',lambda i,p:p['id'].startswith('CH') or p['id']=='E07'),
-    ('locks',lambda i,p:i['group']=='RoofLocks'),
+    ('locks',lambda i,p:False),
     ('veranda',lambda i,p:i['group']=='Porch'),
     ('woodpile',lambda i,p:p['id'] in ('WP1','WP2','WP3','HC1')),
-    ('lighting',lambda i,p:p['id']=='BH1'),
+    ('lighting',lambda i,p:False),
     ('paint',lambda i,p:False),
     ('check',lambda i,p:False),
 ]

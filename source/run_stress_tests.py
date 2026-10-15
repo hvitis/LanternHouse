@@ -141,6 +141,19 @@ def run_calculix_analysis(doc: App.Document, obj: App.DocumentObject,
 def test_roof_turn_button_e08(parts: dict) -> dict:
     """TEST 1: Roof turn-button E08 under roof lifting load. The E08 and E09 plies are glued into one button, so the
     model is one solid of their combined thickness."""
+    if 'E08' not in parts:
+        return {
+            'test_name': 'Test 1: Roof Turn-Button E08 (FEA)',
+            'component': 'E08 (Roof retaining turn-button)',
+            'material': 'N/A (Turn-buttons removed)',
+            'load': 'N/A',
+            'max_stress_mpa': 0.0,
+            'allowable_stress_mpa': 0.0,
+            'safety_factor': float('inf'),
+            'status': 'PASS',
+            'recommendation': 'Turn-buttons removed; roof is gravity-seated and removable.',
+            'upgrade': 'Turn-buttons removed.'
+        }
     p = dict(parts['E08'], thickness=parts['E08']['thickness'] + parts.get('E09', {}).get('thickness', 0))
     shape = profile_shape(p)
     doc = App.newDocument('Test_E08')

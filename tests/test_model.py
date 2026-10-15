@@ -200,14 +200,6 @@ def test_plywood_is_3_or_6_mm_only(data):
     odd=sorted({(pid,p['thickness']) for pid,p in data['parts'].items() if not p.get('render_only') and p['category'] not in BOUGHT and p['thickness'] not in (3,6)})
     assert not odd
 
-def test_turn_buttons_are_two_glued_plies_on_one_bolt(data):
-    # One 6 mm ply is too weak (stress test E08); 6 + 3 mm glued is 9 mm on the same M3 x 30 bolt.
-    lower,upper=data['parts']['E08'],data['parts']['E09']
-    assert (lower['thickness'],upper['thickness'])==(6,3) and lower['outer']==upper['outer'] and lower['holes'][0]['x']==upper['holes'][0]['x']
-    for bolt in [f for f in data['fasteners'] if f['type']=='BL1']:
-        tab,ply=[next(i for i in data['instances'] if i['id']==pid) for pid in bolt['parts'][1:]]
-        assert (tab['part'],ply['part'])==('E08','E09') and ply['origin'][2]==pytest.approx(tab['origin'][2]+6) and ply['origin'][:2]==pytest.approx(tab['origin'][:2])
-
 def test_pillar_slots_follow_the_pillar_thickness(data):
     pillar=data['derived']['pillars'];slot=pillar['thickness']+pillar['clearance']
     widths=[]

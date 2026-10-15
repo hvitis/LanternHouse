@@ -1,7 +1,7 @@
 {
   "$schema": "./config.schema.json",
   "title": "Moomin House",
-  "height": 798.4,
+  "height": 778.4,
   "base_diameter": 522.666667,
   "plinth": {"height": 61.6, "apothem": 165.2, "panel": 6.0, "drawer": {"direction": 30.0, "half_width": 74.666667, "height": 50.4, "back": -112.0, "travel": 200.0, "stop": {"dowel": 6.0, "slot": 6.6, "margin": 1.0}}},
   "partition": {"x": 0.0, "door_y": -107.333333, "door_width": 38, "door_height": 93.333333, "front_gap": 16.0, "top_gap": 1.0},

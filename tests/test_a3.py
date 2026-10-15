@@ -28,7 +28,6 @@ def test_sections_reconstruct_panels_without_gaps(data):
         # Before base lift, panel origins describe the original assembly datum.
         ids=[i for i in data['instances'] if i['design_part']==parent]
         if parent=='F01':ids=sorted(ids,key=lambda i:i['origin'][2])[:len(panel['sections'])]
-        elif parent=='R02':ids=sorted(ids,key=lambda i:i['origin'][2])[:len(ids)//2]
         for inst in ids:
             p=data['parts'][inst['part']]
             def world(loop):return [[inst['origin'][0]+inst['u'][0]*x+inst['v'][0]*y-o[0],inst['origin'][1]+inst['u'][1]*x+inst['v'][1]*y-o[1]] for x,y in loop]
@@ -45,19 +44,6 @@ def test_sections_reconstruct_panels_without_gaps(data):
             assert missing.difference(puzzle.union(finger)).area<1e-6,parent
             assert missing.difference(finger).area<(y+len(split['knobs'])*(2*pz['reach']+math.pi*pz['head']))*cnc['joint_clearance']*1.5,parent
             assert missing.intersection(finger).area<original.bounds[2]*cnc['joint_clearance']*3+60*math.pi*(cnc['tool_diameter']/2)**2,parent
-            continue
-        if parent=='R02':
-            assert assembled.symmetric_difference(original).area<1e-6,f'{parent} lower'
-            all_ids=sorted([i for i in data['instances'] if i['design_part']==parent],key=lambda i:i['origin'][2])
-            upper_ids=all_ids[len(all_ids)//2:]
-            upper_pieces=[]
-            for inst in upper_ids:
-                p=data['parts'][inst['part']]
-                def world_u(loop):return [[inst['origin'][0]+inst['u'][0]*x+inst['v'][0]*y-o[0],inst['origin'][1]+inst['u'][1]*x+inst['v'][1]*y-o[1]] for x,y in loop]
-                upper_pieces.append(Polygon(world_u(p['outer']),[world_u(c) for c in p['cuts']]))
-            upper_assembled=unary_union(upper_pieces)
-            assert upper_assembled.symmetric_difference(original).area<1e-6,f'{parent} upper'
-            assert sum(p.area for p in upper_pieces)==pytest.approx(original.area),f'{parent} upper'
             continue
         assert assembled.symmetric_difference(original).area<1e-6,parent
         assert sum(p.area for p in pieces)==pytest.approx(original.area),parent
@@ -109,12 +95,6 @@ def test_panel_drilling_and_countersinks_do_not_cross_seams(data):
         for h in p['holes']:
             radius=max(h['diameter'],h.get('countersink',0))/2
             assert panel.buffer(1e-6).covers(Point(h['x'],h['y']).buffer(radius)),(p['id'],h['id'])
-
-
-def test_roof_bolt_stack_retains_safe_thread_engagement(data):
-    pivots=[f for f in data['fasteners'] if f['type']=='BL1']
-    assert len(pivots)==2
-    assert all(f['length']-sum(f['stack_mm'])==pytest.approx(3.5) for f in pivots)
 
 
 def test_dimension_labels_include_the_base_support_height(data):

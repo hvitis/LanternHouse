@@ -107,10 +107,8 @@ def redesign_panels(data):
                     rad=math.radians(a)
                     pts.append((cx+R*math.cos(rad),cy+R*math.sin(rad)))
                 return Polygon(pts)
-            lower_regions=[ring_wedge(0,120),ring_wedge(120,240),ring_wedge(240,360)]
-            upper_regions=[ring_wedge(60,180),ring_wedge(180,300),ring_wedge(300,420)]
-            regions=lower_regions+upper_regions
-            roles=['lower section 1','lower section 2','lower section 3','upper section 1','upper section 2','upper section 3']
+            regions=[ring_wedge(0,120),ring_wedge(120,240),ring_wedge(240,360)]
+            roles=['section 1','section 2','section 3']
         else:
             seam=cy+fab['seam_y']
             regions=[box(-1,-1,original['width']+1,seam),box(-1,seam,original['width']+1,original['height']+1)]
@@ -122,7 +120,7 @@ def redesign_panels(data):
             knobs=[(a+(b-a)*k/(n-1) if n>1 else (a+b)/2,1 if k%2==0 else -1) for k in range(n)]
             halves=[r.buffer(-CN['joint_clearance']/2,join_style=2) for r in puzzle_regions(cx,(-10,-10,original['width']+10,original['height']+10),knobs,PZ['neck'],PZ['head'],PZ['reach'],CN['tool_diameter']/2+.5)]
             regions=[regions[0].intersection(halves[0]),regions[1],regions[0].intersection(halves[1])];roles=['front left','rear','front right']
-        sections=[(p,role,t_ring if (parent=='R02' and idx>=3) else 0) for idx,(region,role) in enumerate(zip(regions,roles or [None]*len(regions))) for p in polygons(shape.intersection(region))]
+        sections=[(p,role,0) for idx,(region,role) in enumerate(zip(regions,roles or [None]*len(regions))) for p in polygons(shape.intersection(region))]
         if parent in ('F01','F02'):sections=[(q,role,dz) for p,role,dz in sections for q in polygons(relieve_inside_corners(p,zone,CN['tool_diameter']/2))]
         instances[:]=[i for i in instances if i['part']!=parent]
         del parts[parent];ids=[]
@@ -133,7 +131,7 @@ def redesign_panels(data):
             if role and role.startswith('front'):note=f'Front piece, on show when the house is open. A puzzle joint on the house axis joins it to the other front piece and a {cross} to the rear piece: dry-fit, then press the knobs in from above and glue with PVA over the seam supports. Match the assembly positioning template. '
             elif parent in ('F01','F02'):note='CNC finger joint seam with relieved inside corners: interlock the teeth and glue with PVA over the seam supports. Match the assembly positioning template. '
             elif parent=='B01':note='Straight seam: glue over underside seam supports (cut from leftover material). Match the assembly positioning template. '
-            elif parent=='R02':note=f'3 mm plywood ring section ({role}). Glued face to face with 60-degree staggered seams into a 6 mm reinforcement ring. '
+            elif parent=='R02':note=f'3 mm plywood ring section ({role}). Glue to internal cleats into a reinforcement ring. '
             else:note='Straight seam: glue over the supplied support pieces. Match the assembly positioning template. '
             part_name=original['name']+f' ({role})' if parent=='R02' else original['name']+' / '+(role or f'section {k+1}')
             m.add(pid,part_name,t_part,list(section.exterior.coords)[:-1],cuts=[list(r.coords)[:-1] for r in section.interiors],color='green' if parent=='B01' else 'red' if parent=='R02' else 'stone' if parent=='F00' else 'wood',note=note+original['note'])

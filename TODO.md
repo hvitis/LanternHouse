@@ -34,7 +34,7 @@ Already done:
 9. - [x] **More clay figures.** Snufkin (70 mm), the Snork Maiden (49 mm) and Little My (62 mm) in `source/clay.py`; Little My lives in the attic. Every figure passes every doorway and none fits the small-parts cylinder (`clay.small_part`).
 10. - [x] **Room door leaves.** PD1, 3 mm, on two cotton-tape strips at each doorway's rear jamb, swinging into the right-hand room; the door-sweep check covers them and figures are placed clear of their swing.
 11. - [x] **Back door.** E04 on W09 (kitchen side, 38 mm notch, hinged on its clockwise jamb to clear the wall-hinge blocks), lean-to canopy GD03 on GD04 brackets, 4-riser stone steps, and a woodpile shelter (WP1–WP3) beside it; clear of the GP1 posts, the veranda and the drawer.
-12. - [x] **Optional LED lighting.** D6 wire holes through F00, both F01 levels and F02 behind the left rear pillar; a BH1 hatch cover under B01 carries a screw-lid 2 x AA box behind the drawer back stop (adult access only, no coin cells).
+12. - [x] **Optional LED lighting.** D6 wire holes through F00, both F01 levels and F02 behind the left rear pillar; wire route to the plinth bay behind the drawer back stop (adult access only, no coin cells; BH1 hatch cover removed).
 13. - [x] **Faux cellar hatch.** HC1, an arched plank door glued flat on the plinth panel beside the drawer.
 
 ## 4. Extras (renders and the appendix)

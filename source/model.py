@@ -155,14 +155,6 @@ def build():
     add('DS1','Drawer stop dowel (hardwood)',bt+T['furniture']-.5,poly(16,sr,sr,sr),category='Purchased wood',note=f'One D{ST["dowel"]:g} mm hardwood dowel, {bt+T["furniture"]-.5:g} mm long. With the drawer in, push it up through the B01 hole into the drawer-bottom slot and glue it in from below: the drawer then stops at {DR["travel"]:g} mm and cannot be pulled out onto a child\'s feet.')
     put('DS1',(stop_at[0]-sr,stop_at[1]-sr,0))
     PARTS['B01']['holes'].append(dict(hole(stop_at[0]+half,stop_at[1]+half,ST['dowel'],None,'Drawer stop dowel hole'),id=f'H{len(PARTS["B01"]["holes"])+1:02}'))
-    # Optional lighting: a screw-lid 2 x AA box on a hatch cover under B01, behind the drawer back stop, where
-    # only an adult with the house turned over and a screwdriver reaches it.
-    bw_,bd_,bh_=LT['battery_box'];hc=dpt(back-10-bd_/2,0)   # just behind the DB1 back stop
-    PARTS['B01']['cuts']=[*PARTS['B01']['cuts'],[[hc[0]+half+e_side[0]*a_+e_out[0]*b_,hc[1]+half+e_side[1]*a_+e_out[1]*b_] for a_,b_ in ((-(bw_+6)/2,-(bd_+4)/2),((bw_+6)/2,-(bd_+4)/2),((bw_+6)/2,(bd_+4)/2),(-(bw_+6)/2,(bd_+4)/2))]]
-    cw_,ch_=bw_+22,bd_+20
-    add('BH1','Battery hatch cover',T['detail'],rect(cw_,ch_),holes=[hole(5,ch_/2,2.7),hole(cw_-5,ch_/2,2.7)],category='Structure',note=f'Optional lighting. Screw it under B01 with two 2.5 x 8 screws; glue a {bw_:g} x {bd_:g} x {bh_:g} mm screw-lid 2 x AA battery box with a switch on top, so the box drops through the B01 opening into the plinth. Never use coin cells.')
-    co_=hc;put('BH1',(co_[0]-e_side[0]*cw_/2-e_out[0]*ch_/2,co_[1]-e_side[1]*cw_/2-e_out[1]*ch_/2,0),(e_side[0],e_side[1],0),(e_out[0],e_out[1],0),'Fixed')   # this frame grows downward, under B01
-    HARDWARE.append({'id':'LT-Battery','kind':'Battery box','group':'Fixed','position':[hc[0],hc[1],0],'height':bh_,'width':bw_,'note':'Optional: screw-lid 2 x AA box with switch, glued on the BH1 hatch cover.'})
     gback=back-.5-db   # the guide walls end flush with the back of the back stop
     add('DG1','Drawer guide wall',tp,rect(gfront-gback,ph),note='Two guide walls glued between B01 and F00; they also carry F00 over the drawer bay.')
     add('DB1','Drawer back stop',db,rect(2*hw+2,ph),note='Glued between the guide walls; the closed drawer rests against it.')
@@ -171,10 +163,7 @@ def build():
     allowance=CFG['fabrication']['pillar_clearance']
     post_slots=[cutrect_dogbone(floor_r+x-allowance/2,floor_r+y-post_t-allowance/2,post_width+allowance,post_t+allowance,r=2.0) for x,y in posts]
     add('F01','First / second floor',base,floor_points,cuts=post_slots,holes=[wire_hole(floor_r)],color='wood',note='Slide both levels over the four continuous P01 pillars. Glue divided panels over interlocking finger joints and seam supports; pillar openings feature CNC dogbone fillets (R2.0 mm corner relief) at all four inside corners.')
-    attic_holes=[]
-    for angle in (60,120):
-        th=math.radians(angle);attic_holes.append(hole(floor_r+q(145)*math.cos(th),floor_r+q(145)*math.sin(th),3.2,None,'BL1 roof turn-button pivot clearance'))
-    add('F02','Attic floor with roof-lock pivot holes',base,floor_points,holes=attic_holes+[wire_hole(floor_r)],color='wood',note='Two D3.2 vertical pivot holes for the roof retaining turn-buttons. Do not use F01 as the attic floor.')
+    add('F02','Attic floor',base,floor_points,holes=[wire_hole(floor_r)],color='wood',note='Slide over pillars to top level. Do not use F01 as the attic floor.')
     for k in range(1,4):put('F02' if k==3 else 'F01',(-floor_r,-floor_r,tops[k]-base),group='Fixed',label='Attic floor' if k==3 else f'Floor {k+1}')
     # Windows: the wall itself keeps a solid cross between four panes (no thin glued bars to snap off). A one-piece
     # surround (frame over the cross, sill band and pediment hood) is glued on outside, PET glazing inside.
@@ -373,7 +362,7 @@ def build():
     dormer(globals(),roof)
     # Eave backing ring kept below the sloping skins, seated on short roof support blocks.
     ringr=q(182)
-    add('R02','Roof eave reinforcement ring',6,poly(12,ringr,ringr,ringr),[poly(12,ringr-16,ringr,ringr)],color='red',category='Roof',note='Two 3 mm plies glued face to face (6 mm total), each divided into three 120-degree sections with seams staggered by 60 degrees. Glue to 12 padded internal cleats at the eave. Ring lifts off with roof; do not glue to fixed walls.')
+    add('R02','Roof eave reinforcement ring',3,poly(12,ringr,ringr,ringr),[poly(12,ringr-16,ringr,ringr)],color='red',category='Roof',note='Divided into three 120-degree sections. Glue to 12 padded internal cleats at the eave. Ring lifts off with roof; do not glue to fixed walls.')
     put('R02',(-ringr,-ringr,roof_z),group='Roof')
     add('R03','Roof top cap',3,poly(12,7,7,7),color='red',category='Roof');put('R03',(-7,-7,roof_peak),group='Roof')
     # A smooth ball, not a spire: nothing pointed at a toddler's eye height.
@@ -381,28 +370,11 @@ def build():
     add('FN01','White roof finial ball (turned wood)',FIN['ball'],poly(36,br,br,br),holes=[dict(hole(br,br,fd,fl/2,f'D{fd:g} dowel hole'),entry='bottom')],color='cream',category='Purchased wood',note=f'One D{FIN["ball"]:g} mm turned beech ball with a flat sanded on it; glue it on a D{fd:g} x {fl:g} dowel set into the cone apex through R03. Blunt by design: never replace it with a spire. Never lift the roof by it.')
     PARTS['FN01']['sphere']=br
     put('FN01',(-br,-br,roof_peak+3),group='Roof')
-    cleat_z=roof_z+6;cleat_run=roof_a*(1-6/roof_h)-cleat_r;cleat_rise=roof_h*(1-cleat_r/roof_a)-6
+    cleat_z=roof_z+3;cleat_run=roof_a*(1-3/roof_h)-cleat_r;cleat_rise=roof_h*(1-cleat_r/roof_a)-3
     add('R04','Roof sloping support cleat',12,[[0,0],[cleat_run,0],[0,cleat_rise]],color='red',category='Purchased wood',note='Twelve triangular cleats cut from 12 mm solid wood. Glue bottom to roof ring and slope to roof skin. Wood grain along the sloping edge.')
     for j in range(12):
         th=math.radians(-75+j*30);n=(math.cos(th),math.sin(th));u=(n[0],n[1],0);v=(0,0,1);t=(n[1],-n[0],0)
         put('R04',(n[0]*cleat_r-t[0]*6,n[1]*cleat_r-t[1]*6,cleat_z),u,v,'Roof')
-    # Laminated turn-buttons: a 6 mm E08 ply under a 3 mm E09 ply, glued face to face into one 9 mm button, with a
-    # 22 mm neck and a D12 fender washer on each face. One 3 mm ply broke when the house was lifted by its roof, and
-    # one 6 mm ply falls short of the 1.5 margin (stress test E08: 1.26, however wide the neck); 9 mm reaches 2.5.
-    bt8,bt3,bw8=T['structure'],T['detail'],22;lam=bt8+bt3
-    # The neck round the pivot is 22 wide; the tab tapers to 16 so, turned inward, it still clears the ring's inside.
-    button=[[0,0],[14,0],[38,3],[38,bw8-3],[14,bw8],[0,bw8]]
-    add('E08','Roof turn-button, lower ply',bt8,button,holes=[hole(8,bw8/2,3.2)],color='cream',category='Roof',note=f'Two horizontal captive turn-buttons, each a {bt8:g} mm E08 ply glued under a {bt3:g} mm E09 ply ({lam:g} mm), 3 mm above the roof ring, between two D12 fender washers. Glue the plies with an M3 screw through both pivot holes to line them up. Rotate 90 degrees toward the centre to unlock. Set the pivot friction, then lock the cap nut with permanent (high-strength) threadlocker.')
-    add('E09','Roof turn-button, upper ply',bt3,button,holes=[hole(8,bw8/2,3.2)],color='cream',category='Roof',note=f'Glued on top of E08, pivot holes aligned: the two plies make one {lam:g} mm turn-button.')
-    for idx,angle in enumerate((60,120)):
-        th=math.radians(angle);n=(math.cos(th),math.sin(th),0);u=(-n[1],n[0],0);r=q(145);z=roof_z+9
-        corner=(n[0]*(r-8)-u[0]*bw8/2,n[1]*(r-8)-u[1]*bw8/2)
-        tab=put('E08',(*corner,z),(n[0],n[1],0),u,'RoofLocks');ply=put('E09',(*corner,z+bt8),(n[0],n[1],0),u,'RoofLocks')
-        head=[n[0]*r,n[1]*r,tops[3]-base-.5]
-        # The stack keeps 26.5 mm, so 3.5 mm of the M3 x 30 thread is left for the cap nut.
-        stack=[.5,base,8,1,bt8,bt3,1,.5];stack+=[.5]*round((26.5-sum(stack))/.5)
-        FASTENERS.append({'id':f'FS-RoofPivot-{idx}','type':'BL1','diameter':3,'length':30,'head_diameter':6,'head_height':2,'origin':head,'axis':[0,0,1],'parts':['F02-01',tab['id'],ply['id']],'pilot':3.2,'pilot_depth':None,'stack_mm':stack,'note':f'M3 x 30 pan-head machine screw. From the head up: WS1 steel washer, F02, SP1 8 mm spacer, WS3 D12 fender washer, E08 and E09 ({lam:g} mm), WS3 fender washer, WS2 nylon washer, {["no","one","two","three","four"][len(stack)-8]} WS1 steel washer{"s" if len(stack)-8!=1 else ""}, NT1 domed cap nut. Stack {sum(stack):g} mm leaves {30-sum(stack):g} mm of thread for the nut; check its cavity is at least 3.8 mm deep.'})
-        HARDWARE.append({'id':f'RP-{idx}','kind':'Captive roof pivot','group':'RoofLocks','position':head,'height':25,'width':16})
     # A temporary gauge needs no plywood: 2 mm greyboard, cut by hand on its 1:1 template.
     add('R05','Roof assembly angle jig (card)',2.0,[[0,0],[roof_a,0],[0,roof_h]],color='wood',category='Purchased packing',note='Two temporary jigs of 2 mm greyboard (bookbinding board): glue the printed 1:1 template on with removable adhesive and cut along the line with a sharp knife and a steel rule. Do not install in finished attic; use them to check roof slope before gluing.')
     # Chimney is attached to a roof panel above rear side (small, lightweight hollow box).
@@ -551,10 +523,10 @@ def build():
       f'Strength: 9 mm roof turn-buttons (6 + 3 mm plies glued) between D12 fender washers; 2.0 x 10 door-hinge screws in 16 mm hardwood strips; 2.5 x {next(f["length"] for f in FASTENERS if f["type"]=="SC1"):g} wall-hinge wood screws into D1.8 pilots; stop posts on two dowels each',
       f'Stability: {CFG["stability"]["pads"]} rim pads under the base, steel ballast in the plinth and an anti-tip strap anchor in the rear shell; the opening shells hang {SL:g} mm above the plinth',
       f'CNC: finger joints with a fit clearance and cutter relief at every inside corner in both F01 and F02; {CFG["fabrication"]["floor_support"][0]:g} x {CFG["fabrication"]["floor_support"][1]:g} mm seam strips',
-      'Optional LED lighting: a wire hole through every floor and a screw-closed battery hatch under the base; faux cellar hatch on the plinth',
+      'Optional LED lighting: a wire hole through every floor; faux cellar hatch on the plinth',
       'Display only: tiled stove, chandelier, bathtub, attic bed and desk, and a garden scene round the base']
-    new={'DM06','GZ1','GZ2','WF1','RL1','E04','E09','E11','GD03','GD04','PD1','DS1','BH1','HC1','WP1','WP2','WP3','BL2','AB1'}|{k for k in PARTS if k.startswith('BT')}
-    changed={'R06','R01','DM01','DM02','DM04','DM05','FN01','E01','A02','A03','E07','E08','MC1','GP1','DR1','F00','F01','F02','B01','PT1','PT2'}|{k for k in PARTS if k.startswith('W') and PARTS[k]['category']=='Walls'}
+    new={'DM06','GZ1','GZ2','WF1','RL1','E04','E11','GD03','GD04','PD1','DS1','HC1','WP1','WP2','WP3','BL2','AB1'}|{k for k in PARTS if k.startswith('BT')}
+    changed={'R06','R01','DM01','DM02','DM04','DM05','FN01','E01','A02','A03','E07','MC1','GP1','DR1','F00','F01','F02','B01','PT1','PT2'}|{k for k in PARTS if k.startswith('W') and PARTS[k]['category']=='Walls'}
     for pid,p in PARTS.items():
         if pid in new:p['revision']='new'
         elif pid in changed:p['revision']='changed'

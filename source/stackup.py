@@ -35,12 +35,6 @@ def analyse(data):
     out.append(chain('Ground-floor divider under F01','F00 top; F01 underside set by its metal supports',clear-div,[],(.2,None),'PT2 stands on F00 and must slide in under F01.',cfg))
     for k in (1,2):
         out.append(chain(f'Divider on storey {k+1}','support or pillar top under the ceiling',clear-div,[(-1,fl,'F01 floor it stands on')],(.2,None),'The floor plate rests on its supports: a thick plate raises the floor top and lowers the room.',cfg))
-    # Captive roof pivot: the ring sits on the fixed walls (420 mm from F00), the turn-button on the attic floor that
-    # sits on the pillar tops (414 mm from F00).
-    out.append(chain('Turn-button over the roof ring','F00 top',3.0,[(1,fl,'F02 attic floor'),(-1,6,'R02 roof ring')],(1.0,None),'Locked tabs must clear the ring top so the roof seats; 3 mm nominal.',cfg))
-    bl=next(f for f in data['fasteners'] if f['type']=='BL1');eng=bl['length']-sum(bl['stack_mm'])
-    plies=[(-1,data['parts'][pid]['thickness'],f'{pid} turn-button ply') for pid in ('E08','E09') if pid in data['parts']]
-    out.append(chain('BL1 thread left for the cap nut','screw head',eng,[(-1,fl,'F02 attic floor')]+plies,(2.4,4.8),'At least a nut height of thread (2.4 mm); at most the cap-nut cavity (about 4.8 mm): add or remove a 0.5 mm washer to suit.',cfg))
     # Pillar slots in F01 (cut 0.6 mm wider than the nominal pillar) and divider notches over the corner ribs.
     out.append(chain('P01 pillar in its F01 slot','slot width (cut)',fab['pillar_clearance'],[(-1,T['structure'],'P01 pillar')],(.1,None),'The floors slide down the pillars.',cfg))
     rib=data['parts']['J01']['thickness']
