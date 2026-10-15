@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 import numpy as np
 from PIL import Image
@@ -80,6 +81,25 @@ def crop_and_resize(im: Image.Image, target_width: int, crop: bool = True) -> Im
     return im.resize((target_width, target_height), Image.LANCZOS)
 
 
+def display_geometry(p):
+    """Local vertices and triangles, built once for each shared display object."""
+    vertices, faces = [], []
+    boxes = p.get('boxes')
+    profiles = [(np.array(box['origin']), [[0, 0], [box['size'][0], 0],
+                 box['size'][:2], [0, box['size'][1]]], box['size'][2]) for box in boxes] if boxes else [
+        (np.zeros(3), p['outer'], p['thickness'])]
+    for origin, outer, thickness in profiles:
+        offset, n = len(vertices), len(outer)
+        vertices.extend((origin + [x, y, z]).tolist() for z in (0, thickness) for x, y in outer)
+        triangles = [[0, k + 1, k] for k in range(1, n - 1)]
+        triangles += [[n, n + k, n + k + 1] for k in range(1, n - 1)]
+        for k in range(n):
+            nxt = (k + 1) % n
+            triangles.extend(([k, nxt, n + nxt], [k, n + nxt, n + k]))
+        faces.extend([[offset + index for index in triangle] for triangle in triangles])
+    return np.array(vertices), faces
+
+
 def sync_furniture_mesh(root: Path = ROOT, quiet: bool = False):
     """Sync furniture instances from source/model.py into output/parts.json and output/previews/mesh.json."""
     from model import build
@@ -102,30 +122,20 @@ def sync_furniture_mesh(root: Path = ROOT, quiet: bool = False):
 
     parts = data['parts']
     furn_instances = [i for i in data['instances'] if i['group'] in ('Furniture', 'Garden')]
+    counts = Counter(i['part'] for i in furn_instances)
+    geometry = {pid: display_geometry(parts[pid]) for pid in counts}
 
     for inst in furn_instances:
         pid = inst['part']
         p = parts[pid]
-        outer = p['outer']
-        thickness = p['thickness']
-        n = len(outer)
+        local_vertices, faces = geometry[pid]
         origin = np.array(inst['origin'], dtype=float)
         u = np.array(inst['u'], dtype=float)
         v = np.array(inst['v'], dtype=float)
         w = np.array(inst['w'], dtype=float)
 
-        pts0 = [origin + x * u + y * v for x, y in outer]
-        pts1 = [origin + x * u + y * v + thickness * w for x, y in outer]
-        verts = [pt.tolist() for pt in (pts0 + pts1)]
-        faces = []
-        for k in range(1, n - 1):
-            faces.append([0, k + 1, k])
-        for k in range(1, n - 1):
-            faces.append([n, n + k, n + k + 1])
-        for k in range(n):
-            nxt = (k + 1) % n
-            faces.append([k, nxt, n + nxt])
-            faces.append([k, n + nxt, n + k])
+        scaled = local_vertices * np.array(inst.get('scale', [1, 1, 1]))
+        verts = (origin + scaled @ np.array([u, v, w])).tolist()
 
         mesh.append({
             'id': inst['id'],
@@ -139,7 +149,8 @@ def sync_furniture_mesh(root: Path = ROOT, quiet: bool = False):
 
     mesh_path.write_text(json.dumps(mesh, separators=(',', ':')))
     if not quiet:
-        print(f"Synced {len(furn_instances)} furniture instances into previews/mesh.json")
+        repeated = '; '.join(f"{parts[pid]['name']} ×{counts[pid]}" for pid in ('BK1', 'BC1') if pid in counts)
+        print(f"Synced {len(counts)} shared display objects ({len(furn_instances)} placements; {repeated}) into previews/mesh.json")
 
 
 def rerender_readme_previews(root: Path = ROOT, quiet: bool = False):

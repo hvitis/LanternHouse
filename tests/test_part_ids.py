@@ -37,7 +37,8 @@ def test_floor_seam_supports_orientation_and_quantities(data):
 
 
 @pytest.mark.parametrize('build_id,design_parts,size,quantity',[
-    ('L1LA',{'L1LA','L1MA'},(26,110,4),4),
+    ('BK1',{'BK1'},(16,13,3),120),
+    ('BC1',{'BC1'},(26,80,110),4),
 ])
 def test_standard_furniture_blanks_have_shared_ids(data,build_id,design_parts,size,quantity):
     p=data['parts'][build_id]
@@ -63,7 +64,7 @@ def test_furniture_is_only_for_display(data):
 @pytest.mark.parametrize('optional',[False,True])
 def test_supplier_rejects_stale_furniture_cutting_sheets(data,optional):
     import supplier
-    sheet={'thickness':4,'items':[{'part':'L1LA'}]}
+    sheet={'thickness':4,'items':[{'part':'BC1'}]}
     nest={'sheets':[] if optional else [sheet],'optional_sheets':[sheet] if optional else []}
     with pytest.raises(ValueError,match='View-only furniture'):
         supplier.sheets_for(data,nest,dict(supplier.settings(data['config']),include_optional=True))

@@ -324,7 +324,8 @@ def build():
     outline=[[0,0],[d0,0],[d0,dh],[d1,dh],[d1,0],[Lp,0]]
     for gz in gusset_dz:outline+=[[Lp,gz-.5],[Lp-notch,gz-.5],[Lp-notch,gz+GT+.5],[Lp,gz+GT+.5]]
     outline+=[[Lp,clear],[0,clear]]
-    add('PT1','Room divider wall',wall,outline,color='cream',category='Walls',note=f'Three dividers, one per storey, {Lp:.1f} long and {clear:g} tall, leaving {PT["top_gap"]:g} mm under the ceiling for floors at the thick end of their band. The rear notches slip over the corner ribs; glue them to the ribs. The front edge stays {PT["front_gap"]:g} mm clear of the closing walls. The {PT["door_width"]:g} x {dh:g} doorway sits {d0:g} mm from the front end, next to the opening walls; a PD1 leaf hangs in it on cotton tape.')
+    front_edge_note = 'The front edge reaches the closing walls.' if PT['front_gap'] == 0 else f'The front edge stays {PT["front_gap"]:g} mm clear of the closing walls.'
+    add('PT1','Room divider wall',wall,outline,color='cream',category='Walls',note=f'Three dividers, one per storey, {Lp:.1f} long and {clear:g} tall, leaving {PT["top_gap"]:g} mm under the ceiling for floors at the thick end of their band. The rear notches slip over the corner ribs; glue them to the ribs. {front_edge_note} The {PT["door_width"]:g} x {dh:g} doorway sits {d0:g} mm from the front end, next to the opening walls; a PD1 leaf hangs in it on cotton tape.')
     raised_rear=brace_height(rear,0,gusset_dz[0])!=gusset_dz[0]
     if raised_rear:
         ground_outline=[[0,0],[d0,0],[d0,dh],[d1,dh],[d1,0],[Lp,0]]
@@ -407,6 +408,8 @@ def build():
             if key=='outer':p[key]=[[q(x),q(y)] for x,y in p[key]]
             else:p[key]=[[[q(x),q(y)] for x,y in loop] for loop in p[key]]
         for key in ('width','height','thickness'):p[key]=q(p[key])
+        for box in p.get('boxes',[]):
+            for key in ('origin','size'):box[key]=[q(value) for value in box[key]]
         for h in p['holes']+p['starters']:
             for key in ('x','y','diameter'):h[key]=q(h[key])
     for pid in furniture_ids:PARTS[pid]['starters']=[]
@@ -525,7 +528,7 @@ def build():
       f'Back door on {doors["back"]} with a lean-to canopy, stone steps and a woodpile shelter; room door leaves on cotton-tape hinges',
       'Snufkin, the Snork Maiden and Little My join the family in clay; no figure fits the small-parts cylinder and each passes every doorway',
       f'Toy safety: every magnet enclosed in solid wood behind a {CFG["magnets"]["skin"]:g} mm skin; a D{CFG["finial"]["ball"]:g} ball finial instead of the spire; divider front gap {PT["front_gap"]:g} mm (outside the 5-12 mm pinch range); recessed finger pulls instead of glued handles; a captive drawer stop',
-      f'Strength: 9 mm roof turn-buttons (6 + 3 mm plies glued) between D12 fender washers; 2.0 x 10 door-hinge screws in 16 mm hardwood strips; 2.5 x {next(f["length"] for f in FASTENERS if f["type"]=="SC1"):g} wall-hinge wood screws into D1.8 pilots; stop posts on two dowels each',
+      f'Strength: 9 mm roof turn-buttons (6 + 3 mm plies glued) between D12 fender washers; 2.0 x 10 door-hinge screws in {CFG["door_hinge"]["backing_width"]:g} mm hardwood strips; 2.5 x {next(f["length"] for f in FASTENERS if f["type"]=="SC1"):g} wall-hinge wood screws into D1.8 pilots; stop posts on two dowels each',
       f'Stability: {CFG["stability"]["pads"]} rim pads under the base, steel ballast in the plinth and an anti-tip strap anchor in the rear shell; the opening shells hang {SL:g} mm above the plinth',
       f'CNC: finger joints with a fit clearance and cutter relief at every inside corner in both F01 and F02; {CFG["fabrication"]["floor_support"][0]:g} x {CFG["fabrication"]["floor_support"][1]:g} mm seam strips',
       'Optional LED lighting: a wire hole through every floor; faux cellar hatch on the plinth',
@@ -574,7 +577,10 @@ def profile_variants(p):
             holes.append(json.dumps([x,y,h['diameter'],h.get('depth'),h.get('entry','top'),h.get('countersink'),h.get('countersink_depth')]))
         circle=p.get('outercircle')
         circle=(*point(*circle[:2]),circle[2]) if circle else ()
-        yield (p['thickness'],stock,optional,outer,cuts,tuple(sorted(holes)),circle),(c,s,x0,y0)
+        # Compound display objects have a fixed local frame and must not merge with plain slabs.
+        if p.get('boxes') and (c,s)!=(1,0):continue
+        compound=json.dumps(p.get('boxes',[]),sort_keys=True)
+        yield (p['thickness'],stock,optional,outer,cuts,tuple(sorted(holes)),circle,compound),(c,s,x0,y0)
 
 def profile_key(p):
     return min(key for key,_ in profile_variants(p))
@@ -636,7 +642,8 @@ def merge_identical():
 
 def instance_box(inst):
     p=PARTS[inst['part']];o,u,v,w=inst['origin'],inst['u'],inst['v'],inst['w']
-    pts=[[o[k]+u[k]*x+v[k]*y+w[k]*t for k in range(3)] for x,y in p['outer'] for t in (0,p['thickness'])]
+    sx,sy,sz=inst.get('scale',(1,1,1))
+    pts=[[o[k]+u[k]*x*sx+v[k]*y*sy+w[k]*t*sz for k in range(3)] for x,y in p['outer'] for t in (0,p['thickness'])]
     return [min(q[k] for q in pts) for k in range(3)],[max(q[k] for q in pts) for k in range(3)]
 
 ROOMS=[('ground floor','kitchen'),('floor 1','living room'),('floor 2','bedrooms'),('attic','attic')]
@@ -703,83 +710,37 @@ def garden(G,bt):
     solid('GX2','Mailbox',rect(20,14),12,'red',o,a,-10,-7,46)
 
 def furnish(tops):
-    def part(pid,name,w,h,t=4,color='wood',note=''):
-        if pid not in PARTS:add(pid,name,t,rect(w,h),color=color,category='Furniture',note=note)
-    def box(prefix,name,x,y,z,w,d,h,color='cream',shelves=0,group='Furniture',has_back=True,has_shelves=True,has_top=True):
-        part(prefix+'A',name+' side',d,h,color=color)
-        if has_shelves:
-            part(prefix+'B',name+' top / bottom / shelf',w-8,d-3,color=color)
-            levels=[z]+([z+h-4] if has_top else [])+[z+(j+1)*(h-8)/(shelves+1) for j in range(shelves)]
-            for zz in levels:put(prefix+'B',(x+4,y,zz),group=group)
-        if has_back:
-            part(prefix+'C',name+' back',w-8,h-8,3,color)
-            upright(prefix+'C',x+4,y+d,z+4,group)
-        upright(prefix+'A',x,y,z,group,axis='yz');upright(prefix+'A',x+w-4,y,z,group,axis='yz')
-
-    def table(prefix,name,x,y,z,w,d,h,color='wood',support_depth=None):
-        support_depth=d-12 if support_depth is None else support_depth
-        part(prefix+'A',name+' tabletop',w,d,color=color);part(prefix+'B',name+' pedestal side',support_depth,h-4,color=color)
-        inset=(d-support_depth)/2
-        put(prefix+'A',(x,y,z+h-4),group='Furniture');upright(prefix+'B',x+8,y+inset,z,'Furniture',axis='yz');upright(prefix+'B',x+w-12,y+inset,z,'Furniture',axis='yz')
-    def seat(prefix,name,x,y,z,w,d,h,back,color):
-        part(prefix+'A',name+' seat',w,d,color=color);part(prefix+'B',name+' side / leg',d,h-4,color=color);part(prefix+'C',name+' back',w,back,color=color)
-        put(prefix+'A',(x,y,z+h-4),group='Furniture');upright(prefix+'B',x,y,z,'Furniture',axis='yz');upright(prefix+'B',x+w-4,y,z,'Furniture',axis='yz');upright(prefix+'C',x,y+d+4,z,'Furniture')
-    def bed(prefix,name,x,y,z):
-        part(prefix+'A',name+' mattress platform',54,104,color='cream');part(prefix+'B',name+' head / foot',54,34,color='ochre');part(prefix+'C',name+' support',96,18,color='wood')
-        put(prefix+'A',(x,y+4,z+18),group='Furniture');upright(prefix+'B',x,y+4,z,'Furniture');upright(prefix+'B',x,y+112,z,'Furniture')
-        upright(prefix+'C',x+4,y+8,z,'Furniture',axis='yz');upright(prefix+'C',x+46,y+8,z,'Furniture',axis='yz')
-    # Room layouts per storey; the divider runs along X0 with its door opening at Y-107 to -69 swinging into +X.
-    f1=tops[1]
-
+    """One book and one complete bookcase, reused with placement, scale and paint per copy."""
+    add('BK1','Book',3,rect(16,13),color='red',category='Furniture')
+    # The profile is the bounding box; boxes describe the complete open bookcase.
+    add('BC1','Bookshelf',110,rect(26,80),color='wood',category='Furniture')
+    shelf_zs=[0]+[(j+1)*(110-8)/5 for j in range(4)]
+    PARTS['BC1']['boxes']=[
+        {'origin':[0,0,0],'size':[26,4,110]},
+        {'origin':[0,76,0],'size':[26,4,110]},
+        {'origin':[0,4,4],'size':[3,72,102]},
+        *[{'origin':[3,4,z],'size':[23,72,4]} for z in shelf_zs+[106]],
+    ]
     book_colors=['red','blue','ochre','sage','rose','ink']
-    for c in book_colors:
-        part(f'BK_{c}',f'Book block {c}',16,13,3,color=c)
-    def wall_shelf(prefix,name,y,z,w,d,h,side='left',shelves=3,color='wood',books=True):
-        """Bookshelf against the room divider along X=0 (design units, scaled with the furniture).
-        The divider is 6 mm thick, so a back face at |X| = 4 design units (3.7 mm) leaves 0.7 mm clear.
-        Two gables (4 thick) at the ends y..y+4 and y+w-4..y+w, the 3 mm back against the divider between them,
-        and the shelves in front of the back. side='left' stands in the -X room, 'right' in the +X room.
-        w runs along Y from y to y+w; d is the full depth from the divider; h is the height.
-        """
-        part(prefix+'A',name+' gable end',d,h,color=color)
-        part(prefix+'B',name+' shelf / top / bottom',d-3,w-8,color=color)
-        part(prefix+'C',name+' back panel',w-8,h-8,3,color=color)
-        shelf_zs=[z]+[z+(j+1)*(h-8)/(shelves+1) for j in range(shelves)]
-        if side=='left':
-            upright(prefix+'A',-4-d,y+4,z,'Furniture',axis='xz')
-            upright(prefix+'A',-4-d,y+w,z,'Furniture',axis='xz')
-            upright(prefix+'C',-7,y+4,z+4,'Furniture',axis='yz')
-            for zz in shelf_zs+[z+h-4]:
-                put(prefix+'B',(-4-d,y+4,zz),group='Furniture')
-            if books:
-                bx=-4-d+3
-                p_off=sum(ord(ch) for ch in prefix)
-                for s_idx,sz in enumerate(shelf_zs):
-                    n_books=max(3,min(6,int((w-16)/8)))
-                    for k in range(n_books):
-                        bc=book_colors[(k+s_idx*2+p_off)%len(book_colors)]
-                        put(f'BK_{bc}',(bx,y+10+k*5,sz+4),(1,0,0),(0,0,1),group='Furniture')
-        else:
-            upright(prefix+'A',4,y+4,z,'Furniture',axis='xz')
-            upright(prefix+'A',4,y+w,z,'Furniture',axis='xz')
-            upright(prefix+'C',4,y+4,z+4,'Furniture',axis='yz')
-            for zz in shelf_zs+[z+h-4]:
-                put(prefix+'B',(7,y+4,zz),group='Furniture')
-            if books:
-                bx=9
-                p_off=sum(ord(ch) for ch in prefix)
-                for s_idx,sz in enumerate(shelf_zs):
-                    n_books=max(3,min(6,int((w-16)/8)))
-                    for k in range(n_books):
-                        bc=book_colors[(k+s_idx*2+p_off)%len(book_colors)]
-                        put(f'BK_{bc}',(bx,y+10+k*5,sz+4),(1,0,0),(0,0,1),group='Furniture')
+    def wall_shelf(prefix,name,y,w,d,h,side,color):
+        left=side=='left'
+        inst=put('BC1',(-4 if left else 4,y+w if left else y,tops[1]),
+                 (-1,0,0) if left else (1,0,0),
+                 (0,-1,0) if left else (0,1,0),'Furniture',name)
+        inst['scale']=[d/26,w/80,h/110]
+        inst['color']=CFG['colors'][color]
+        bx=-4-d+3 if left else 9
+        for s_idx,sz in enumerate(shelf_zs):
+            for k in range(max(3,min(6,int((w-16)/8)))):
+                bc=book_colors[(k+s_idx*2+sum(map(ord,prefix)))%len(book_colors)]
+                book=put('BK1',(bx,y+10+k*5,tops[1]+(sz+4)*h/110),
+                         (1,0,0),(0,0,1),'Furniture')
+                book['color']=CFG['colors'][bc]
 
-    # Floor 1: Grand Circular Library along inner room wall
-    wall_shelf('L1L','Grand library west bookcase',-65,f1,80,26,110,side='left',shelves=4,color='wood')
-    wall_shelf('L1M','Grand library north bookcase',30,f1,75,26,110,side='left',shelves=4,color='wood')
-
-    wall_shelf('L1R','Reference collection bookcase',-60,f1,80,24,104,side='right',shelves=4,color='ochre')
-    wall_shelf('L1S','Encyclopedic stacks bookcase',35,f1,70,24,104,side='right',shelves=4,color='cream')
+    wall_shelf('L1L','Grand library west bookcase',-65,80,26,110,'left','wood')
+    wall_shelf('L1M','Grand library north bookcase',30,75,26,110,'left','wood')
+    wall_shelf('L1R','Reference collection bookcase',-60,80,24,104,'right','ochre')
+    wall_shelf('L1S','Encyclopedic stacks bookcase',35,70,24,104,'right','cream')
 
 
 if __name__=='__main__':

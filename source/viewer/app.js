@@ -43,8 +43,17 @@ function profileShape(p){
   return shape;
 }
 const geometry={},edges={};
+function compoundGeometry(boxes){
+  const positions=[];
+  for(const box of boxes){
+    const g=new THREE.BoxGeometry(...box.size).toNonIndexed();
+    g.translate(...box.origin.map((value,k)=>value+box.size[k]/2));
+    positions.push(...g.attributes.position.array);g.dispose();
+  }
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.computeVertexNormals();return g;
+}
 for(const [pid,p] of Object.entries(parts)){
-  geometry[pid]=p.sphere?new THREE.SphereGeometry(p.sphere,48,24).rotateX(Math.PI/2).translate(p.sphere,p.sphere,p.sphere):new THREE.ExtrudeGeometry(profileShape(p),{depth:p.thickness,bevelEnabled:false,curveSegments:p.outercircle?96:20});
+  geometry[pid]=p.boxes?compoundGeometry(p.boxes):p.sphere?new THREE.SphereGeometry(p.sphere,48,24).rotateX(Math.PI/2).translate(p.sphere,p.sphere,p.sphere):new THREE.ExtrudeGeometry(profileShape(p),{depth:p.thickness,bevelEnabled:false,curveSegments:p.outercircle?96:20});
   edges[pid]=new THREE.EdgesGeometry(geometry[pid],25);
 }
 const materials={};
@@ -88,7 +97,7 @@ for(const f of fasteners){
   const pivot=new THREE.Group(),inner=new THREE.Group();pivot.position.set(f.origin[0],f.origin[1],0);inner.position.set(-f.origin[0],-f.origin[1],0);
   pivot.add(inner);nodes.RoofLocks.inner.add(pivot);catches[tab]={pivot,inner};
 }
-function matrixOf(i){const [u,v,w,o]=[i.u,i.v,i.w,i.origin];return new THREE.Matrix4().set(u[0],v[0],w[0],o[0],u[1],v[1],w[1],o[1],u[2],v[2],w[2],o[2],0,0,0,1);}
+function matrixOf(i){const [u,v,w,o]=[i.u,i.v,i.w,i.origin];return new THREE.Matrix4().set(u[0],v[0],w[0],o[0],u[1],v[1],w[1],o[1],u[2],v[2],w[2],o[2],0,0,0,1).scale(new THREE.Vector3(...(i.scale??[1,1,1])));}
 const meshes=[],lines=[],pieceLabels=[],parentOf={};
 for(const i of instances){
   if(!nodes[i.group])continue;   // jigs, test coupons and the loose accessory tray are not in the house

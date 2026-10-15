@@ -28,6 +28,8 @@ except Exception:
 def polygon(points):
     vs=[App.Vector(x,y,0) for x,y in points];return Part.makePolygon(vs+[vs[0]])
 def profile_shape(p):
+    if p.get('boxes'):
+        return Part.makeCompound([Part.makeBox(*box['size'],App.Vector(*box['origin'])) for box in p['boxes']])
     if p.get('sphere'):   # a turned ball standing on its profile plane, with its dowel hole from below
         r=p['sphere'];shape=Part.makeSphere(r,App.Vector(r,r,r))
         for h in p['holes']:shape=shape.cut(Part.makeCylinder(h['diameter']/2,h['depth'] or 2*r,App.Vector(h['x'],h['y'],0)))
@@ -48,7 +50,11 @@ def matrix(inst):
         for r in range(3):setattr(m,f'A{r+1}{c+1}',inst[key][r])
     m.A14,m.A24,m.A34=inst['origin'];return m
 def transformed(shape,inst):
-    s=shape.copy();s.Placement=App.Placement(matrix(inst));return s
+    s=shape.copy()
+    if 'scale' in inst:
+        scale=App.Matrix();scale.A11,scale.A22,scale.A33=inst['scale']
+        s=s.transformGeometry(scale)
+    s.Placement=App.Placement(matrix(inst));return s
 def color(hexval):return tuple(int(hexval[j:j+2],16)/255 for j in (1,3,5))
 def thickness_alias(t):return 'Ply'+str(t).replace('.0','').replace('.','_')
 def setcolor(obj,hexval,visible=True):

@@ -10,8 +10,9 @@ LOOSE=('Tools','Accessories','Garden')   # beside the house in the CAD or on the
 def corners(inst,part):
     """World coordinates of a placed profile's outline, on both faces of the plywood."""
     o,u,v,w=inst['origin'],inst['u'],inst['v'],inst['w']
+    sx,sy,sz=inst.get('scale',(1,1,1))
     for x,y in part['outer']:
-        for z in (0,part['thickness']):yield [o[k]+u[k]*x+v[k]*y+w[k]*z for k in range(3)]
+        for z in (0,part['thickness']):yield [o[k]+u[k]*x*sx+v[k]*y*sy+w[k]*z*sz for k in range(3)]
 
 def house(data):
     for i in data['instances']:

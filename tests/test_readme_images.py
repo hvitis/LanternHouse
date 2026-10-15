@@ -1,11 +1,51 @@
 """Tests for README image generation and automatic updates."""
 from pathlib import Path
+import json
+import numpy as np
 from PIL import Image
 import pytest
 
 import readme_images
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_shared_bookcase_mesh_preserves_open_shelves(data):
+    p = data['parts']['BC1']
+    vertices, faces = readme_images.display_geometry(p)
+    triangles = vertices[np.array(faces)]
+    volume = np.einsum('ij,ij->i', triangles[:, 0], np.cross(triangles[:, 1], triangles[:, 2])).sum() / 6
+    scale = data['config']['wall_height'] / 450
+    # Two gables, one back and six horizontal boards, with empty space between them.
+    expected = (2 * 26 * 4 * 110 + 3 * 72 * 102 + 6 * 23 * 72 * 4) * scale**3
+    assert volume == pytest.approx(expected)
+    assert volume < p['width'] * p['height'] * p['thickness'] / 2
+    assert vertices.min(axis=0) == pytest.approx([0, 0, 0])
+    assert vertices.max(axis=0) == pytest.approx([26 * scale, 80 * scale, 110 * scale])
+
+
+def test_sync_reuses_complete_bookcases_and_preserves_paint(data, tmp_path, monkeypatch, capsys):
+    import model
+    monkeypatch.setattr(model, 'build', lambda: data)
+    previews = tmp_path / 'output/previews'
+    previews.mkdir(parents=True)
+    fixture = {'id': 'fixture', 'group': 'Fixed'}
+    (previews / 'mesh.json').write_text(json.dumps([fixture, {'id': 'old-shelf', 'group': 'Furniture'}]))
+    readme_images.sync_furniture_mesh(tmp_path)
+    mesh = json.loads((previews / 'mesh.json').read_text())
+    assert fixture in mesh
+    assert not any(item['id'] == 'old-shelf' for item in mesh)
+    books = [item for item in mesh if item.get('part') == 'BK1']
+    shelves = [item for item in mesh if item.get('part') == 'BC1']
+    assert len(books) == 120 and len(shelves) == 4
+    assert len({item['color'] for item in books}) == 6
+    assert len({item['color'] for item in shelves}) == 3
+    for shelf in shelves:
+        vertices = np.array(shelf['vertices'])
+        assert vertices[:, 2].min() == pytest.approx(data['derived']['floor_tops'][1])
+        assert len(shelf['faces']) > 12, 'A bookshelf must contain its boards, rather than one solid slab'
+    log = capsys.readouterr().out
+    assert 'Book ×120' in log and 'Bookshelf ×4' in log
 
 
 def test_crop_and_resize_crops_and_scales():
