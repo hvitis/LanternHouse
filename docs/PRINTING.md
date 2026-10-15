@@ -6,7 +6,7 @@ The house's furniture and accessories can also be 3D printed. Each design is a s
 | --- | --- | --- |
 | **Mac** | `make studio`: a live preview in the browser while you (or Claude) change a design. `make prints`: generate and publish the files. | `.venv` with `requirements-print.txt` (build123d, a CAD library on the OpenCASCADE kernel) |
 | **Web** | `prints.html` in the GitHub Pages site: view, check and download each published design | Nothing: it reads the committed files in `prints/` |
-| **CI** | Re-reads every published STL, reruns the print checks, and fails if `prints/` is older than its sources | numpy only |
+| **CI** | Copies the published files into the static viewer site | Python with `requirements.txt` |
 
 ## Quick start
 
@@ -87,4 +87,4 @@ The page also gives the size, the solid weight and a rough weight at the profile
 | `prints/` | The published files and `manifest.json` (committed; generated, never edited by hand) |
 | `tests/test_prints.py`, `tests/prints-smoke.mjs` | The checks on hand-made meshes, the published prints re-checked from their STL files, and the page in a browser |
 
-A design whose source, `printer.json`, small-parts rule or mesh tolerance changed is out of date until `make prints` runs again. Its hash in `prints/manifest.json` no longer matches, and `pytest` (and so CI) fails with a message that says so. `make prints` only rebuilds designs whose hash changed, so files for unchanged designs stay byte-identical. Pass `--force` to `source/print_build.py` to rebuild every design anyway.
+A design whose source, `printer.json`, small-parts rule or mesh tolerance changed is out of date until `make prints` runs again. Its hash in `prints/manifest.json` no longer matches, and local `pytest` checks fail with a message that says so. CI publishes the committed files without tests. `make prints` only rebuilds designs whose hash changed, so files for unchanged designs stay byte-identical. Pass `--force` to `source/print_build.py` to rebuild every design anyway.

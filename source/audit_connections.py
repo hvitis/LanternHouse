@@ -2,8 +2,6 @@
 import json,re,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-sys.path.insert(0,str(Path(sys.executable).resolve().parent.parent/'lib'))
-from build_cad import profile_shape, transformed
 
 # Pieces that belong to another family's assembly, and loose display pieces that are not assemblies at all.
 MERGE={'K7':'K2','N4':'N3','LG1':'LG','LG2':'LG','LG3':'LG','WP1':'WP','WP2':'WP','WP3':'WP'}
@@ -14,14 +12,27 @@ def family(design_part):
     fam=re.sub(r'(?<=..)[A-Z]$','',design_part)
     return MERGE.get(fam,fam)
 
+def furniture_assemblies(data):
+    """Group assembled pieces by item, keeping copies of complete bookcases separate."""
+    families={}
+    for inst in data['instances']:
+        part=data['parts'][inst['part']]
+        design=inst.get('design_part',inst['part'])
+        if part['category']!='Furniture' or inst['group']!='Furniture':continue
+        if inst['part']=='BK1' or design.startswith(LOOSE):continue
+        key=inst['id'] if part.get('boxes') else family(design)
+        families.setdefault(key,[]).append(inst)
+    return families
+
 def main():
+    sys.path.insert(0,str(Path(sys.executable).resolve().parent.parent/'lib'))
+    from build_cad import profile_shape, transformed
     data=json.loads((ROOT/'output/parts.json').read_text())
     # These solids check the visual assemblies; none is written into the CAD project.
-    profiles={pid:profile_shape(p) for pid,p in data['parts'].items() if p['category']=='Furniture'}
-    items_all=[i for i in data['instances'] if i['part'] in profiles and i['group']=='Furniture' and not i.get('design_part',i['part']).startswith(LOOSE)]
+    families=furniture_assemblies(data)
+    items_all=[i for items in families.values() for i in items]
+    profiles={pid:profile_shape(data['parts'][pid]) for pid in {i['part'] for i in items_all}}
     shapes={i['id']:transformed(profiles[i['part']],i) for i in items_all}
-    families={}
-    for i in items_all:families.setdefault(family(i.get('design_part',i['part'])),[]).append(i)
     checks=[]
     for fam,items in sorted(families.items()):
         parent=list(range(len(items)));contacts=[]

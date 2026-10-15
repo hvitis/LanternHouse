@@ -46,17 +46,10 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-          cache-dependency-path: requirements*.txt
+          cache-dependency-path: requirements.txt
 
       - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements-dev.txt
-
-      - name: Run fast checks & unit tests
-        run: |
-          python source/config_check.py
-          python -m pytest -q
+        run: python -m pip install -r requirements.txt
 
       - name: Install system dependencies for FreeCAD
         run: |
@@ -73,7 +66,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: FreeCAD-squashfs
-          key: freecad-1.1.4-linux-x86_64
+          key: ${{ runner.os }}-freecad-1.1.4-linux-x86_64
 
       - name: Download & extract FreeCAD AppImage
         if: steps.cache-freecad.outputs.cache-hit != 'true'

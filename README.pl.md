@@ -187,7 +187,7 @@ source/                  źródła generujące domek
   export_viewer.py       eksport przeglądarki jako strony statycznej (GitHub Pages)
   release.py             wysyła PDF i zestaw budowlany do wydania GitHub
 tests/                   szybkie testy modelu i eksportu oraz kontrola przeglądarki
-.github/workflows/       CI: testy źródeł i przeglądarki, publikacja strony z main
+.github/workflows/       eksport strony z pamięcią podręczną; pełna kompilacja przy wydaniu
 docs/                    przewodnik, opis procesu, publikacja, pomysły i ilustracje
 original/                lokalne zdjęcia referencyjne (ignorowane przez Git)
 output/                  wygenerowane pliki (ignorowane przez Git)

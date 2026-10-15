@@ -54,7 +54,9 @@ try {
     assert.equal(await page.locator('#dxfPanel').isVisible(), false);
     assert.equal(await page.locator('#printablesFrame').getAttribute('src'), null, 'Printables load only when opened');
     assert.equal(requests.some(url => url.endsWith('/data/house.dxf')), false, 'DXF loads only when opened');
-    await page.waitForFunction(async () => { const {flight} = await import('./app.js'); return flight?.t === 1; });
+    // Preload the module so polling predicates return booleans instead of promises.
+    await page.evaluate(async () => {window.searchViewer = await import('./app.js');});
+    await page.waitForFunction(() => window.searchViewer.flight?.t === 1);
     assert.equal(await page.locator('#showDims').isChecked(), false, 'The default house preview is free of dimension labels');
     await page.screenshot({path: resolve(screenshots, `${name}-workbench.png`)});
     if (name === 'mobile') await page.locator('#houseTools > summary').click();
@@ -120,7 +122,6 @@ try {
     await page.locator('#showPieceIds').uncheck();
     await page.waitForFunction(() => [...document.querySelectorAll('.piece-id')].every(label => label.style.display === 'none'));
     // Search only exact IDs. A part code finds every copy; an instance code finds one piece.
-    await page.evaluate(async () => {window.searchViewer = await import('./app.js');});
     const search = page.locator('#elementId');
     await search.fill('P0');
     assert.equal(await search.getAttribute('aria-invalid'), 'true');
@@ -158,8 +159,8 @@ try {
     await page.locator('#showPorch').uncheck();
     const porch = model.instances.find(i => i.group === 'Porch' && !model.parts[i.part].render_only);
     await search.fill(porch.id);
-    await page.waitForFunction(async () => {
-      const {searchMatches, visibleChain} = await import('./app.js');return [...searchMatches].every(visibleChain);
+    await page.waitForFunction(() => {
+      const {searchMatches, visibleChain} = window.searchViewer;return [...searchMatches].every(visibleChain);
     });
     assert.equal(await page.locator('#showPorch').isChecked(), true);
     await search.press('Escape');
@@ -172,8 +173,8 @@ try {
     // Furniture includes every display-only solid, inside and around the house, with its edges.
     for (const checked of [false, true]) {
       await page.locator('#showFurniture').setChecked(checked);
-      await page.waitForFunction(async checked => {
-        const {meshes, lines, visibleChain} = await import('./app.js');
+      await page.waitForFunction(checked => {
+        const {meshes, lines, visibleChain} = window.searchViewer;
         const decorations = meshes.filter(m => m.userData.part?.render_only);
         return decorations.length > 0 && decorations.every(m => visibleChain(m) === checked)
           && lines.filter(l => l.userData.mesh.userData.part?.render_only).every(l => visibleChain(l) === checked);
@@ -199,10 +200,19 @@ try {
     await page.locator('#closeAll').click();
     await page.waitForFunction(() => document.querySelector('#walls').value === '0' && document.querySelector('#wallLeft').value === '0' && document.querySelector('#wallRight').value === '0' && document.querySelector('#drawer').value === '0');
 
-    // Test opening left and right walls separately
+    // Slider values change before apply() updates the scene on the next animation frame.
+    async function waitForWallRotations(left, right) {
+      await page.waitForFunction(([left, right]) => {
+        const {nodes} = window.searchViewer;
+        return Math.abs(-nodes.WallLeft.pivot.rotation.z * 180 / Math.PI - left) < .05
+          && Math.abs(nodes.WallRight.pivot.rotation.z * 180 / Math.PI - right) < .05;
+      }, [left, right]);
+    }
+    // Test opening left and right walls separately.
+    await waitForWallRotations(0, 0);
     await page.locator('#wallLeft').fill('45');
     await page.locator('#wallLeft').dispatchEvent('input');
-    await page.waitForFunction(() => document.querySelector('#wallLeft').value === '45');
+    await waitForWallRotations(45, 0);
     const wallRotations = await page.evaluate(async () => {
       const {nodes} = await import('./app.js');
       const {MathUtils} = await import('./vendor/three.module.js');
@@ -218,7 +228,7 @@ try {
 
     await page.locator('#wallRight').fill('70');
     await page.locator('#wallRight').dispatchEvent('input');
-    await page.waitForFunction(() => document.querySelector('#wallRight').value === '70');
+    await waitForWallRotations(45, 70);
     const wallRotations2 = await page.evaluate(async () => {
       const {nodes} = await import('./app.js');
       const {MathUtils} = await import('./vendor/three.module.js');
@@ -234,11 +244,12 @@ try {
 
     await page.locator('#closeAll').click();
     await page.waitForFunction(() => document.querySelector('#wallLeft').value === '0' && document.querySelector('#wallRight').value === '0');
+    await waitForWallRotations(0, 0);
     await page.locator('[data-view="top"]').click();
     await page.locator('#showFigures').uncheck();
     await page.locator('#xray').check();
-    await page.waitForFunction(async () => {
-      const {meshes} = await import('./app.js');
+    await page.waitForFunction(() => {
+      const {meshes} = window.searchViewer;
       return meshes.filter(m => m.userData.part?.category === 'Walls').every(m => m.material.transparent && m.material.opacity === .22);
     });
     // DXF is the real cutting file, loaded on demand under the same static-site prefix.

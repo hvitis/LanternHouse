@@ -92,3 +92,15 @@ def test_thickness_check_precedes_packaging_and_failure_stops_package(tmp_path):
     with pytest.raises(subprocess.CalledProcessError):
         rebuild.run_pipeline(tmp_path, "cad-python", tolerance=True, runner=failed)
     assert all(Path(command[1]).name != "package.py" for command in calls)
+
+
+def test_source_syntax_error_stops_before_starting_cad(tmp_path):
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "book.py").write_text('text = f"{broken\\expression}"\n')
+    calls = []
+
+    with pytest.raises(SyntaxError):
+        rebuild.run_pipeline(tmp_path, "cad-python", runner=lambda *args, **_: calls.append(args))
+
+    assert calls == []

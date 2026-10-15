@@ -187,7 +187,7 @@ source/                  everything that generates the house
   export_viewer.py       the viewer as a static site (GitHub Pages)
   release.py             uploads the PDFs and build kit to a GitHub release
 tests/                   model and export tests, static viewer browser checks
-.github/workflows/       CI: Python and browser checks; the viewer site on main
+.github/workflows/       cached viewer export and Pages on main; full builds on release
 docs/                    build guide, pipeline, publishing, ideas, README images
 original/                your own reference photos (git-ignored)
 output/                  generated, git-ignored

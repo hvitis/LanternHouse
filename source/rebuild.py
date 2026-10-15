@@ -70,6 +70,9 @@ def snapshot(root, workspace):
 
 
 def run_pipeline(workspace, freecad_python, lang="pl", tolerance=False, runner=subprocess.run):
+    print("Checking source syntax before CAD build", flush=True)
+    for path in sorted((workspace / "source").rglob("*.py")):
+        compile(path.read_bytes(), str(path), "exec")
     env = dict(os.environ, MOOMIN_HEADLESS="1", QT_QPA_PLATFORM="offscreen")
 
     def run(script, cad=False, args=()):

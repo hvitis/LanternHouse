@@ -29,7 +29,9 @@ def polygon(points):
     vs=[App.Vector(x,y,0) for x,y in points];return Part.makePolygon(vs+[vs[0]])
 def profile_shape(p):
     if p.get('boxes'):
-        return Part.makeCompound([Part.makeBox(*box['size'],App.Vector(*box['origin'])) for box in p['boxes']])
+        boxes=[Part.makeBox(*box['size'],App.Vector(*box['origin'])) for box in p['boxes']]
+        # Connected boards form one profile solid for CAD validation and collision checks.
+        return boxes[0].multiFuse(boxes[1:]).removeSplitter() if len(boxes)>1 else boxes[0]
     if p.get('sphere'):   # a turned ball standing on its profile plane, with its dowel hole from below
         r=p['sphere'];shape=Part.makeSphere(r,App.Vector(r,r,r))
         for h in p['holes']:shape=shape.cut(Part.makeCylinder(h['diameter']/2,h['depth'] or 2*r,App.Vector(h['x'],h['y'],0)))

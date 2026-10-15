@@ -210,13 +210,15 @@ The solid-kernel checks (overlaps, wall swing, door sweep, drawer, roof lift, PD
 
 ## 3D prints
 
-The 3D-printable furniture is a separate, small pipeline. `source/print_build.py` builds each design in `source/prints/` with build123d on the Mac into STL, 3MF and STEP files and checks the STL (`source/print_mesh.py`, numpy). `make prints` publishes the designs that pass into the committed `prints/` folder. `export_viewer.py` copies it into the site next to `prints.html`. `make studio` (`source/print_studio.py`) is the live preview while a design is changed. CI re-checks the published STL files and fails when `prints/` is older than its sources. See [PRINTING.md](PRINTING.md).
+The 3D-printable furniture is a separate, small pipeline. `source/print_build.py` builds each design in `source/prints/` with build123d on the Mac into STL, 3MF and STEP files and checks the STL (`source/print_mesh.py`, numpy). `make prints` publishes the designs that pass into the committed `prints/` folder. `export_viewer.py` copies it into the site next to `prints.html`. `make studio` (`source/print_studio.py`) is the live preview while a design is changed. Local tests check the published STL files and detect outdated files in `prints/`. CI copies the published files into the viewer site. See [PRINTING.md](PRINTING.md).
 
 ## Continuous integration and publishing
 
-`.github/workflows/ci.yml` runs the config check, Python tests and static viewer browser checks (the house viewer and the prints page) on pushes to `main` and pull requests.
-The browser checks load the export under `/moominshouse/`, block external requests and check WebGL pixels and controls at desktop and mobile sizes.
-On `main`, the workflow then uploads the export and deploys it to GitHub Pages.
+`.github/workflows/ci.yml` exports only the static viewer on pushes to `main`, pull requests, and manual runs.
+It needs Python, without FreeCAD, Node.js, or Chromium. Tests and lint run locally.
+The workflow caches pip downloads and the generated model and DXF with a key derived from the model inputs.
+An exact cache match skips model generation and DXF nesting. Every export copies the current web assets and published prints.
+New runs cancel older viewer runs for the same branch. Only `main` uploads the export and deploys it to GitHub Pages.
 See [PUBLISHING.md](PUBLISHING.md) for local checks and repository setup.
 Before the first deployment, select **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 You can also enable Pages with the GitHub CLI:
@@ -225,7 +227,9 @@ You can also enable Pages with the GitHub CLI:
 gh api -X POST 'repos/<owner>/<repo>/pages' -f build_type=workflow
 ```
 
-The full FreeCAD build does not run in the push and pull-request CI. Pushing a `v*` tag from `main` runs `.github/workflows/release.yml`, which does the full rebuild and tolerance check on Linux, packages the passing reports, then publishes the release. Releases can also be made from a local build:
+Pushing a `v*` tag from `main` runs `.github/workflows/release.yml` and skips the viewer workflow.
+The release workflow caches pip downloads and FreeCAD, builds all deliverables, checks manufacturing reports and plywood tolerance, then publishes the release.
+It does not run the unit or browser tests. Releases can also be made from a local build:
 
 ```sh
 .venv/bin/python source/rebuild.py --freecad-python "$FREECAD_PYTHON" --tolerance

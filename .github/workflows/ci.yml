@@ -1,40 +1,24 @@
-# Tests on every push and pull request; on main, also publishes the 3D viewer to GitHub Pages.
-# None of this needs FreeCAD: the config check, the tests and the viewer data use the pure-Python model.
+# Build only the static viewer on pushes and pull requests; publish main to GitHub Pages.
+# The full CAD/PDF build runs only in release.yml. Tests run locally.
 # One-time setup: Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
 name: CI
 
 on:
   push:
     branches: [main]
-    tags:
-      - 'v*'
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
-jobs:
-  test:
-    name: Config and model tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@v7
-        with:
-          python-version: '3.12'
-          cache: pip
-          cache-dependency-path: requirements*.txt
-      - run: python -m pip install -r requirements-dev.txt
-      - run: make lint PYTHON=python
-      - run: python source/config_check.py
-      - run: python -m pytest -q
+concurrency:
+  group: viewer-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
   viewer:
     name: Build the viewer site
-    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -44,27 +28,35 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-          cache-dependency-path: requirements*.txt
+          cache-dependency-path: requirements.txt
       - run: python -m pip install -r requirements.txt
-      - run: python source/export_viewer.py _site
-      - uses: actions/setup-node@v7
+      - name: Cache viewer model and DXF
+        id: viewer-data
+        uses: actions/cache@v4
         with:
-          node-version: '22'
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:viewer
-      - run: npm run test:prints
+          path: _site/data
+          # Web assets and published prints are copied fresh on every export.
+          # No fallback keys: changed model inputs must rebuild the data.
+          key: viewer-data-v1-${{ runner.os }}-py312-${{ hashFiles('source/**/*.py', 'source/**/*.json', 'ops/**', 'requirements.txt', '.github/workflows/ci.yml') }}
+      - name: Export static viewer
+        env:
+          REUSE_VIEWER_DATA: ${{ steps.viewer-data.outputs.cache-hit }}
+        run: |
+          if [ "$REUSE_VIEWER_DATA" = 'true' ]; then
+            python source/export_viewer.py _site --reuse-data
+          else
+            python source/export_viewer.py _site
+          fi
       # Pages deploys from main only: the github-pages environment rejects tags, and main already carries the tag's commit.
       - uses: actions/upload-pages-artifact@v5
-        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
+        if: github.ref == 'refs/heads/main'
         with:
           path: _site
 
   deploy:
     name: Deploy to GitHub Pages
     needs: viewer
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       pages: write

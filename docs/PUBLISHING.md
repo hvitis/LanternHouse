@@ -113,7 +113,9 @@ The static asset URLs need no change.
 If the first deployment starts before Pages is configured, configure Pages and run **Actions → CI → Run workflow**.
 See the [GitHub Pages workflow documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages) for the publishing source and permissions.
 
-The workflow checks the configuration, Python tests and browser behavior on `main` and on pull requests.
+The workflow exports only the static viewer on `main` and on pull requests. Tests run locally with the commands above.
+It caches pip downloads and generated model/DXF data. Web assets and published prints are copied fresh for every export.
+Only the release workflow builds the complete CAD files, PDFs, and build kit.
 Only pushes to `main` and manual runs on `main` upload and deploy the Pages artifact.
 The deployment uses the `github-pages` environment and the built-in `GITHUB_TOKEN`. No personal token is needed.
 Only the deployment job receives `pages: write` and `id-token: write`.

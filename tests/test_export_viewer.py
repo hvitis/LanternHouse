@@ -91,3 +91,36 @@ def test_reexport_removes_stale_files(site):
     (site/'stale.txt').touch()
     export_viewer.export(site)
     assert not (site/'stale.txt').exists()
+
+
+def test_cached_data_skips_geometry_build_and_refreshes_assets(site, monkeypatch):
+    previous={p.name:p.read_bytes() for p in (site/'data').iterdir()}
+    def unexpected_build(*args):
+        pytest.fail('Cached viewer data must skip model building and DXF nesting')
+    monkeypatch.setattr(export_viewer,'model_data',unexpected_build)
+    monkeypatch.setattr(export_viewer,'viewer_cut_file',unexpected_build)
+    (site/'app.js').write_text('stale web asset')
+    (site/'prints/manifest.json').write_text('{}')
+    (site/'stale.txt').touch()
+
+    export_viewer.export(site,reuse_data=True)
+
+    assert {p.name:p.read_bytes() for p in (site/'data').iterdir()}==previous
+    assert (site/'app.js').read_bytes()==(export_viewer.VIEWER/'app.js').read_bytes()
+    assert json.loads((site/'prints/manifest.json').read_text())==json.loads((export_viewer.ROOT/'prints/manifest.json').read_text())
+    assert not (site/'stale.txt').exists()
+
+
+@pytest.mark.parametrize('missing',['parts.json','house.dxf','dxf-labels.json'])
+def test_incomplete_cache_rebuilds_all_data(site, monkeypatch, data, missing):
+    (site/'data'/missing).unlink()
+    calls=[]
+    def build():
+        calls.append('model')
+        return data
+    monkeypatch.setattr(export_viewer,'model_data',build)
+
+    export_viewer.export(site,reuse_data=True)
+
+    assert calls==['model']
+    assert all((site/'data'/name).is_file() for name in ('parts.json','house.dxf','dxf-labels.json'))
