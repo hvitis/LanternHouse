@@ -111,6 +111,37 @@ def test_veranda_headers_and_centered_crossframe_use_three_mm_plywood(data):
     assert across==pytest.approx(data['config']['veranda']['width']/2)
 
 
+def test_pointed_drawer_bottom_meets_both_front_panels(data):
+    from shapely.geometry import Polygon
+    parts=data['parts'];bottom=next(i for i in data['instances'] if i['part']=='DR1')
+    def plan(inst,x,y,t=0):
+        return [inst['origin'][k]+inst['u'][k]*x+inst['v'][k]*y+inst['w'][k]*t for k in (0,1)]
+    footprint=Polygon([plan(bottom,x,y) for x,y in parts['DR1']['outer']])
+    fronts=[i for i in data['instances'] if i['part']=='DR4']
+    assert len(fronts)==2
+    for front in fronts:
+        p=parts['DR4']
+        # Below the finger notch, the last 14 mm of each panel has no wood to glue to.
+        length=p['width']-14
+        face=Polygon([plan(front,x,0,t) for x,t in ((0,0),(length,0),(length,p['thickness']),(0,p['thickness']))])
+        assert footprint.intersection(face).area<1e-6,front['id']
+        contact=footprint.boundary.intersection(face.boundary.buffer(1e-6))
+        assert contact.length>50,front['id']
+
+
+def test_pointed_drawer_keeps_the_captive_stop_travel(data):
+    from shapely.geometry import Polygon
+    parts=data['parts'];bottom=next(i for i in data['instances'] if i['part']=='DR1')
+    stop=next(i for i in data['instances'] if i['part']=='DS1')
+    center=[stop['origin'][k]+sum(x*stop['u'][k]+y*stop['v'][k] for x,y in parts['DS1']['outer'])/len(parts['DS1']['outer']) for k in range(3)]
+    stop_x=sum((center[k]-bottom['origin'][k])*bottom['u'][k] for k in range(3))
+    slot=Polygon(parts['DR1']['cuts'][0]);left,_,right,_=slot.bounds
+    cfg=data['config']['plinth']['drawer'];end_gap=cfg['stop']['dowel']/2+cfg['stop']['margin']
+    assert right-stop_x==pytest.approx(end_gap)
+    assert stop_x-cfg['travel']-left==pytest.approx(end_gap)
+    assert Polygon(parts['DR1']['outer']).contains(slot)
+
+
 def test_room_dividers_clear_the_installed_rear_braces(cfg,data):
     from model import inside_polygon
     def local(inst,point):

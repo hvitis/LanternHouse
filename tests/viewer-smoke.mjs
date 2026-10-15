@@ -70,9 +70,8 @@ try {
     })));
     assert.ok(colours > 20, `${name}: the WebGL frame is blank (${colours} colours)`);
     await page.screenshot({path: resolve(screenshots, `${name}.png`)});
-    assert.equal(await page.locator('#showThickness').isChecked(), true);
-    assert.match(await page.locator('#thicknessLegend').innerText(), /3 mm · CUT_3MM/);
-    assert.match(await page.locator('#thicknessLegend').innerText(), /6 mm · CUT_6MM/);
+    assert.equal(await page.locator('#showThickness').isChecked(), false);
+    assert.equal(await page.locator('#thicknessLegend').isVisible(), false);
     async function checkMaterials(thickness) {
       const failures = await page.evaluate(async thickness => {
         const {meshes} = await import('./app.js');
@@ -83,6 +82,10 @@ try {
       }, thickness);
       assert.deepEqual(failures, [], `${name}: incorrect ${thickness ? 'DXF' : 'normal'} materials`);
     }
+    await checkMaterials(false);
+    await page.locator('#showThickness').check();
+    assert.match(await page.locator('#thicknessLegend').innerText(), /3 mm · CUT_3MM/);
+    assert.match(await page.locator('#thicknessLegend').innerText(), /6 mm · CUT_6MM/);
     await checkMaterials(true);
     await page.locator('#showThickness').uncheck();
     assert.equal(await page.locator('#thicknessLegend').isVisible(), false);

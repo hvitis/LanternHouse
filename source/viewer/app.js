@@ -184,7 +184,7 @@ for(const h of hardwareObjects)if(h.userData.owners?.some(id=>atticIds.has(id)))
 
 // ---------- state, animation and controls ----------
 const travel=derived.drawer.travel;
-const state={walls:0,doors:0,drawer:0,lift:0,roof:'on',explode:0,cut:total+10,porch:true,furniture:true,figures:true,hardware:false,edges:true,xray:false,dims:true,highlight:false,thickness:true};
+const state={walls:0,doors:0,drawer:0,lift:0,roof:'on',explode:0,cut:total+10,porch:true,furniture:true,figures:true,hardware:false,edges:true,xray:false,dims:true,highlight:false,thickness:false};
 const target={walls:0,doors:0,drawer:0,lift:0,explode:0};
 const $=id=>document.getElementById(id);
 $('drawer').step='any';$('drawer').max=travel;$('cut').step='any';$('cut').max=total+10;$('cut').value=total+10;

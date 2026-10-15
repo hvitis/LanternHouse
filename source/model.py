@@ -147,7 +147,11 @@ def build():
     # Captive stop: a hardwood dowel pushed up through B01 after the drawer is in rides in a slot in the drawer
     # bottom and stops it at the configured travel. The slot also keeps the drawer from wandering sideways.
     ST=DR['stop'];L1=front-back-db;sr=ST['dowel']/2;sm=ST['margin'];sx1=L1-12;sx0=sx1-(DR['travel']+2*sr+2*sm)
-    add('DR1','Drawer bottom with stop slot',T['furniture'],rect(L1,2*hw-2*db),cuts=[cutrect(sx0,hw-db-ST['slot']/2,sx1-sx0,ST['slot'])],category='Structure',note=f'Slides directly on B01: wax the underside. The DS1 dowel rides in the slot and stops the drawer at {DR["travel"]:g} mm.')
+    # Follow both DR4 inner faces with a shallow point, so the bottom has two matching glue edges.
+    # Keep the slot referenced to the original straight box, preserving the dowel position and travel.
+    bottom_half=hw-db;bottom_edge=rho_face(bottom_half)-back-db;bottom_tip=rho_face(0)-back-db
+    bottom=[[0,0],[bottom_edge,0],[bottom_tip,bottom_half],[bottom_edge,2*bottom_half],[0,2*bottom_half]]
+    add('DR1','Pointed drawer bottom with stop slot',T['furniture'],bottom,cuts=[cutrect(sx0,hw-db-ST['slot']/2,sx1-sx0,ST['slot'])],category='Structure',note=f'Glue the two angled front edges to the inner faces of the DR4 panels. Keep the finger notches clear. Slides directly on B01: wax the underside. The DS1 dowel rides in the slot and stops the drawer at {DR["travel"]:g} mm.')
     for w in (hw,-hw):vertical_plate('DR2',dpt(back,w),dpt(front,w),bt,dpt(0,0),'Drawer')
     vertical_plate('DR3',dpt(back,-hw+db),dpt(back,hw-db),bt,dpt(0,0),'Drawer')
     bo=dpt(back+db,-hw+db);put('DR1',(bo[0],bo[1],bt),(e_out[0],e_out[1],0),(e_side[0],e_side[1],0),'Drawer')
@@ -492,7 +496,8 @@ def build():
     dim(f'{finial_height:g} finial',(sx,sy,roof_peak),(sx,sy,total))
     mark(f'Eave Z{roof_z:g}',(sx+10,sy,roof_z));mark(f'Top Z{total:g}',(sx+10,sy,total))
     dim(f'Drawer pulls out {travel:g}',(*dpt(r0,hw+30),bt),(*dpt(r0+travel,hw+30),bt),[((*dpt(r0,0),bt),(*dpt(r0,hw+30),bt))])
-    mark(f'Hidden drawer {2*hw:g} x {front-back:.0f} x {dh_:g} (inside {2*hw-2*db:g} x {front-back-db:.0f} x {dh_-4:g})',(*dpt((front+back)/2,0),bt+dh_+4),'Drawer')
+    drawer_depth=rho_face(0)-back
+    mark(f'Hidden drawer {2*hw:g} x {drawer_depth:.0f} x {dh_:g} (inside {2*hw-2*db:g} x {drawer_depth-db:.0f} x {dh_-4:g})',(*dpt((rho_face(0)+back)/2,0),bt+dh_+4),'Drawer')
     def vp(x,y,z):return (po[0]+pu[0]*x+pv[0]*y,po[1]+pu[1]*x+pv[1]*y,z)
     dim(f'Deck Z{deck_top:g}',vp(ver['width']+20,0,bt),vp(ver['width']+20,0,deck_top),[(vp(ver['width'],0,deck_top),vp(ver['width']+20,0,deck_top))])
     dim(f'Veranda {ver["width"]:g}',vp(0,-20,deck_top),vp(ver['width'],-20,deck_top),[(vp(0,0,deck_top),vp(0,-20,deck_top)),(vp(ver['width'],0,deck_top),vp(ver['width'],-20,deck_top))])
@@ -530,7 +535,7 @@ def build():
     for pid,p in PARTS.items():
         if pid in new:p['revision']='new'
         elif pid in changed:p['revision']='changed'
-    derived={'views':views,'doorways':doorways,'figure_fit':fit,'dimensions':dims,'changes':changes,'figures':list(FIGURES),'drawer':{'direction':list(e_out),'side':side,'angle':DR['direction'],'travel':travel,'width':2*hw,'depth':front-back,'height':dh_},'plinth_height':PL['height'],'ground_floor':G,'total_height':total,'wall_width':width,'floor_radius':floor_r,'roof_slant':slant,'roof_panel_width':rw,'floor_tops':tops,'clear_room_height':pitch-base,'hinge_axes':{'WallRight':[hinge_x,0],'WallLeft':[-hinge_x,0]},'roof_eave':roof_z,'windows_per_floor':windows,'veranda_size':[ver['width'],ver['depth']],'braces':[list(s) for s in braces],'veranda_facet':ver['facet'],'base_thickness':bt,'facets':[{'facet':k+1,'part':w['part'],'id':w['id'],'group':w['group']} for k,w in enumerate(WALLS)],'doors':doors,'reference_style':f'original/ photos: red hipped veranda on {ver["facet"]} ({facet_angle(ver["facet"])} degrees), white shaped columns and railings, gabled main entrance on {doors["main"]}'}
+    derived={'views':views,'doorways':doorways,'figure_fit':fit,'dimensions':dims,'changes':changes,'figures':list(FIGURES),'drawer':{'direction':list(e_out),'side':side,'angle':DR['direction'],'travel':travel,'width':2*hw,'depth':drawer_depth,'height':dh_},'plinth_height':PL['height'],'ground_floor':G,'total_height':total,'wall_width':width,'floor_radius':floor_r,'roof_slant':slant,'roof_panel_width':rw,'floor_tops':tops,'clear_room_height':pitch-base,'hinge_axes':{'WallRight':[hinge_x,0],'WallLeft':[-hinge_x,0]},'roof_eave':roof_z,'windows_per_floor':windows,'veranda_size':[ver['width'],ver['depth']],'braces':[list(s) for s in braces],'veranda_facet':ver['facet'],'base_thickness':bt,'facets':[{'facet':k+1,'part':w['part'],'id':w['id'],'group':w['group']} for k,w in enumerate(WALLS)],'doors':doors,'reference_style':f'original/ photos: red hipped veranda on {ver["facet"]} ({facet_angle(ver["facet"])} degrees), white shaped columns and railings, gabled main entrance on {doors["main"]}'}
     data={'config':CFG,'parts':PARTS,'instances':INSTANCES,'hardware':HARDWARE,'fasteners':FASTENERS,'joints':JOINTS,'derived':derived,'clay':figs}
     from fabrication import redesign_panels
     redesign_panels(data)
