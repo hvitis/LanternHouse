@@ -425,6 +425,23 @@ SUPPLIES_EXTRA_PL = {
 }
 
 
+PARTS_NOTE_PL = {
+ 'A04': 'Cztery klocki 24 × 24 × 12 mm. Przyklej do F00 i słupka ramy; wkręt SC3 wprowadzany od spodu F00.',
+ 'DS1': 'Kołek D6 mm z twardego drewna (dł. 8.5 mm). Wklej od spodu przez B01 w rowek dna szuflady (ogranicza wysuw do 200 mm).',
+ 'GZ1': 'Szklenie z arkusza PET 0.5 mm wycięte nożem; wklej od wewnątrz na szprosach przezroczystym klejem.',
+ 'A02': 'Klocki 16 × 28 × 8 mm z twardego drewna. Przyklej wewnątrz ściany, po związaniu nawierć otwory pilotujące pod wkręty HG1.',
+ 'A06': '12 sztywnych podkładek 0.9 mm (tektura, fornir lub tworzywo), po jednej pod każde skrzydełko zawiasu ściany HG1.',
+ 'MC1': 'Klocki 24 × 22 × 12 mm z twardego drewna wklejane wewnątrz otwieranych ścian. Magnes D8×3 całkowicie zamknięty i zakołkowany.',
+ 'GP1': 'Słupki 20 × 20 mm na płycie B01 (styk otwartych ścian pod kątem 100°). Zakołkowany magnes D8×3 i odbojnik filcowy.',
+ 'A03': 'Listwy 8 × 12 × 80 mm z twardego drewna wzmacniające zawiasy drzwi HG2 (po dwie listwy na drzwi).',
+ 'GZ2': 'Szklenie z przezroczystego PET 0.5 mm wklejane od wewnątrz frontu lukarny.',
+ 'FN01': 'Toczona kula bukowa D35 mm ze spłaszczeniem; wklejona na kołek D6 w wierzchołek stożka dachu. Bezpieczne obłe zwieńczenie.',
+ 'R04': 'Trójkątne klocki z litego drewna 12 mm. Przyklej podstawę do pierścienia dachu, a skos do poszycia dachu.',
+ 'R05': 'Tymczasowe wzorniki z tektury 2 mm do kontroli kąta pochylenia połaci dachu przed sklejeniem.',
+ 'AB1': 'Klocek kotwienia wklejany wewnątrz stałej ściany tylnej pod wkręt paska zabezpieczającego przed przewróceniem.',
+}
+
+
 def manifest(data):
     """A validated, deterministic browser contract, generated from the current model."""
     import fnmatch
@@ -462,15 +479,20 @@ def manifest(data):
     for pid,p in parts.items():
         if p.get('render_only') or p['category'] not in ('Purchased wood','Purchased packing'):continue
         name_pl = part_name_pl(pid)
+        w = round(p['width'], 1)
+        h = round(p['height'], 1)
+        t = round(p['thickness'], 1)
         supplies.append(dict(
             id='material-'+pid,
             group='Materials to cut',
             group_pl='Materiały do cięcia',
-            description=f"{pid} · {p['name']} · {p['width']:g} × {p['height']:g} × {p['thickness']:g} mm",
-            description_pl=f"{pid} · {name_pl} · {p['width']:g} × {p['height']:g} × {p['thickness']:g} mm",
+            description=f"{pid} · {p['name']} · {w:g} × {h:g} × {t:g} mm",
+            description_pl=f"{pid} · {name_pl} · {w:g} × {h:g} × {t:g} mm",
             quantity=str(p['quantity']),
+            quantity_pl=f"{p['quantity']} szt.",
             purchase='',
             use=p.get('note',''),
+            use_pl=PARTS_NOTE_PL.get(pid, p.get('note','')),
             optional=p.get('optional',False)
         ))
     extra=[

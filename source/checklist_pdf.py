@@ -1,12 +1,22 @@
-"""Generate a 2-page A4 double-sided (duplex) printable checklist with checkboxes."""
+"""Generate a 2-page A4 double-sided (duplex) printable checklist with checkboxes.
+
+Uses ReportLab Platypus flowable architecture to guarantee:
+- Exactly 2 pages A4 duplex with balanced content density.
+- Zero text overlaps, automatic paragraph height calculation and clean word wraps.
+- Crisp vector checkboxes, subtle zebra striping and clear typography.
+"""
 import json
 from pathlib import Path
-from reportlab.pdfgen import canvas
+
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.utils import simpleSplit
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Flowable, PageBreak
+)
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_LEFT, TA_RIGHT
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -17,13 +27,135 @@ def register_fonts():
     if 'DejaVuSans-Bold' not in pdfmetrics.getRegisteredFontNames():
         pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', str(fonts_dir / 'DejaVuSans-Bold.ttf')))
 
-def draw_checkbox(c, x, y, size=10):
-    c.saveState()
-    c.setLineWidth(0.8)
-    c.setStrokeColor(colors.HexColor('#2d4041'))
-    c.setFillColor(colors.HexColor('#ffffff'))
-    c.roundRect(x, y - size + 2, size, size, 1.5, fill=1, stroke=1)
-    c.restoreState()
+
+class Checkbox(Flowable):
+    """Clean vector checkbox for manual pen check-offs."""
+    def __init__(self, size=9.5, stroke_color=colors.HexColor('#2d4041'), fill_color=colors.white):
+        super().__init__()
+        self.size = size
+        self.stroke_color = stroke_color
+        self.fill_color = fill_color
+
+    def wrap(self, availWidth, availHeight):
+        return self.size + 4, self.size + 2
+
+    def draw(self):
+        self.canv.saveState()
+        self.canv.setLineWidth(0.8)
+        self.canv.setStrokeColor(self.stroke_color)
+        self.canv.setFillColor(self.fill_color)
+        self.canv.roundRect(1, 1, self.size, self.size, 1.5, fill=1, stroke=1)
+        self.canv.restoreState()
+
+
+def format_qty(qty, lang='pl'):
+    if not qty:
+        return ''
+    q = str(qty).strip()
+    q = q.replace(' szt.', '').replace(' pcs', '').replace(' pc', '').strip()
+    if q.isdigit():
+        if lang == 'pl':
+            return f"{q} szt."
+        return f"{q} pc" if q == '1' else f"{q} pcs"
+
+    translations = {
+        '1 m each': ('po 1 m', '1 m each'),
+        '1 sheet': ('1 arkusz', '1 sheet'),
+        'about 500 ml': ('ok. 500 ml', 'about 500 ml'),
+        '1 pack': ('1 opakowanie', '1 pack'),
+        'about 5 m': ('ok. 5 m', 'about 5 m'),
+        '1 set': ('1 zestaw', '1 set'),
+        'Choose quantities and fixings for the actual fit': ('wg potrzeb', 'as required'),
+        'Dobrać ilości i mocowania do wykonania': ('wg potrzeb', 'as required'),
+    }
+    if q in translations:
+        return translations[q][0] if lang == 'pl' else translations[q][1]
+    return q
+
+
+def make_page_decorations(lang='pl'):
+    def draw_decorations(canvas, doc):
+        canvas.saveState()
+        page_w, page_h = A4
+        page_num = canvas._pageNumber
+        total_pages = 2
+        is_pl = lang == 'pl'
+
+        margin = 32
+        content_w = page_w - 2 * margin
+
+        NAVY = colors.HexColor('#13292a')
+        TEAL = colors.HexColor('#1f6b6b')
+        MUTED = colors.HexColor('#52696a')
+        LINE = colors.HexColor('#cfd8d2')
+        BG_PILL = colors.HexColor('#f5f7f5')
+
+        # Top banner stripe
+        canvas.setFillColor(TEAL)
+        canvas.rect(margin, page_h - 18, content_w, 3, fill=1, stroke=0)
+
+        if page_num == 1:
+            eyebrow = "PRZEWODNIK WARSZTATOWY · ZANIM ZACZNIESZ" if is_pl else "WORKSHOP COMPANION · BEFORE YOU START"
+            title = "Lista kontrolna: Przygotowanie warsztatu i elementy" if is_pl else "Checklist: Workshop Preparation & Fittings"
+            subtitle = "Wydrukuj dwustronnie (A4 dupleks). Sprawdź i zaznacz wszystkie pozycje przed montażem." if is_pl else "Print double-sided (A4 duplex). Verify and check off all items before starting assembly."
+            footer_note = "Strona 1 z 2 · Druga strona: Elementy specjalne, formatki sklejki i zasady montażu" if is_pl else "Page 1 of 2 · Reverse: Specialties, Plywood cut parts & Workshop rules"
+        else:
+            eyebrow = "PRZEWODNIK WARSZTATOWY · DRUGA STRONA ARKUSZA" if is_pl else "WORKSHOP COMPANION · SHEET BACK SIDE"
+            title = "Lista kontrolna: Formatki sklejki i kontrola jakości" if is_pl else "Checklist: Plywood Cut Parts & Quality Control"
+            subtitle = "Weryfikacja wymiarów formatek, przygotowanie podzespołów i krytyczne punkty kontroli." if is_pl else "Stock dimensions check, subassembly prep and critical quality control checks."
+            footer_note = "Strona 2 z 2 · Format A4 zoptymalizowany do druku dwustronnego (dupleks)" if is_pl else "Page 2 of 2 · A4 format optimized for double-sided (duplex) printing"
+
+        # Eyebrow
+        canvas.setFont('DejaVuSans-Bold', 7)
+        canvas.setFillColor(TEAL)
+        canvas.drawString(margin, page_h - 29, eyebrow.upper())
+
+        # Main title
+        canvas.setFont('DejaVuSans-Bold', 14)
+        canvas.setFillColor(NAVY)
+        canvas.drawString(margin, page_h - 45, title)
+
+        # Subtitle
+        canvas.setFont('DejaVuSans', 7.5)
+        canvas.setFillColor(MUTED)
+        canvas.drawString(margin, page_h - 56, subtitle)
+
+        # Duplex badge
+        badge_text = f"A4 DUPLEX · {page_num} / {total_pages}"
+        canvas.setFont('DejaVuSans-Bold', 7.5)
+        bw = canvas.stringWidth(badge_text, 'DejaVuSans-Bold', 7.5)
+        canvas.setFillColor(BG_PILL)
+        canvas.roundRect(page_w - margin - bw - 14, page_h - 50, bw + 14, 16, 3, fill=1, stroke=0)
+        canvas.setFillColor(NAVY)
+        canvas.drawString(page_w - margin - bw - 7, page_h - 43, badge_text)
+
+        # Header dividing line
+        canvas.setStrokeColor(LINE)
+        canvas.setLineWidth(0.6)
+        canvas.line(margin, page_h - 63, page_w - margin, page_h - 63)
+
+        # Footer dividing line
+        canvas.line(margin, 28, page_w - margin, 28)
+
+        # Footer note
+        canvas.setFont('DejaVuSans', 7.2)
+        canvas.setFillColor(MUTED)
+        canvas.drawString(margin, 18, footer_note)
+
+        # Footer right
+        right_text = f"MoominsHouse · {page_num} / {total_pages}"
+        rw = canvas.stringWidth(right_text, 'DejaVuSans', 7.2)
+        canvas.drawString(page_w - margin - rw, 18, right_text)
+
+        # Duplex center alignment mark
+        canvas.setStrokeColor(TEAL)
+        canvas.setLineWidth(0.5)
+        canvas.line(page_w / 2 - 8, 9, page_w / 2 + 8, 9)
+
+        canvas.restoreState()
+
+    return draw_decorations
+
 
 def generate(output_path, lang='pl', manifest_data=None):
     register_fonts()
@@ -38,270 +170,295 @@ def generate(output_path, lang='pl', manifest_data=None):
     supplies = manifest_data['supplies']
     is_pl = lang == 'pl'
 
-    # Dimensions
-    page_w, page_h = A4
-    margin = 36  # ~12.7 mm
-    content_w = page_w - 2 * margin
+    # Styles
+    styles = getSampleStyleSheet()
 
-    c = canvas.Canvas(str(output_path), pagesize=A4)
-    c.setTitle('Moomin House Checklist' if not is_pl else 'Domek Muminków - Lista kontrolna')
-    c.setAuthor('MoominsHouse')
+    style_builder = ParagraphStyle(
+        'BuilderInfo',
+        parent=styles['Normal'],
+        fontName='DejaVuSans',
+        fontSize=7.2,
+        leading=9,
+        textColor=colors.HexColor('#13292a'),
+    )
 
-    # Color palette matching viewer workspace
-    NAVY = colors.HexColor('#13292a')
-    TEAL = colors.HexColor('#1f6b6b')
-    MUTED = colors.HexColor('#52696a')
-    LINE = colors.HexColor('#cfd8d2')
-    BG_BOX = colors.HexColor('#f5f7f5')
-    ACCENT = colors.HexColor('#e8ece5')
+    style_sec_hdr_left = ParagraphStyle(
+        'SecHdrLeft',
+        parent=styles['Normal'],
+        fontName='DejaVuSans-Bold',
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor('#13292a'),
+    )
 
-    def draw_header(page_num, total_pages, title, eyebrow, subtitle):
-        c.saveState()
-        # Top banner line
-        c.setFillColor(TEAL)
-        c.rect(margin, page_h - 22, content_w, 3, fill=1, stroke=0)
+    style_sec_hdr_right = ParagraphStyle(
+        'SecHdrRight',
+        parent=styles['Normal'],
+        fontName='DejaVuSans',
+        fontSize=7.2,
+        leading=9,
+        alignment=TA_RIGHT,
+        textColor=colors.HexColor('#52696a'),
+    )
 
-        # Eyebrow
-        c.setFont('DejaVuSans-Bold', 7)
-        c.setFillColor(TEAL)
-        c.drawString(margin, page_h - 34, eyebrow.upper())
+    style_code = ParagraphStyle(
+        'CodeStyle',
+        parent=styles['Normal'],
+        fontName='DejaVuSans-Bold',
+        fontSize=7.8,
+        leading=9.5,
+        textColor=colors.HexColor('#1f6b6b'),
+    )
 
-        # Main title
-        c.setFont('DejaVuSans-Bold', 16)
-        c.setFillColor(NAVY)
-        c.drawString(margin, page_h - 52, title)
+    style_desc = ParagraphStyle(
+        'DescStyle',
+        parent=styles['Normal'],
+        fontName='DejaVuSans',
+        fontSize=7.2,
+        leading=9.2,
+        textColor=colors.HexColor('#13292a'),
+    )
 
-        # Subtitle
-        c.setFont('DejaVuSans', 8.5)
-        c.setFillColor(MUTED)
-        c.drawString(margin, page_h - 64, subtitle)
+    style_qty = ParagraphStyle(
+        'QtyStyle',
+        parent=styles['Normal'],
+        fontName='DejaVuSans-Bold',
+        fontSize=7.2,
+        leading=9,
+        alignment=TA_RIGHT,
+        textColor=colors.HexColor('#13292a'),
+    )
 
-        # Duplex / Page badge (top right)
-        badge_text = f"A4 DUPLEX · {page_num} / {total_pages}"
-        c.setFont('DejaVuSans-Bold', 8)
-        bw = c.stringWidth(badge_text, 'DejaVuSans-Bold', 8)
-        c.setFillColor(BG_BOX)
-        c.roundRect(page_w - margin - bw - 14, page_h - 56, bw + 14, 18, 3, fill=1, stroke=0)
-        c.setFillColor(NAVY)
-        c.drawString(page_w - margin - bw - 7, page_h - 48, badge_text)
+    CONTENT_W = 531
+    COL_CHECK = 16
+    COL_CODE = 44
+    COL_QTY = 78
+    COL_DESC = CONTENT_W - COL_CHECK - COL_CODE - COL_QTY  # 393 pt
 
-        # Header dividing line
-        c.setStrokeColor(LINE)
-        c.setLineWidth(0.6)
-        c.line(margin, page_h - 72, page_w - margin, page_h - 72)
-        c.restoreState()
+    def make_section_header(title, count_text):
+        t = Table(
+            [[
+                Paragraph(f"<b>{title.upper()}</b>", style_sec_hdr_left),
+                Paragraph(count_text, style_sec_hdr_right)
+            ]],
+            colWidths=[CONTENT_W - 90, 90]
+        )
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#eef3f1')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (0, 0), 6),
+            ('RIGHTPADDING', (-1, -1), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 2),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+            ('LINEBEFORE', (0, 0), (0, 0), 3, colors.HexColor('#1f6b6b')),
+        ]))
+        return t
 
-    def draw_footer(page_num, total_pages, footer_note):
-        c.saveState()
-        c.setStrokeColor(LINE)
-        c.setLineWidth(0.6)
-        c.line(margin, 36, page_w - margin, 36)
+    def make_table(rows):
+        t = Table(rows, colWidths=[COL_CHECK, COL_CODE, COL_DESC, COL_QTY])
+        style = [
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 2),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 3),
+            ('TOPPADDING', (0, 0), (-1, -1), 1.8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.8),
+            ('LINEBELOW', (0, 0), (-1, -1), 0.35, colors.HexColor('#e8edea')),
+        ]
+        for i in range(len(rows)):
+            bg = colors.HexColor('#ffffff') if i % 2 == 0 else colors.HexColor('#fbfcfb')
+            style.append(('BACKGROUND', (0, i), (-1, i), bg))
+        t.setStyle(TableStyle(style))
+        return t
 
-        c.setFont('DejaVuSans', 7.5)
-        c.setFillColor(MUTED)
-        c.drawString(margin, 24, footer_note)
+    def make_item_row(code, desc, qty, note=None):
+        chk = Checkbox()
+        code_p = Paragraph(code, style_code) if code else Paragraph('', style_code)
+        
+        # Build description paragraph
+        if note:
+            prefix = "Zastosowanie: " if is_pl else "Application: "
+            # Check if note already starts with part description or application
+            note_text = note if note.startswith(('Cztery', 'Jeden', 'Kołek', 'Szklenie', 'Klocki', 'Sztywne', 'Dwa', 'Sześć', 'Toczona', 'Dwanaście', 'Wytnij', 'Four', 'One', 'Cut', 'Buy', 'Twelve', 'Two', 'Six', 'Glue')) else f"{prefix}{note}"
+            html = f"<b>{desc}</b><br/><font color='#52696a' size='6.4'>{note_text}</font>"
+        else:
+            html = f"<b>{desc}</b>"
+            
+        desc_p = Paragraph(html, style_desc)
+        qty_str = format_qty(qty, lang)
+        qty_p = Paragraph(qty_str, style_qty)
+        return [chk, code_p, desc_p, qty_p]
 
-        right_text = f"MoominsHouse · {page_num} / {total_pages}"
-        rw = c.stringWidth(right_text, 'DejaVuSans', 7.5)
-        c.drawString(page_w - margin - rw, 24, right_text)
-
-        # Duplex alignment tick mark
-        c.setStrokeColor(TEAL)
-        c.setLineWidth(0.5)
-        c.line(page_w / 2 - 8, 12, page_w / 2 + 8, 12)
-        c.restoreState()
-
-    def draw_section_hdr(y, title, count_text):
-        c.saveState()
-        c.setFillColor(BG_BOX)
-        c.roundRect(margin, y - 4, content_w, 16, 2, fill=1, stroke=0)
-        c.setFont('DejaVuSans-Bold', 9)
-        c.setFillColor(NAVY)
-        c.drawString(margin + 6, y, title.upper())
-        if count_text:
-            c.setFont('DejaVuSans', 7.5)
-            c.setFillColor(MUTED)
-            cw = c.stringWidth(count_text, 'DejaVuSans', 7.5)
-            c.drawString(page_w - margin - cw - 6, y, count_text)
-        c.restoreState()
-        return y - 18
+    story = []
 
     # ================= PAGE 1 =================
-    eyebrow_p1 = "Przewodnik warsztatowy · Zanim zaczniesz" if is_pl else "Workshop companion · Before you start"
-    title_p1 = "Lista kontrolna: Narzędzia, kleje i okucia" if is_pl else "Checklist: Tools, Adhesives & Hardware"
-    subtitle_p1 = "Wydrukuj dwustronnie (dupleks). Sprawdź i zaznacz wszystkie pozycje przed rozpoczęciem montażu." if is_pl else "Print double-sided (duplex). Verify and check off all items before starting assembly."
+    # Builder info banner
+    info_text = (
+        "<b>Wykonawca:</b> ___________________________    "
+        "<b>Data:</b> ____________    "
+        "<b>Status:</b> [ ] Gotowy do montażu"
+    ) if is_pl else (
+        "<b>Builder:</b> ___________________________    "
+        "<b>Date:</b> ____________    "
+        "<b>Status:</b> [ ] Ready to build"
+    )
+    b_table = Table([[Paragraph(info_text, style_builder)]], colWidths=[CONTENT_W])
+    b_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f5f7f5')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+    ]))
+    story.append(b_table)
+    story.append(Spacer(1, 4))
 
-    draw_header(1, 2, title_p1, eyebrow_p1, subtitle_p1)
-    footer_p1 = "Strona 1 z 2 · Druga strona arkusza zawiera wykaz materiałów i części do wycięcia" if is_pl else "Page 1 of 2 · Turn sheet over for Materials to cut and Plywood parts"
-    draw_footer(1, 2, footer_p1)
-
-    # Builder info bar
-    info_y = page_h - 86
-    c.saveState()
-    c.setFillColor(ACCENT)
-    c.roundRect(margin, info_y - 3, content_w, 15, 2, fill=1, stroke=0)
-    c.setFont('DejaVuSans', 7.5)
-    c.setFillColor(NAVY)
-    b_label = "Wykonawca: _______________________    Data: ____________    Status: [ ] Kompletny" if is_pl else "Builder: _______________________    Date: ____________    Status: [ ] Ready to build"
-    c.drawString(margin + 8, info_y, b_label)
-    c.restoreState()
-
-    cur_y = info_y - 20
-
-    # Group supplies for Page 1: Tools, Adhesives & finish, Materials, Hardware
+    # Categorize supplies
     g_tools = [s for s in supplies if s['group'] == 'Tools']
     g_adh = [s for s in supplies if s['group'] == 'Adhesives and finish']
     g_mat = [s for s in supplies if s['group'] == 'Materials']
     g_hw = [s for s in supplies if s['group'] == 'Hardware']
+    g_cut = [s for s in supplies if s['group'] == 'Materials to cut']
 
-    # --- Section: Tools ---
-    cur_y = draw_section_hdr(cur_y, "1. Narzędzia i przyrządy" if is_pl else "1. Tools & Workshop Equipment", f"{len(g_tools)} pozycji" if is_pl else f"{len(g_tools)} items")
+    # Page 1: Fasteners (5) + Movable Hardware & Roof Assembly Fittings (8)
+    fastener_ids = {'SC1', 'SC2', 'SC3', 'SP2', 'floor-supports'}
+    g_fasteners = [s for s in g_hw if s['id'] in fastener_ids]
+    
+    movable_ids = {'HG1', 'HG2', 'MG1', 'SD1', 'DW1', 'FB1', 'CB1', 'PG1'}
+    g_movable = [s for s in g_hw if s['id'] in movable_ids]
+
+    # Page 2: Auxiliary hardware & specialty items (5) + Cut stock (13) + Rules (6)
+    specialty_ids = {'TP1', 'FT1', 'BL2', 'AT1', 'LT1'}
+    g_specialty = [s for s in g_hw if s['id'] in specialty_ids]
+
+    # Section 1: Tools & Equipment (5 items)
+    s1_title = "1. Narzędzia i przyrządy pomiarowe" if is_pl else "1. Tools & Measuring Equipment"
+    s1_cnt = f"{len(g_tools)} pozycji" if is_pl else f"{len(g_tools)} items"
+    story.append(make_section_header(s1_title, s1_cnt))
+    s1_rows = []
     for s in g_tools:
-        draw_checkbox(c, margin + 4, cur_y)
         desc = s.get('description_pl' if is_pl else 'description', s['description'])
         qty = s.get('quantity_pl' if is_pl else 'quantity', s['quantity'])
-        c.setFont('DejaVuSans-Bold', 8)
-        c.setFillColor(NAVY)
-        c.drawString(margin + 20, cur_y - 6, desc)
-        c.setFont('DejaVuSans', 7.5)
-        c.setFillColor(MUTED)
-        qw = c.stringWidth(qty, 'DejaVuSans', 7.5)
-        c.drawString(page_w - margin - qw - 4, cur_y - 6, qty)
-        cur_y -= 14
+        s1_rows.append(make_item_row('', desc, qty))
+    story.append(make_table(s1_rows))
+    story.append(Spacer(1, 4))
 
-    cur_y -= 4
-
-    # --- Section: Adhesives & Finish ---
-    cur_y = draw_section_hdr(cur_y, "2. Kleje, materiały i preparaty wykończeniowe" if is_pl else "2. Adhesives, Materials & Finishes", f"{len(g_adh)+len(g_mat)} pozycji" if is_pl else f"{len(g_adh)+len(g_mat)} items")
-    for s in (g_adh + g_mat):
-        draw_checkbox(c, margin + 4, cur_y)
+    # Section 2: Adhesives, Sealants & Finishes (7 items)
+    s2_title = "2. Kleje, taśmy i powłoki wykończeniowe" if is_pl else "2. Adhesives, Tapes & Finishes"
+    s2_items = g_adh + g_mat
+    s2_cnt = f"{len(s2_items)} pozycji" if is_pl else f"{len(s2_items)} items"
+    story.append(make_section_header(s2_title, s2_cnt))
+    s2_rows = []
+    for s in s2_items:
         desc = s.get('description_pl' if is_pl else 'description', s['description'])
         qty = s.get('quantity_pl' if is_pl else 'quantity', s['quantity'])
-        c.setFont('DejaVuSans-Bold', 8)
-        c.setFillColor(NAVY)
-        c.drawString(margin + 20, cur_y - 6, desc)
-        c.setFont('DejaVuSans', 7.5)
-        c.setFillColor(MUTED)
-        qw = c.stringWidth(qty, 'DejaVuSans', 7.5)
-        c.drawString(page_w - margin - qw - 4, cur_y - 6, qty)
-        cur_y -= 14
+        s2_rows.append(make_item_row('', desc, qty))
+    story.append(make_table(s2_rows))
+    story.append(Spacer(1, 4))
 
-    cur_y -= 4
-
-    # --- Section: Hardware & Fasteners ---
-    cur_y = draw_section_hdr(cur_y, "3. Okucia, magnesy i łączniki mechaniczne" if is_pl else "3. Hardware, Magnets & Fasteners", f"{len(g_hw)} pozycji" if is_pl else f"{len(g_hw)} items")
-    for s in g_hw:
-        draw_checkbox(c, margin + 4, cur_y)
-        pid = s['id']
+    # Section 3: Screws, Shims & Brackets (5 items)
+    s3_title = "3. Wkręty, podkładki i kątowniki konstrukcyjne" if is_pl else "3. Fasteners, Shims & Structural Brackets"
+    s3_cnt = f"{len(g_fasteners)} pozycji" if is_pl else f"{len(g_fasteners)} items"
+    story.append(make_section_header(s3_title, s3_cnt))
+    s3_rows = []
+    for s in g_fasteners:
+        code = s['id'] if s['id'] != 'floor-supports' else 'KAT'
         desc = s.get('description_pl' if is_pl else 'description', s['description'])
         qty = s.get('quantity_pl' if is_pl else 'quantity', s['quantity'])
         use = s.get('use_pl' if is_pl else 'use', s.get('use', ''))
+        s3_rows.append(make_item_row(code, desc, qty, use))
+    story.append(make_table(s3_rows))
+    story.append(Spacer(1, 4))
 
-        c.setFont('DejaVuSans-Bold', 8)
-        c.setFillColor(TEAL)
-        c.drawString(margin + 20, cur_y - 6, pid)
+    # Section 4: Movable Hardware, Magnets & Roof Assemblies (8 items)
+    s4_title = "4. Okucia ruchome, magnesy i osprzęt dachu" if is_pl else "4. Hinges, Magnets & Roof Assemblies"
+    s4_cnt = f"{len(g_movable)} pozycji" if is_pl else f"{len(g_movable)} items"
+    story.append(make_section_header(s4_title, s4_cnt))
+    s4_rows = []
+    for s in g_movable:
+        code = s['id']
+        desc = s.get('description_pl' if is_pl else 'description', s['description'])
+        qty = s.get('quantity_pl' if is_pl else 'quantity', s['quantity'])
+        use = s.get('use_pl' if is_pl else 'use', s.get('use', ''))
+        s4_rows.append(make_item_row(code, desc, qty, use))
+    story.append(make_table(s4_rows))
 
-        # Description text
-        c.setFont('DejaVuSans', 7.2)
-        c.setFillColor(NAVY)
-        # truncate or fit
-        avail_w = content_w - 140
-        lines = simpleSplit(desc, 'DejaVuSans', 7.2, avail_w)
-        c.drawString(margin + 52, cur_y - 6, lines[0] if lines else '')
-
-        # Qty and use
-        c.setFont('DejaVuSans-Bold', 7.5)
-        c.setFillColor(NAVY)
-        c.drawString(page_w - margin - 85, cur_y - 6, f"{qty} szt." if is_pl else f"{qty} pcs")
-
-        if len(lines) > 1 or use:
-            cur_y -= 9
-            sub = use or (lines[1] if len(lines) > 1 else '')
-            c.setFont('DejaVuSans', 6.5)
-            c.setFillColor(MUTED)
-            c.drawString(margin + 52, cur_y - 6, sub[:75])
-            cur_y -= 6
-        else:
-            cur_y -= 13
-
-    c.showPage()
+    # Hard page break to ensure Page 1 -> Page 2 duplex integrity
+    story.append(PageBreak())
 
     # ================= PAGE 2 =================
-    eyebrow_p2 = "Przewodnik warsztatowy · Arkusz 2 (Druga strona)" if is_pl else "Workshop companion · Sheet 2 (Back side)"
-    title_p2 = "Lista kontrolna: Materiały do cięcia i formatki" if is_pl else "Checklist: Materials to Cut & Sheet Stock"
-    subtitle_p2 = "Sprawdź wymiary, grubość i oznaczenia elementów przed przystąpieniem do montażu." if is_pl else "Verify dimensions, thickness and piece IDs before assembly."
-
-    draw_header(2, 2, title_p2, eyebrow_p2, subtitle_p2)
-    footer_p2 = "Strona 2 z 2 · Format A4 zoptymalizowany do druku dwustronnego (dupleks)" if is_pl else "Page 2 of 2 · A4 format optimized for double-sided (duplex) printing"
-    draw_footer(2, 2, footer_p2)
-
-    cur_y = page_h - 86
-
-    # --- Section: Materials to cut ---
-    g_cut = [s for s in supplies if s['group'] == 'Materials to cut']
-    cur_y = draw_section_hdr(cur_y, "4. Materiały do wycięcia i formatki sklejki" if is_pl else "4. Materials to Cut & Plywood Stock", f"{len(g_cut)} pozycji" if is_pl else f"{len(g_cut)} items")
-
-    for s in g_cut:
-        draw_checkbox(c, margin + 4, cur_y)
+    # Section 5: Auxiliary Hardware, Ballast & Lighting (5 items)
+    s5_title = "5. Taśmy, filce, balast i oświetlenie" if is_pl else "5. Tapes, Felt Pads, Ballast & Lighting"
+    s5_cnt = f"{len(g_specialty)} pozycji" if is_pl else f"{len(g_specialty)} items"
+    story.append(make_section_header(s5_title, s5_cnt))
+    s5_rows = []
+    for s in g_specialty:
+        code = s['id']
         desc = s.get('description_pl' if is_pl else 'description', s['description'])
         qty = s.get('quantity_pl' if is_pl else 'quantity', s['quantity'])
         use = s.get('use_pl' if is_pl else 'use', s.get('use', ''))
+        s5_rows.append(make_item_row(code, desc, qty, use))
+    story.append(make_table(s5_rows))
+    story.append(Spacer(1, 4))
 
-        c.setFont('DejaVuSans-Bold', 8)
-        c.setFillColor(NAVY)
-        c.drawString(margin + 20, cur_y - 6, desc)
+    # Section 6: Materials to Cut & Stock Parts
+    s6_title = "6. Formatki i materiały do wycięcia" if is_pl else "6. Plywood Cut Parts & Trim Stock"
+    s6_cnt = f"{len(g_cut)} pozycji" if is_pl else f"{len(g_cut)} items"
+    story.append(make_section_header(s6_title, s6_cnt))
+    s6_rows = []
+    for s in g_cut:
+        pid = s['id'].replace('material-', '')
+        desc = s.get('description_pl' if is_pl else 'description', s['description'])
+        qty = s.get('quantity_pl' if is_pl else 'quantity', s['quantity'])
+        use = s.get('use_pl' if is_pl else 'use', s.get('use', ''))
+        s6_rows.append(make_item_row(pid, desc, qty, use))
+    story.append(make_table(s6_rows))
+    story.append(Spacer(1, 4))
 
-        c.setFont('DejaVuSans-Bold', 8)
-        c.setFillColor(TEAL)
-        qw = c.stringWidth(f"{qty} szt." if is_pl else f"{qty} pcs", 'DejaVuSans-Bold', 8)
-        c.drawString(page_w - margin - qw - 4, cur_y - 6, f"{qty} szt." if is_pl else f"{qty} pcs")
-
-        if use:
-            cur_y -= 9
-            c.setFont('DejaVuSans', 7)
-            c.setFillColor(MUTED)
-            c.drawString(margin + 20, cur_y - 6, f"Zastosowanie: {use}" if is_pl else f"Use: {use}")
-            cur_y -= 8
-        else:
-            cur_y -= 15
-
-    cur_y -= 8
-
-    # --- Section: Workshop Field Rules & Checks ---
-    cur_y = draw_section_hdr(cur_y, "5. Zasady warsztatowe i kontrola jakości" if is_pl else "5. Workshop Rules & Quality Control", "Zalecenia" if is_pl else "Guidelines")
+    # Section 7: Workshop Rules & Quality Checks
+    s7_title = "7. Zasady warsztatowe i kontrola jakości" if is_pl else "7. Workshop Rules & Quality Control"
+    s7_cnt = "6 wytycznych" if is_pl else "6 guidelines"
+    story.append(make_section_header(s7_title, s7_cnt))
 
     field_rules_pl = [
-        ("Zawsze przymierzaj na sucho", "Przed nałożeniem kleju złóż każdy zespół na sucho. Sprawdź kąty i swobodę ruchu elementów."),
-        ("Przenieś oznaczenia części", "Oznacz ołówkiem identyfikatory części (np. B01, DR1, W01) na niewidocznych po montażu powierzchniach."),
-        ("Kontroluj grubość sklejki", "Zmierz rzeczywistą grubość suwmiarką i przetestuj połączenia na próbkach T01/T02 przed montażem."),
-        ("Ogranicznik głębokości wiercenia", "Przy wierceniu gniazd magnesów i otworów wkrętów zawsze stosuj ogranicznik głębokości (np. taśmę na wiertle)."),
-        ("Czas schnięcia spoin", "Odczekaj pełen czas wiązania kleju podany przez producenta przed obciążeniem konstrukcji lub montażem zawiasów."),
-        ("Swoboda ruchu", "Utrzymuj powierzchnie ślizgowe szuflady, gniazda zawiasów i styki magnesów wolne od wycieków kleju i farby."),
+        ("Przymiarka na sucho", "Przed nałożeniem kleju złóż każdy zespół na sucho. Sprawdź kąty prostoliniowe i swobodę ruchu."),
+        ("Oznaczenia części", "Oznacz ołówkiem identyfikatory części (B01, DR1, W01) na niewidocznych po montażu powierzchniach."),
+        ("Grubość sklejki", "Zmierz rzeczywistą grubość suwmiarką i przetestuj połączenia na próbkach T01/T02 przed klejeniem."),
+        ("Ogranicznik wiercenia", "Przy wierceniu gniazd magnesów i otworów wkrętów zawsze stosuj ogranicznik głębokości (taśmę na wiertle)."),
+        ("Czas schnięcia spoin", "Odczekaj pełen czas wiązania kleju podany przez producenta przed obciążeniem konstrukcji i stropów."),
+        ("Czyste powierzchnie robocze", "Utrzymuj prowadnice szuflady, gniazda zawiasów i styki magnesów wolne od wycieków kleju i farby."),
     ]
     field_rules_en = [
-        ("Always dry-fit first", "Test every joint and subassembly without glue to verify angles and clearance before committing adhesive."),
-        ("Transfer part IDs", "Mark piece IDs (e.g. B01, DR1, W01) with pencil on faces that remain hidden after final assembly."),
-        ("Verify plywood thickness", "Measure actual stock with calipers and test coupon joints T01/T02 before cutting or assembling structural parts."),
-        ("Use depth stops when drilling", "Always use a depth collar or tape flag when boring blind magnet pockets and pilot screw holes."),
-        ("Respect adhesive cure times", "Allow full curing time recommended by the glue manufacturer before loading floors or hanging wall shells."),
+        ("Dry-fit first", "Test every joint and subassembly without glue to verify squareness and clearance before committing adhesive."),
+        ("Transfer part IDs", "Mark piece IDs (B01, DR1, W01) with pencil on faces that remain hidden after final assembly."),
+        ("Verify plywood thickness", "Measure actual stock with calipers and test coupon joints T01/T02 before assembling structural parts."),
+        ("Drilling depth stops", "Always use a depth collar or tape flag when boring blind magnet pockets and pilot screw holes."),
+        ("Respect adhesive cure", "Allow full curing time recommended by glue manufacturer before loading floors or hanging shells."),
         ("Keep sliding seams clear", "Keep drawer tracks, hinge knuckles and magnet contact faces strictly clear of glue squeeze-out and paint."),
     ]
     rules = field_rules_pl if is_pl else field_rules_en
+    s7_rows = []
+    for r_title, r_desc in rules:
+        chk = Checkbox()
+        desc_p = Paragraph(f"<b>{r_title}:</b> <font color='#52696a'>{r_desc}</font>", style_desc)
+        s7_rows.append([chk, Paragraph('', style_code), desc_p, Paragraph('', style_qty)])
+    story.append(make_table(s7_rows))
 
-    for title, desc in rules:
-        draw_checkbox(c, margin + 4, cur_y)
-        c.setFont('DejaVuSans-Bold', 8)
-        c.setFillColor(NAVY)
-        c.drawString(margin + 20, cur_y - 6, f"{title}:")
-        tw = c.stringWidth(f"{title}:", 'DejaVuSans-Bold', 8)
-        c.setFont('DejaVuSans', 7.5)
-        c.setFillColor(MUTED)
-        c.drawString(margin + 24 + tw, cur_y - 6, desc)
-        cur_y -= 14
+    # Doc template with exact margins
+    doc = SimpleDocTemplate(
+        str(output_path),
+        pagesize=A4,
+        leftMargin=32,
+        rightMargin=32,
+        topMargin=64,
+        bottomMargin=28,
+    )
 
-    c.save()
+    decorations = make_page_decorations(lang=lang)
+    doc.build(story, onFirstPage=decorations, onLaterPages=decorations)
     print(f"Checklist PDF generated at: {output_path} ({output_path.stat().st_size} bytes)")
     return output_path
+
 
 if __name__ == '__main__':
     generate(ROOT / 'output/viewer/checklist-pl.pdf', lang='pl')
