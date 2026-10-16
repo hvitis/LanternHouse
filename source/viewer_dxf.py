@@ -43,7 +43,7 @@ def preview(data):
             p=data['parts'][item['part']]
             x,y=cut_file.cnc.transform(p,item,p['width']/2,p['height']/2)
             labels.append({'id':item['part'],'copy':item['copy'],'layer':cut_file.layer(sheet['thickness']),'x':x+ox,'y':y+oy})
-    with TemporaryDirectory(prefix='moomin-viewer-dxf-') as temporary:
+    with TemporaryDirectory(prefix='lanternwood-viewer-dxf-') as temporary:
         path=Path(temporary)/'house.dxf'
         cut_file.build(data,cached,path)
         return {'dxf':path.read_text(),'labels':labels}

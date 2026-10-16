@@ -1,4 +1,4 @@
-# Domek Muminków
+# Lanternwood House
 
 [English](README.md) · **Polski**
 
@@ -8,14 +8,14 @@
   <img src="docs/images/cover.jpg" width="380" alt="Okładka książki: okrągła niebieska wieża z czerwonym stożkowym dachem i małą werandą na letniej łące">
 </p>
 
-Domek to niebieska wieża z czerwonym spiczastym dachem, trzema kondygnacjami i poddaszem. Wszystkie części ze sklejki mieszczą się na A3 (297 × 420 mm). Można je obrabiać CNC lub wycinać ręcznie z szablonów A4. Przednie ściany otwierają się na zawiasach. Dach z dwiema lukarnami jest zdejmowany, weranda z drabinką sznurową stoi na stałe z boku, tylne drzwi prowadzą do drewutni, a kamienny cokół kryje szufladę. W domku mieszka sześć figurek z modeliny termoutwardzalnej: rodzina Muminków, Włóczykij, Panna Migotka i Mała Mi.
+Domek to okrągła niebieska wieża z czerwonym spiczastym dachem, trzema kondygnacjami i poddaszem. Wszystkie części ze sklejki mieszczą się na A3 (297 × 420 mm). Można je obrabiać CNC lub wycinać ręcznie z szablonów A4. Przednie ściany otwierają się na zawiasach. Dach z dwiema lukarnami jest zdejmowany, weranda z drabinką sznurową stoi na stałe z boku, tylne drzwi prowadzą do drewutni, a kamienny cokół kryje szufladę. W domku mieszkają cztery figurki z modeliny termoutwardzalnej: rodzina Rowan (Elias, Mira, Ada i Theo).
 
 <p align="center">
-  <b><a href="https://hvitis.github.io/MoominsHouse/">Otwórz model 3D w przeglądarce</a></b> &nbsp;·&nbsp;
-  <b><a href="https://github.com/hvitis/moominshouse/releases/latest">Pobierz książkę budowy (PDF)</a></b>
+  <b><a href="https://hvitis.github.io/lanternwood-house/">Otwórz model 3D w przeglądarce</a></b> &nbsp;·&nbsp;
+  <b><a href="https://github.com/hvitis/lanternwood-house/releases/latest">Pobierz książkę budowy (PDF)</a></b>
 </p>
 
-> To nieoficjalny, niekomercyjny projekt fanowski. Nie jest powiązany z Moomin Characters Oy ani producentami komercyjnych zestawów domku Muminków. Żaden z tych podmiotów go nie zatwierdził. Zobacz [znaki towarowe i licencję](#znaki-towarowe-i-licencja).
+> Lanternwood House to oryginalny, otwarty projekt drewnianego domku dla lalek i figurek z modeliny. Zobacz [licencję](#licencja).
 
 <table>
   <tr>
@@ -26,8 +26,8 @@ Domek to niebieska wieża z czerwonym spiczastym dachem, trzema kondygnacjami i 
 </table>
 
 <p align="center">
-  <img src="docs/images/clay-family.webp" width="520" alt="Figurki z modeliny: Tatuś Muminka w cylindrze, Mamusia Muminka w pasiastym fartuszku z torebką, Muminek, Panna Migotka, Włóczykij i Mała Mi"><br>
-  <sub>Rodzina z modeliny: model z brył, objętości i gramatura każdego koloru</sub>
+  <img src="docs/images/clay-family.webp" width="520" alt="Figurki z modeliny rodziny Rowan: Elias, Mira, Ada i Theo"><br>
+  <sub>Rodzina Rowan z modeliny: model z brył, objętości i gramatura każdego koloru</sub>
 </p>
 
 <!-- specifications:start -->
@@ -58,16 +58,16 @@ Domek to niebieska wieża z czerwonym spiczastym dachem, trzema kondygnacjami i 
 - **Ruchome elementy.** Dwie przednie części ściany otwierają się do 100°. Magnesy zamknięte w drewnie słupków ogrodowych utrzymują je w tej pozycji, a zaczepy pod podłogą poddasza utrzymują ściany zamknięte. Troje drzwi wejściowych otwiera się na zewnątrz, a pokoje na każdej kondygnacji łączą drzwi na zawiasach z taśmy bawełnianej. Dach można zdjąć z wieży. Szuflada wysuwa się z cokołu na 200 mm i nie da się jej wyciągnąć. Opcjonalne oświetlenie LED ma otwory na przewód i zakręcany schowek na baterie.
 - **Jedna konfiguracja steruje całością.** Wysokość, podstawa, cokół, szuflada, drzwi, położenie i wymiary werandy, otwory zawiasów, arkusze sklejki i kolory znajdują się w `source/config.json`.
 - **Automatyczne kontrole.** Każda kompilacja sprawdza przenikanie brył, ruch ścian co 5° aż do ogranicznika 100° i ruch wszystkich sześciorga drzwi. Sprawdza też szufladę aż do ogranicznika, podnoszenie dachu, prześwity okien, przejście każdej figurki przez każde drzwi i to, że żadnej nie da się połknąć, zamknięcie każdego magnesu w drewnie, przypisanie każdej części do jednego kroku montażu, odstępy rozkroju, liczbę części i okuć oraz skalę PDF. Osobne kontrole odtwarzają domek dla najcieńszej i najgrubszej zmierzonej sklejki, liczą łańcuchy tolerancji każdego połączenia i siłę przewrócenia przy otwartych ścianach. Niepowodzenie dowolnej kontroli zatrzymuje kompilację.
-- **Figurki z modeliny.** Tatuś Muminka, Mamusia Muminka, Muminek, Włóczykij, Panna Migotka i Mała Mi powstają z łączonych brył opisanych polem odległości. Model oblicza objętość figurki, gramaturę każdego koloru i oszczędność przy zastosowaniu rdzenia z folii aluminiowej.
+- **Figurki z modeliny.** Elias, Mira, Ada i Theo Rowan powstają z łączonych brył opisanych polem odległości. Model oblicza objętość figurki, gramaturę każdego koloru i oszczędność przy zastosowaniu rdzenia z folii aluminiowej.
 - **Wiele formatów wyjściowych.** Edytowalny dokument FreeCAD, bryły STEP (domek zamknięty, otwarty, rozstrzelony i każda część osobno), profile DXF, rozkroje SVG, pliki operacji CNC SVG i DXF, dokumenty PDF oraz listy zakupów CSV.
 
 ## Wypróbuj przeglądarkę 3D — bez FreeCAD
 
-Najłatwiej otworzyć [przeglądarkę online](https://hvitis.github.io/MoominsHouse/). GitHub przebudowuje ją po każdym wysłaniu zmian na gałąź `main`. Do uruchomienia lokalnego lub podglądu własnej konfiguracji potrzebujesz Pythona 3.12 lub nowszego oraz Git.
+Najłatwiej otworzyć [przeglądarkę online](https://hvitis.github.io/lanternwood-house/). GitHub przebudowuje ją po każdym wysłaniu zmian na gałąź `main`. Do uruchomienia lokalnego lub podglądu własnej konfiguracji potrzebujesz Pythona 3.12 lub nowszego oraz Git.
 
 ```sh
-git clone https://github.com/hvitis/moominshouse.git
-cd moominshouse
+git clone https://github.com/hvitis/lanternwood-house.git
+cd lanternwood-house
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python source/serve.py --open
@@ -93,13 +93,13 @@ Po zmianie `source/config.json` uruchom `serve.py --rebuild`, aby odświeżyć m
 
 ## Meble do druku 3D
 
-[Strona wydruków](https://hvitis.github.io/MoominsHouse/#printables) pokazuje meble do domku, które można wydrukować w 3D. Każdy mebel możesz obracać w 3D i sprawdzić wyniki kontroli druku: czy mieści się na drukarce, czy nie wymaga podpór, czy ścianki są dość grube i czy jest za duży do połknięcia. Możesz też pobrać pliki STL, 3MF lub STEP. Każdy mebel to krótki plik Pythona w `source/prints/`. Na Macu `make studio` otwiera podgląd na żywo, który przebudowuje część po każdym zapisie pliku i każdym ruchu suwaka wymiaru. `make prints` publikuje pliki na stronę. To zakładka **3D printables** przeglądarki online; CI publikuje ją razem z przeglądarką po każdym wysłaniu zmian na `main`. Szczegóły (po angielsku): [docs/PRINTING.md](docs/PRINTING.md).
+[Strona wydruków](https://hvitis.github.io/lanternwood-house/#printables) pokazuje meble do domku, które można wydrukować w 3D. Każdy mebel możesz obracać w 3D i sprawdzić wyniki kontroli druku: czy mieści się na drukarce, czy nie wymaga podpór, czy ścianki są dość grube i czy jest za duży do połknięcia. Możesz też pobrać pliki STL, 3MF lub STEP. Każdy mebel to krótki plik Pythona w `source/prints/`. Na Macu `make studio` otwiera podgląd na żywo, który przebudowuje część po każdym zapisie pliku i każdym ruchu suwaka wymiaru. `make prints` publikuje pliki na stronę. To zakładka **3D printables** przeglądarki online; CI publikuje ją razem z przeglądarką po każdym wysłaniu zmian na `main`. Szczegóły (po angielsku): [docs/PRINTING.md](docs/PRINTING.md).
 
 ## Wygeneruj pliki do budowy
 
 Pliki PDF, CAD i rozkroje **nie znajdują się w repozytorium**. Zajmują łącznie około 100 MB i powstają z kodu źródłowego.
 
-**Jeśli chcesz tylko zbudować domek,** pobierz dokumenty PDF i zestaw z [najnowszego wydania](https://github.com/hvitis/moominshouse/releases/latest). Samodzielnie generuj pliki, gdy zmieniasz projekt.
+**Jeśli chcesz tylko zbudować domek,** pobierz dokumenty PDF i zestaw z [najnowszego wydania](https://github.com/hvitis/lanternwood-house/releases/latest). Samodzielnie generuj pliki, gdy zmieniasz projekt.
 
 **1. Zainstaluj FreeCAD 1.1 lub nowszy.** Etapy CAD używają Pythona dostarczanego z FreeCAD. Udostępnia on jądro OpenCASCADE, numpy i shapely.
 
@@ -131,18 +131,18 @@ Pełna kompilacja trwa około dwóch minut, a kontrola grubości — około minu
 | Ścieżka | Zawartość |
 | --- | --- |
 | `output/pdf/` | Dziewięć dokumentów PDF: pełna książka, instrukcja, szablony do wycinania, zwymiarowane części, dekoracje (paleta, okładziny kamienne, pasy gontów), rodzina z modeliny, ręczne szablony części 3 mm i załącznik dla wykonawcy. Strony warsztatowe mają format A4, a arkusze produkcyjne także A3. |
-| `output/cad/` | `MoominHouse.FCStd` (edytowalny dokument), zespoły STEP (zamknięty, otwarty, rozstrzelony) i `parts/*.step` |
+| `output/cad/` | `LanternwoodHouse.FCStd` (edytowalny dokument), zespoły STEP (zamknięty, otwarty, rozstrzelony) i `parts/*.step` |
 | `output/dxf/` | DXF dla każdego profilu, rozkroje w pełnej skali (`*-layout.svg`) i pliki operacji CNC dla wszystkich grubości (`*-cnc-*.svg`, `*-cnc-*.dxf`) |
 | `output/previews/` | Rendery na podstawie CAD i rendery figurek |
 | `output/reports/` | `release-validation.json` (wszystkie kontrole), `cad-validation.json`, `thickness-tolerance.json`, `parts.csv`, `hardware.csv`, `stock.csv` |
-| `output/Moomin-House-Supplier-Cut.dxf` | Wszystko, co wykonawca wycina, w jednym pliku DXF R12: tylko linie cięcia, jedna warstwa na grubość |
-| `output/Moomin-House-Build-Kit.zip` | Wszystkie powyższe pliki wraz ze źródłami w jednej paczce |
+| `output/Lanternwood-House-Supplier-Cut.dxf` | Wszystko, co wykonawca wycina, w jednym pliku DXF R12: tylko linie cięcia, jedna warstwa na grubość |
+| `output/Lanternwood-House-Build-Kit.zip` | Wszystkie powyższe pliki wraz ze źródłami w jednej paczce |
 
 Przed drukowaniem przeczytaj [przewodnik budowy](docs/BUILD-GUIDE.md). Szablony 1:1 drukuj w skali 100% i sprawdź ich wymiary.
 
-Do obróbki CNC najpierw przeczytaj [docs/SUPPLIER-READINESS.md](docs/SUPPLIER-READINESS.md), potem przekaż `Moomin-House-Supplier.pdf` (zaczyna się od specyfikacji i listy do potwierdzenia) oraz `Moomin-House-Supplier-Cut.dxf` (wszystkie linie cięcia w jednym pliku, o co prosi większość firm) albo pliki operacji CSV, DXF R12 i SVG. Strony produkcyjne A3 są pogrupowane według grubości (tylko 3 i 6 mm) oraz operacji. Zawierają czyste kontury bez tła i opisów. Osobne mapy wskazują części, strony obróbki i głębokości. Pełna książka pozostaje wyłącznie w formacie A4. Duże pojedyncze części mają szablony na dwóch stronach A4 z zakładką. Plik `Moomin-House-3mm-Hand-Templates.pdf` obejmuje tylko cienkie części. Dodaj `--lang en` do `source/rebuild.py`, aby wygenerować opisy dla wykonawcy po angielsku.
+Do obróbki CNC najpierw przeczytaj [docs/SUPPLIER-READINESS.md](docs/SUPPLIER-READINESS.md), potem przekaż `Lanternwood-House-Supplier.pdf` (zaczyna się od specyfikacji i listy do potwierdzenia) oraz `Lanternwood-House-Supplier-Cut.dxf` (wszystkie linie cięcia w jednym pliku, o co prosi większość firm) albo pliki operacji CSV, DXF R12 i SVG. Strony produkcyjne A3 są pogrupowane według grubości (tylko 3 i 6 mm) oraz operacji. Zawierają czyste kontury bez tła i opisów. Osobne mapy wskazują części, strony obróbki i głębokości. Pełna książka pozostaje wyłącznie w formacie A4. Duże pojedyncze części mają szablony na dwóch stronach A4 z zakładką. Plik `Lanternwood-House-3mm-Hand-Templates.pdf` obejmuje tylko cienkie części. Dodaj `--lang en` do `source/rebuild.py`, aby wygenerować opisy dla wykonawcy po angielsku.
 
-`make build` zapisuje plik do cięcia dla wykonawcy, `output/Moomin-House-Supplier-Cut.dxf`, a każde wydanie `v*` dołącza go automatycznie. `make cutfile` odtwarza go w około sekundę z rozkroju ostatniej kompilacji. Po zmianie projektu lub konfiguracji uruchom `make build`, aby DXF i mapy arkuszy w PDF dla wykonawcy pochodziły z tego samego rozkroju.
+`make build` zapisuje plik do cięcia dla wykonawcy, `output/Lanternwood-House-Supplier-Cut.dxf`, a każde wydanie `v*` dołącza go automatycznie. `make cutfile` odtwarza go w około sekundę z rozkroju ostatniej kompilacji. Po zmianie projektu lub konfiguracji uruchom `make build`, aby DXF i mapy arkuszy w PDF dla wykonawcy pochodziły z tego samego rozkroju.
 
 Aby wybrać, jaką sklejkę kupić, uruchom `make stock`. Skrypt pyta o dostawcę (albo używa zapisanego w `ops/suppliers/`), formaty, ceny i paczki, które sprzedaje, minimalny odstęp między elementami, margines od krawędzi i szerokość cięcia piły dostawcy. Następnie układa wszystkie elementy domu ze sklejki (bez mebli, figurek, ogrodu, drewutni, okuć i wkrętów) na wielu mieszankach tych formatów, także formatek ciętych przez dostawcę z dużego arkusza, i zapisuje `output/pdf/Optymalne-wymiary-i-cennik-<dostawca>.pdf`: najtańsze formaty i ilości dla każdej klasy, porównanie wariantów, cenę za m² i rozkład elementów na arkuszach. Przykład: `ops/suppliers/sklejka-krakow.json`.
 
@@ -221,15 +221,13 @@ To projekt drewnianej zabawki do samodzielnego wykonania, bez certyfikacji. Kont
 - Sprawdzony na macOS (Apple silicon) z Pythonem 3.12 i FreeCAD 1.1.4. Linux i Windows mogą działać z Pythonem dostarczonym przez FreeCAD, ale nie zostały jeszcze sprawdzone.
 - Projekt przeszedł kontrole CAD, ale domek nie powstał jeszcze ze sklejki. Po pierwszym montażu na sucho może być potrzebna korekta tolerancji.
 
-## Znaki towarowe i licencja
+## Licencja
 
 Copyright © 2026 hvitis. Kod, projekt i wygenerowane z nich pliki są objęte licencją [Creative Commons Uznanie autorstwa–Użycie niekomercyjne–Na tych samych warunkach 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) ([`LICENSE`](LICENSE)). Możesz udostępniać i modyfikować domek do celów niekomercyjnych. Podaj autora i udostępniaj zmiany na tej samej licencji.
 
 Pliki three.js w `source/viewer/vendor/` zachowują własną licencję MIT (`THREE-LICENSE.txt`). Czcionki DejaVu zachowują licencję z `source/fonts/LICENSE_DEJAVU`.
 
-Moomin, postacie Muminków i domek Muminków są znakami towarowymi i utworami chronionymi prawem autorskim Moomin Characters Oy. Licencja projektu nie przyznaje praw do tych elementów. To osobisty, niekomercyjny projekt fanowski. Repozytorium nie zawiera oficjalnych ilustracji ani zdjęć produktów i nie służy do ich rozpowszechniania. Nie sprzedawaj zestawów, książek ani figurek wykonanych na podstawie tego projektu.
-
 <p align="center">
-  <img src="docs/images/social-preview.png" width="800" alt="Domek Muminków: drewniany domek dla lalek ze sklejki wygenerowany z kodu">
+  <img src="docs/images/social-preview.png" width="800" alt="Lanternwood House: drewniany domek dla lalek ze sklejki wygenerowany z kodu">
 </p>
 

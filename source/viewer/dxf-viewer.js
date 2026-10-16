@@ -52,7 +52,7 @@ export function parseDxf(text){
 }
 
 const panel=$('dxfPanel'),viewport=$('dxfViewport'),status=$('dxfStatus');
-let canvas,ctx,drawing,sourceText='',fileName='Moomin-House-Supplier-Cut.dxf',pending,needsFit=false;
+let canvas,ctx,drawing,sourceText='',fileName='Lanternwood-House-Supplier-Cut.dxf',pending,needsFit=false;
 let scale=1,tx=0,ty=0,fitScale=1,width=1,height=1;
 let pieceLabels=[];
 const hidden=new Set(),pointers=new Map();
@@ -165,7 +165,7 @@ async function open(){
     fetch('./data/house.dxf').then(async response=>{if(!response.ok)throw new Error(`Could not load the DXF (HTTP ${response.status}).`);return response.text();}),
     fetch('./data/dxf-labels.json').then(async response=>{if(!response.ok)throw new Error(`Could not load the piece IDs (HTTP ${response.status}).`);return response.json();})
   ]).finally(()=>{pending=null;});
-  try{const [text,labels]=await pending;if(!drawing)load(text,'Moomin-House-Supplier-Cut.dxf',labels);}catch(e){error(`${e.message} Switch tabs to retry, or open a DXF file.`);}
+  try{const [text,labels]=await pending;if(!drawing)load(text,'Lanternwood-House-Supplier-Cut.dxf',labels);}catch(e){error(`${e.message} Switch tabs to retry, or open a DXF file.`);}
 }
 addEventListener('previewchange',event=>{
   pointers.clear();

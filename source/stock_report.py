@@ -10,6 +10,7 @@ from reportlab.lib.utils import simpleSplit
 from shapely.geometry import Polygon
 from supplier import fonts, REGULAR, BOLD
 from stock import area, ssize
+import naming
 
 TITLE='Optymalne wymiary i cennik'
 W,H=A4;M=16*mm;INK=colors.HexColor('#284849');TEAL=colors.HexColor('#197F98');RUST=colors.HexColor('#B56535')
@@ -27,7 +28,7 @@ def thick(t):return f'{t} mm'
 class Doc:
     """A4 pages with a running header, a y cursor that breaks pages, and wrapped tables."""
     def __init__(self,path,supplier):
-        fonts();self.c=canvas.Canvas(str(path),pagesize=A4);self.c.setTitle(TITLE);self.c.setAuthor(supplier['name']);self.c.setSubject('Domek Muminków: zakup sklejki')
+        fonts();self.c=canvas.Canvas(str(path),pagesize=A4);self.c.setTitle(TITLE);self.c.setAuthor(supplier['name']);self.c.setSubject(f'{naming.NAME}: zakup sklejki')
         self.supplier=supplier;self.page=0;self.y=0;self.section=''
     def new(self,section=None):
         if self.page:self.footer();self.c.showPage()
@@ -37,7 +38,7 @@ class Doc:
         self.y=H-20*mm
     def footer(self):
         c=self.c;c.setFont(REGULAR,8);c.setFillColor(colors.grey)
-        c.drawString(M,9*mm,f'Domek Muminków · {datetime.date.today().isoformat()}');c.drawRightString(W-M,9*mm,f'strona {self.page}')
+        c.drawString(M,9*mm,f'{naming.NAME} · {datetime.date.today().isoformat()}');c.drawRightString(W-M,9*mm,f'strona {self.page}')
     def need(self,h):
         if self.y-h<16*mm:self.new()
     def heading(self,text,size=13):
@@ -89,7 +90,7 @@ def a3_plan(T):return T['single'].get('420x297')
 def overview(d,res):
     s=res['supplier'];cur=s.get('currency','zł');d.new('podsumowanie');c=d.c
     c.setFillColor(INK);c.setFont(BOLD,22);c.drawString(M,d.y-4*mm,TITLE);d.y-=12*mm
-    d.text('Domek Muminków: sklejka na elementy konstrukcji domu. Ile arkuszy, jakich wymiarów i za ile, żeby kupić jak najmniej i jak najlepiej wykorzystać arkusze.',10)
+    d.text(f'{naming.NAME}: sklejka na elementy konstrukcji domu. Ile arkuszy, jakich wymiarów i za ile, żeby kupić jak najmniej i jak najlepiej wykorzystać arkusze.',10)
     d.heading('Dostawca i ustawienia',11)
     tmap=', '.join(f'{k} → {v:g} mm' for k,v in (s.get('thickness_map') or {}).items()) or 'brak (grubości jak w projekcie)'
     bed=s.get('max_sheet_mm');bed=f'{max(bed):g} × {min(bed):g} mm' if bed else 'bez limitu'
@@ -105,7 +106,7 @@ def overview(d,res):
     rows=[[thick(t),p['pieces'],p['profiles'],m2(p['area_m2'])] for t,p in sorted(res['parts'].items(),key=lambda kv:float(kv[0]))]
     d.table([30,30,30],['Grubość','Elementy','Profile','Powierzchnia elementów'],rows)
     left=res['left_out']
-    d.text(f'Pominięte: {left.get("display",0)} elementów tylko do wizualizacji (meble, figurki Muminków, ogród z namiotem, łódką i mostkiem, drewutnia), '
+    d.text(f'Pominięte: {left.get("display",0)} elementów tylko do wizualizacji (meble, figurki rodziny Rowan, ogród z namiotem, drewutnia), '
            f'{left.get("bought",0)} kupowanych elementów z litego drewna i opakowań, {left.get("hardware",0)} pozycji okuć (zawiasy, magnesy, baterie) '
            f'i {left.get("fasteners",0)} wkrętów.',8,color=colors.grey)
     for g,G in res['grades'].items():

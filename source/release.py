@@ -10,11 +10,12 @@ source now on disk, and that this source is committed and pushed, so the files m
 """
 import argparse, hashlib, json, shutil, subprocess, sys, zipfile
 from pathlib import Path
+import naming
 
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'output'
 PDFS=['Complete','Instructions','Cutting-Templates','Dimensioned-Parts','Decor','Clay-Family','3mm-Hand-Templates','Supplier']
-KIT=OUT/'Moomin-House-Build-Kit.zip'
-CUT=OUT/'Moomin-House-Supplier-Cut.dxf'   # everything the supplier cuts, in one file
+KIT=OUT/naming.KIT_ZIP
+CUT=OUT/naming.SUPPLIER_CUT_DXF   # everything the supplier cuts, in one file
 
 def git(*args):
     return subprocess.run(['git',*args],cwd=ROOT,capture_output=True,text=True).stdout.rstrip()
@@ -28,7 +29,7 @@ def repo_url():
 def sha256(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 
 def assets():
-    return [OUT/'pdf'/f'Moomin-House-{name}.pdf' for name in PDFS]+[CUT,KIT]
+    return [OUT/'pdf'/f'{naming.PREFIX}-{name}.pdf' for name in PDFS]+[CUT,KIT]
 
 def problems():
     """Every reason the current output/ must not be released; empty when it is ready."""
@@ -62,7 +63,7 @@ def notes(tag):
     cad=json.loads((OUT/'reports/cad-validation.json').read_text())
     nest=json.loads((OUT/'nesting.json').read_text())
     sys.path.insert(0,str(ROOT/'source'));from package import stock_table
-    pdf_pages={**pages['pdfs'],'Moomin-House-Complete.pdf':pages['complete_pages']}
+    pdf_pages={**pages['pdfs'],naming.PDF_COMPLETE:pages['complete_pages']}
     contents={CUT.name:'every cutting path for the supplier in one DXF R12 file: mm, one layer per plywood thickness, no frames or text',
               KIT.name:'everything: PDFs, STEP, FCStd, DXF, laser files, renders, reports and source'}
     rows=[f'| `{p.name}` | {f"{pdf_pages[p.name]} pages" if p.name in pdf_pages else contents[p.name]} | {p.stat().st_size/1024/1024:.1f} MB |' for p in assets()]
@@ -77,7 +78,7 @@ def notes(tag):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument('tag',help='release tag, for example v5');p.add_argument('--title',help='default: "Moomin House <tag>"')
+    p.add_argument('tag',help='release tag, for example v5');p.add_argument('--title',help=f'default: "{naming.NAME} <tag>"')
     p.add_argument('--draft',action='store_true',help='create a draft to review on GitHub before publishing')
     p.add_argument('--dry-run',action='store_true',help='check and print the release without uploading anything')
     args=p.parse_args();found=problems()
@@ -87,7 +88,7 @@ def main():
         print('Assets:\n'+'\n'.join(f'  {p.relative_to(ROOT)}' for p in assets()))
     if found:raise SystemExit('\nNot ready to release:\n'+'\n'.join('  - '+f for f in found))
     if args.dry_run:print('\nReady to release. Run again without --dry-run to upload.');return
-    command=['gh','release','create',args.tag,*map(str,assets()),'--title',args.title or f'Moomin House {args.tag}',
+    command=['gh','release','create',args.tag,*map(str,assets()),'--title',args.title or f'{naming.NAME} {args.tag}',
              '--target',git('rev-parse','HEAD'),'--notes-file','-']+(['--draft'] if args.draft else [])
     subprocess.run(command,cwd=ROOT,input=notes(args.tag),text=True,check=True)
 

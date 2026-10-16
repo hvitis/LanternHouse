@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import cnc
+import naming
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.lib.utils import simpleSplit
@@ -111,7 +112,7 @@ def assembly_map(c, pack, test):
 
 def write_pdf(pack, layouts, path, fingerprint, process):
     c = canvas.Canvas(str(path), pagesize=A4, invariant=1)
-    c.setTitle("Moomin House - critical joint workshop samples")
+    c.setTitle(f"{naming.NAME} - critical joint workshop samples")
     y = heading(
         c,
         "Critical joint workshop samples",

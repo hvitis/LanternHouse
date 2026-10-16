@@ -526,7 +526,7 @@ def build():
       'Windows keep a solid cross in the wall between four panes, with a one-piece surround (frame, sill and pediment hood) and clear PET glazing: no thin glued bars to snap',
       'Nine 3 x 8 mm battens cover the outside corner seams that do not move (board-and-batten look)',
       f'Back door on {doors["back"]} with a lean-to canopy, stone steps and a woodpile shelter; room door leaves on cotton-tape hinges',
-      'Snufkin, the Snork Maiden and Little My join the family in clay; no figure fits the small-parts cylinder and each passes every doorway',
+      'The Rowan family (Elias, Mira, Ada and Theo) in thermo-clay; no figure fits the small-parts cylinder and each passes every doorway',
       f'Toy safety: every magnet enclosed in solid wood behind a {CFG["magnets"]["skin"]:g} mm skin; a D{CFG["finial"]["ball"]:g} ball finial instead of the spire; divider front gap {PT["front_gap"]:g} mm (outside the 5-12 mm pinch range); recessed finger pulls instead of glued handles; a captive drawer stop',
       f'Strength: 9 mm roof turn-buttons (6 + 3 mm plies glued) between D12 fender washers; 2.0 x 10 door-hinge screws in {CFG["door_hinge"]["backing_width"]:g} mm hardwood strips; 2.5 x {next(f["length"] for f in FASTENERS if f["type"]=="SC1"):g} wall-hinge wood screws into D1.8 pilots; stop posts on two dowels each',
       f'Stability: {CFG["stability"]["pads"]} rim pads under the base, steel ballast in the plinth and an anti-tip strap anchor in the rear shell; the opening shells hang {SL:g} mm above the plinth',
@@ -647,7 +647,7 @@ def instance_box(inst):
     return [min(q[k] for q in pts) for k in range(3)],[max(q[k] for q in pts) for k in range(3)]
 
 ROOMS=[('ground floor','kitchen'),('floor 1','living room'),('floor 2','bedrooms'),('attic','attic')]
-FIGURE_CODES={'pappa':'FG1','mamma':'FG2','troll':'FG3','snufkin':'FG4','snorkmaiden':'FG5','littlemy':'FG6'}
+FIGURE_CODES={'elias':'FG1','mira':'FG2','ada':'FG3','theo':'FG4'}
 def place_figures(tops,inner):
     """Stand the thermo-clay figures on their storeys (config figures.levels) in the front-most free spot, so
     they are seen when the walls open, turned a little toward the middle. Clear of furniture, posts, the
@@ -677,7 +677,7 @@ def place_figures(tops,inner):
 
 def garden(G,bt):
     """Garden scene around the base for the renders and the viewer: a lantern on each stop post and, on the lawn
-    beyond the base where the opening walls never reach, a well, a bathing hut, Snufkin's tent, a rowing boat, a
+    beyond the base where the opening walls never reach, a well, a bathing hut, a canvas tent, a rowing boat, a
     small bridge and a mailbox. Display only, like the furniture; each is a few stacked solids."""
     def solid(pid,name,outline,t,color,o,ang,x,y,z,plane='xy'):
         # 'xy': outline in the item's plan, extruded up. 'yz': outline across the item (y, z), extruded along x.
@@ -697,8 +697,8 @@ def garden(G,bt):
     o,a=(120,370),-20   # bathing hut: body and roof
     solid('GH1','Bathing hut',rect(50,40),60,'blue',o,a,0,0,0)
     solid('GH2','Bathing hut roof',[[-3,0],[43,0],[20,16]],54,'red',o,a,-2,0,60,'yz')
-    o,a=(-170,345),15   # Snufkin's tent
-    solid('GT1',"Snufkin's tent",[[0,0],[44,0],[22,30]],60,'green',o,a,0,0,0,'yz')
+    o,a=(-170,345),15   # canvas tent
+    solid('GT1',"Canvas tent",[[0,0],[44,0],[22,30]],60,'green',o,a,0,0,0,'yz')
     o,a=(-350,160),70   # rowing boat
     solid('GB1','Rowing boat',[[0,10],[12,0],[70,0],[86,10],[70,20],[12,20]],9,'blue',o,a,0,0,0)
     o,a=(-330,-60),100   # small bridge: abutments, deck, rails

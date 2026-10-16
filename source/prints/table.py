@@ -1,4 +1,4 @@
-"""A round table for the Moomin House on one flared pedestal, printed upright with no supports.
+"""A round table for Lanternwood House on one flared pedestal, printed upright with no supports.
 
 The column widens into the table top in a 45° cone, the most an FDM printer prints without support, so the
 underside of the top needs none. The top's upper edge and the foot are rounded.

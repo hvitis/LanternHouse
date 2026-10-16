@@ -12,6 +12,7 @@ from pathlib import Path
 
 import assembly
 import checklist_pdf
+import naming
 import print_mesh
 from serve import ROOT, VIEWER, model_data
 from viewer_dxf import preview as viewer_cut_file
@@ -20,7 +21,7 @@ ASSETS = (
     'motion.js', 'geometry.js', 'instructions.js', 'instructions-scene.js', 'index.html', 'workspace.css', 'workspace.js', 'app.js', 'dxf-viewer.js', 'prints.html', 'prints.js', 'social-preview.png', 'vendor/three.module.js',
     'vendor/OrbitControls.js', 'vendor/CSS2DRenderer.js', 'vendor/THREE-LICENSE.txt',
 )
-MARKER = '.moomin-viewer-export'
+MARKER = naming.EXPORT_MARKER
 
 def export(dest, reuse_data=False):
     target=Path(dest).absolute()

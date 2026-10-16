@@ -40,7 +40,7 @@ Opening `index.html` directly from the filesystem does not support the module an
 
 The `_site/` folder contains HTML, JavaScript, local three.js files, license files, `data/parts.json` and `data/assembly.json`.
 The assembly manifest is regenerated on every export, including exports that reuse cached geometry.
-Every asset URL is relative, so the site works at `/` and at `/moominshouse/`.
+Every asset URL is relative, so the site works at `/` and at `/lanternwood-house/`.
 The export builds the model from the source. It does not use the existing `output/parts.json`.
 The export replaces `_site/`. Outside the repository, it replaces only folders that contain its export marker.
 
@@ -57,7 +57,7 @@ npm run test:instructions
 ```
 
 On Linux, use `npx playwright install --with-deps chromium` to install the browser and its system dependencies.
-The checks serve `_site/` under `/moominshouse/` and block external requests.
+The checks serve `_site/` under `/lanternwood-house/` and block external requests.
 They check the model request, local JavaScript modules, rendered WebGL pixels and the opening controls at desktop and mobile sizes.
 They also check the visible error message when the model file is missing.
 Screenshots appear in `output/viewer-smoke/` and stay outside Git.
@@ -90,14 +90,14 @@ Screenshots appear in `output/viewer-smoke/` and stay outside Git.
 4. Create the first commit:
 
    ```sh
-   git commit -m "Prepare Moomin House source and static 3D viewer"
+   git commit -m "Prepare Lanternwood House source and static 3D viewer"
    ```
 
-5. Create an empty public repository named `moominshouse` on GitHub.
+5. Create an empty public repository named `lanternwood-house` on GitHub.
 6. Connect the remote:
 
    ```sh
-   git remote add origin https://github.com/hvitis/moominshouse.git
+   git remote add origin https://github.com/hvitis/lanternwood-house.git
    ```
 
 7. In GitHub, select **Settings → Pages → Build and deployment → Source → GitHub Actions**.
@@ -108,7 +108,7 @@ Screenshots appear in `output/viewer-smoke/` and stay outside Git.
    ```
 
 9. Wait for the **CI** workflow to finish in **Actions**.
-10. Open <https://hvitis.github.io/MoominsHouse/>.
+10. Open <https://hvitis.github.io/lanternwood-house/>.
 
 If you use another owner or repository name, change the remote and the links in both README files.
 The static asset URLs need no change.

@@ -1,4 +1,4 @@
-"""Real physical stress testing suite for CNC plywood Moomin House.
+"""Real physical stress testing suite for CNC plywood Lanternwood House.
 
 Executes:
 1. CalculiX 3D Finite Element Analysis (FEA) via FreeCAD's FEM and Gmsh APIs.
@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 
 # Set headless FreeCAD environment before imports
-os.environ['MOOMIN_HEADLESS'] = '1'
+os.environ['LANTERNWOOD_HEADLESS'] = '1'
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -74,7 +74,7 @@ def run_calculix_analysis(doc: App.Document, obj: App.DocumentObject,
     """Helper to run a CalculiX static linear FEA in FreeCAD."""
     analysis = ObjectsFem.makeAnalysis(doc, 'Analysis')
     solver = ObjectsFem.makeSolverCalculiXCcxTools(doc, 'CalculiX')
-    tmpdir = tempfile.mkdtemp(prefix='fea_moomin_')
+    tmpdir = tempfile.mkdtemp(prefix='fea_lanternwood_')
     solver.WorkingDir = tmpdir
     solver.AnalysisType = 'static'
     analysis.addObject(solver)
@@ -533,7 +533,7 @@ def test_tip_over(data: dict) -> dict:
 
 def main():
     print("=" * 70)
-    print(" MOOMIN HOUSE CNC PLYWOOD PHYSICAL STRESS ANALYSIS & FEA SUITE")
+    print(" LANTERNWOOD HOUSE CNC PLYWOOD PHYSICAL STRESS ANALYSIS & FEA SUITE")
     print(" Powered by FreeCAD FEM, CalculiX (ccx), Gmsh, and Eurocode 5")
     print("=" * 70)
 
@@ -615,7 +615,7 @@ def main():
     # Write Markdown summary report
     out_md = ROOT / 'output/reports/stress-report.md'
     with open(out_md, 'w') as f:
-        f.write("# Moomin House CNC Plywood Stress Testing & FEA Report\n\n")
+        f.write("# Lanternwood House CNC Plywood Stress Testing & FEA Report\n\n")
         f.write(f"**Execution Date**: {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}  \n")
         f.write(f"**Solvers Used**: FreeCAD 1.1 FEM, CalculiX (ccx 2.23), Gmsh 4.15, Eurocode 5 (EN 1995-1-1 / EN 310)  \n")
         f.write(f"**Material**: Finnish Birch Plywood (E = 8000 MPa, fm,k = 32 MPa, rho = 680 kg/m³)  \n\n")

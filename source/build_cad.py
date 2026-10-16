@@ -19,7 +19,7 @@ import Mesh
 import Part
 import Sketcher
 try:
-    if os.environ.get('MOOMIN_HEADLESS')=='1':raise RuntimeError('headless')
+    if os.environ.get('LANTERNWOOD_HEADLESS')=='1':raise RuntimeError('headless')
     import FreeCADGui as Gui
     Gui.showMainWindow()
 except Exception:
@@ -116,7 +116,7 @@ def main():
         for old in (ROOT/'output'/folder).glob(suffix):
             if old.stem not in build_parts:old.unlink()
     for old in (ROOT/'output/cad').glob('*-furnished.step'):old.unlink()
-    doc=App.newDocument('MoominHouse');doc.Label='Moomin House | 700 mm | 3 floors + attic'
+    doc=App.newDocument('LanternwoodHouse');doc.Label='Lanternwood House | 700 mm | 3 floors + attic'
     params=doc.addObject('Spreadsheet::Sheet','Parameters');params.Label='Dimensions and plywood thickness (mm)'
     values=[('OverallHeight',CFG['height']),('TowerDiameter',CFG['tower_diameter']),('RoofDiameter',CFG['roof_diameter']),('FloorPitch',CFG['floor_pitch']),('WallHeight',CFG['wall_height'])]+[(thickness_alias(t),t) for t in sorted(set(p['thickness'] for p in data['parts'].values()))]
     for row,(alias,value) in enumerate(values,1):params.set(f'A{row}',alias);params.set(f'B{row}',f'{value} mm');params.setAlias(f'B{row}',alias)
@@ -182,19 +182,21 @@ def main():
         ws=transformed(shapes[pid],inst);world[inst['id']]=ws
         verts,faces=ws.tessellate(.8)
         mesh.append({'id':inst['id'],'part':pid,'design_part':inst['design_part'],'group':inst['group'],'color':inst.get('color') or data['parts'][pid]['color'],'vertices':[[v.x,v.y,v.z] for v in verts],'faces':faces})
-    # Thermo-clay Moomins: one exact solid per figure (its lumps, unsmoothed) for the native project and
+    # Thermo-clay Rowan family: one exact solid per figure (its lumps, unsmoothed) for the native project and
     # every clearance check; the smoothed clay mesh is for the viewer and the renders.
     figures=[]
+    DOMINANT_COLOR={'elias':clay.COLOURS['navy'],'mira':clay.COLOURS['sage'],'ada':clay.COLOURS['rust'],'theo':clay.COLOURS['mustard']}
     for f in data['derived']['figures']:
         print('Clay figure',f['id'],flush=True)
         solid,faces=clay_solid(f);name=f['id'].replace('-','_')
-        obj=doc.addObject('Part::Feature',name);obj.Shape=solid;obj.Label=f'{f["id"]} | {f["name"]} | thermo-clay, {f["room"]}';groups['Figures'].addObject(obj);setcolor(obj,clay.COLOURS['white'])
+        obj=doc.addObject('Part::Feature',name);obj.Shape=solid;obj.Label=f'{f["id"]} | {f["name"]} | thermo-clay, {f["room"]}';groups['Figures'].addObject(obj);setcolor(obj,DOMINANT_COLOR.get(f['key'],clay.COLOURS['skin']))
         obj.addProperty('App::PropertyString','ClayNote','Fabrication');obj.ClayNote=f'{f["name"]}, {f["height"]:g} mm tall, about {clay.stats(f["key"])["volume_mm3"]/1000:.1f} cm3 of oven-hardening clay'
         world[f['id']]=solid;figures.append({'id':f['id'],'part':f['code'],'group':'Figures','faces':faces,'valid':solid.isValid(),'cad_volume_mm3':round(solid.Volume,1),
             'lumps_volume_mm3':round(clay.hard_volume(f['key']),1),'clay_volume_mm3':round(clay.stats(f['key'])['volume_mm3'],1)})
         V,F,_,C,_=clay.mesh(f['key'],1.5);palette=list(clay.COLOURS.values())
-        face=np.where((C[F]==1).sum(1)>=2,1,np.where((C[F]==2).sum(1)>=2,2,0))
-        mesh.append({'id':f['id'],'part':f['code'],'group':'Figures','color':palette[0],'face_colors':[palette[k] for k in face],'vertices':np.round(figure_points(V,f),3).tolist(),'faces':F.tolist()})
+        c_faces=C[F]
+        face=np.where(c_faces[:,0]==c_faces[:,1],c_faces[:,0],np.where(c_faces[:,1]==c_faces[:,2],c_faces[:,1],c_faces[:,0]))
+        mesh.append({'id':f['id'],'part':f['code'],'group':'Figures','color':DOMINANT_COLOR.get(f['key'],palette[0]),'face_colors':[palette[k] for k in face],'vertices':np.round(figure_points(V,f),3).tolist(),'faces':F.tolist()})
     # Explicit screw / bolt reference solids, with real axes and tapered tips.
     for f in data['fasteners']:
         axis=App.Vector(*f['axis']);origin=App.Vector(*f['origin']);length=f['length'];tip=2 if f['type']!='BL1' else .3
@@ -208,10 +210,10 @@ def main():
     # Hide construction library without disabling links to its objects.
     for obj in library.Group:
         if obj.ViewObject:obj.ViewObject.Visibility=False
-    doc.recompute();doc.saveAs(str(ROOT/'output/cad/MoominHouse.FCStd'))
+    doc.recompute();doc.saveAs(str(ROOT/'output/cad/LanternwoodHouse.FCStd'))
     # Furniture exists only in the preview meshes and viewer data, never in CAD deliverables.
     house=[world[i['id']] for i in data['instances'] if i['group'] not in ('Tools','Accessories','Furniture','Figures','Garden')]
-    Part.makeCompound(house).exportStep(str(ROOT/'output/cad/MoominHouse.step'))
+    Part.makeCompound(house).exportStep(str(ROOT/'output/cad/LanternwoodHouse.step'))
     # Alternative open assembly and exploded assembly as real solid CAD exports.
     open_shapes=[];exploded=[];views=data['derived']['views']
     for inst in data['instances']:
@@ -223,8 +225,8 @@ def main():
         if g in views['open']:s.translate(App.Vector(*views['open'][g]))
         if g in views['exploded']:e.translate(App.Vector(*views['exploded'][g]))
         open_shapes.append(s);exploded.append(e)
-    Part.makeCompound(open_shapes).exportStep(str(ROOT/'output/cad/MoominHouse-open.step'))
-    Part.makeCompound(exploded).exportStep(str(ROOT/'output/cad/MoominHouse-exploded.step'))
+    Part.makeCompound(open_shapes).exportStep(str(ROOT/'output/cad/LanternwoodHouse-open.step'))
+    Part.makeCompound(exploded).exportStep(str(ROOT/'output/cad/LanternwoodHouse-exploded.step'))
     add_contact_joints(data,world)
     for j in data['joints']:
         p=App.Vector(*j['position']);axis=App.Vector(*j['axis']);wire=Part.makeLine(p-axis*15,p+axis*15)
@@ -234,7 +236,7 @@ def main():
     native_mismatches=[]
     for pid,obj in native.items():
         if not obj.Shape.isValid() or abs(obj.Shape.Volume-shapes[pid].Volume)>.05:native_mismatches.append(pid)
-    doc.recompute();doc.saveAs(str(ROOT/'output/cad/MoominHouse.FCStd'))
+    doc.recompute();doc.saveAs(str(ROOT/'output/cad/LanternwoodHouse.FCStd'))
     (ROOT/'output/parts.json').write_text(json.dumps(data,indent=2))
     (ROOT/'output/previews/mesh.json').write_text(json.dumps(mesh,separators=(',',':')))
     report=validate(data,shapes,world,figures)
@@ -243,9 +245,9 @@ def main():
     report['runtime_seconds']=round(time.time()-started,1);report['freecad_version']='.'.join(App.Version()[:3])
     (ROOT/'output/reports/cad-validation.json').write_text(json.dumps(report,indent=2))
     # Close and reopen the delivered native file, then re-read universal solids.
-    App.closeDocument(doc.Name);reopened=App.openDocument(str(ROOT/'output/cad/MoominHouse.FCStd'));reopened.recompute()
+    App.closeDocument(doc.Name);reopened=App.openDocument(str(ROOT/'output/cad/LanternwoodHouse.FCStd'));reopened.recompute()
     report['native_reopen_objects']=len(reopened.Objects)
-    step=Part.Shape();step.read(str(ROOT/'output/cad/MoominHouse.step'));report['step_reopen_solids']=len(step.Solids)
+    step=Part.Shape();step.read(str(ROOT/'output/cad/LanternwoodHouse.step'));report['step_reopen_solids']=len(step.Solids)
     report['step_reopen_valid']=step.isValid();(ROOT/'output/reports/cad-validation.json').write_text(json.dumps(report,indent=2))
     # FreeCAD writes timestamped .FCBak copies when a document is saved over itself; they are not deliverables.
     for backup in (ROOT/'output/cad').glob('*.FCBak'):backup.unlink()

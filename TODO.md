@@ -1,13 +1,13 @@
-# Moomin House — TODO
+# Lanternwood House — TODO
 
-Open improvements to the house, **in priority order**. Safety and fit come first, then the details that make it read as the Moominhouse, then play value, extras, and the book and tooling. Most items come from the comparison with the DeAgostini / Fanhome *Moominhouse* kit and the design review of 2026-10-14.
+Open improvements to the house, **in priority order**. Safety and fit come first, then play value, extras, and the book and tooling.
 
 Already done:
 - stone plinth with a hidden drawer; room dividers with doorways; veranda at ground-floor level, with stairs; entrance steps (revisions 3 and 4);
 - steeper roof and printable fish-scale shingles, cut per course so they wrap the round roof; new cover (revisions 3 and 4);
-- thermo-clay Moominpappa, Moominmamma and Moomintroll, one per floor; 3 mm parts on A4 / A3 laser sheets; identical parts share one ID (revision 5);
+- thermo-clay Rowan family (Elias, Mira, Ada and Theo), one per floor; 3 mm parts on A4 / A3 laser sheets; identical parts share one ID (revision 5);
 - magnetic catches and garden stop posts for the opening walls (four magnets), drawer turned to 150°, smaller figures that pass every doorway, EN 71-3 paint guidance, build gates, `make all` and the plywood thickness check (revision 6);
-- revision 7 (2026-10-15): two lower, bigger dormers (over W06 beside the veranda, next to the chimney, and over W12 on the opposite side), rope ladder, one-piece window surrounds with glazing, seam battens, back door with canopy and woodpile, room door leaves, Snufkin / Snork Maiden / Little My, LED provisions, cellar hatch, extra furniture and a garden scene, and every item of RISKS.md mitigated (see there). Details per item below.
+- revision 7 (2026-10-15): two lower, bigger dormers (over W06 beside the veranda, next to the chimney, and over W12 on the opposite side), rope ladder, one-piece window surrounds with glazing, seam battens, back door with canopy and woodpile, room door leaves, Rowan family figures, LED provisions, cellar hatch, extra furniture and a garden scene, and every item of RISKS.md mitigated (see there). Details per item below.
 
 ## 1. Before the first build: safety and fit
 
@@ -31,7 +31,7 @@ Already done:
 
 ## 3. Play value
 
-9. - [x] **More clay figures.** Snufkin (70 mm), the Snork Maiden (49 mm) and Little My (62 mm) in `source/clay.py`; Little My lives in the attic. Every figure passes every doorway and none fits the small-parts cylinder (`clay.small_part`).
+9. - [x] **Thermo-clay figures.** The Rowan family (Elias, Mira, Ada, Theo) in `source/clay.py`; Theo lives in the attic. Every figure passes every doorway and none fits the small-parts cylinder (`clay.small_part`).
 10. - [x] **Room door leaves.** PD1, 3 mm, on two cotton-tape strips at each doorway's rear jamb, swinging into the right-hand room; the door-sweep check covers them and figures are placed clear of their swing.
 11. - [x] **Back door.** E04 on W09 (kitchen side, 38 mm notch, hinged on its clockwise jamb to clear the wall-hinge blocks), lean-to canopy GD03 on GD04 brackets, 4-riser stone steps, and a woodpile shelter (WP1–WP3) beside it; clear of the GP1 posts, the veranda and the drawer.
 12. - [x] **Optional LED lighting.** D6 wire holes through F00, both F01 levels and F02 behind the left rear pillar; wire route to the plinth bay behind the drawer back stop (adult access only, no coin cells; BH1 hatch cover removed).
@@ -40,7 +40,7 @@ Already done:
 ## 4. Extras (renders and the appendix)
 
 14. - [x] **More example furniture (renders only):** tiled stove (kakelugn) and chandelier in the living room, a footed bathtub, an attic bed and desk. The furniture contact audit now derives its families from the model (the old list still named deleted furniture and failed).
-15. - [x] **Garden extras.** Well, bathing hut, rowing boat, small bridge, mailbox and Snufkin's tent in a display-only `Garden` group on the lawn beyond the base, plus a lantern on each GP1 post; new `garden` render. (There are no FUR cutting sheets any more: all furniture is display-only.)
+15. - [x] **Garden extras.** Well, bathing hut, rowing boat, small bridge, mailbox and garden tent in a display-only `Garden` group on the lawn beyond the base, plus a lantern on each GP1 post; new `garden` render. (There are no FUR cutting sheets any more: all furniture is display-only.)
 
 ## 5. Book and tooling
 

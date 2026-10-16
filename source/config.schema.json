@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "config.schema.json",
-  "title": "Moomin House design parameters",
+  "title": "Lanternwood House design parameters",
   "description": "source/config.json drives every part, placement, cut sheet and book page. Lengths are millimetres, angles degrees. Check a config with: python source/config_check.py",
   "type": "object",
   "additionalProperties": false,
@@ -340,12 +340,10 @@
             "type": "array",
             "items": {
               "enum": [
-                "pappa",
-                "mamma",
-                "troll",
-                "snufkin",
-                "snorkmaiden",
-                "littlemy"
+                "elias",
+                "mira",
+                "ada",
+                "theo"
               ]
             },
             "uniqueItems": true
@@ -362,29 +360,24 @@
           "type": "object",
           "description": "Finished height of each figure, feet to top of head or hat, mm",
           "properties": {
-            "troll": {
+            "elias": {
               "$ref": "#/$defs/mm"
             },
-            "mamma": {
+            "mira": {
               "$ref": "#/$defs/mm"
             },
-            "pappa": {
+            "ada": {
               "$ref": "#/$defs/mm"
             },
-            "snufkin": {
-              "$ref": "#/$defs/mm"
-            },
-            "snorkmaiden": {
-              "$ref": "#/$defs/mm"
-            },
-            "littlemy": {
+            "theo": {
               "$ref": "#/$defs/mm"
             }
           },
           "required": [
-            "troll",
-            "mamma",
-            "pappa"
+            "elias",
+            "mira",
+            "ada",
+            "theo"
           ],
           "additionalProperties": false
         },

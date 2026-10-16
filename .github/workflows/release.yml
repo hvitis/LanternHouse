@@ -84,7 +84,7 @@ jobs:
 
       - name: Rebuild, check thickness, and package all deliverables
         env:
-          MOOMIN_HEADLESS: "1"
+          LANTERNWOOD_HEADLESS: "1"
           QT_QPA_PLATFORM: "offscreen"
         run: |
           xvfb-run python source/rebuild.py --freecad-python "$PWD/FreeCAD-squashfs/usr/bin/python" --tolerance
@@ -114,14 +114,14 @@ jobs:
           # Release notes from the build reports (file sizes, checks passed, plywood table).
           python -c "import sys; sys.path.insert(0, 'source'); import release; print(release.notes('$TAG_NAME'))" > release-notes.md
           shopt -s nullglob
-          ASSETS=(output/Moomin-House-Build-Kit.zip output/Moomin-House-Supplier-Cut.dxf output/pdf/*.pdf output/pdf/*.csv)
+          ASSETS=(output/Lanternwood-House-Build-Kit.zip output/Lanternwood-House-Supplier-Cut.dxf output/pdf/*.pdf output/pdf/*.csv)
           if gh release view "$TAG_NAME" > /dev/null 2>&1; then
             echo "Release $TAG_NAME exists: replacing its assets."
             gh release upload "$TAG_NAME" "${ASSETS[@]}" --clobber
             gh release edit "$TAG_NAME" --notes-file release-notes.md
           else
             gh release create "$TAG_NAME" "${ASSETS[@]}" \
-              --title "Moomin House $TAG_NAME" \
+              --title "Lanternwood House $TAG_NAME" \
               --verify-tag \
               --notes-file release-notes.md
           fi

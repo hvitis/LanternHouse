@@ -34,14 +34,14 @@ def test_failed_pipeline_preserves_previous_output_and_docs(project):
 
 def finish(workspace, *_):
     (workspace / "output").mkdir()
-    (workspace / "output/Moomin-House-Build-Kit.zip").write_bytes(b"new kit")
+    (workspace / "output/Lanternwood-House-Build-Kit.zip").write_bytes(b"new kit")
     (workspace / "docs/BUILD-GUIDE.md").write_text("new guide")
 
 
 def test_success_publishes_complete_output_without_stale_files(project):
     rebuild.rebuild(project, "freecad-python", pipeline=finish)
     assert not (project / "output/old.pdf").exists()
-    assert (project / "output/Moomin-House-Build-Kit.zip").read_bytes() == b"new kit"
+    assert (project / "output/Lanternwood-House-Build-Kit.zip").read_bytes() == b"new kit"
     assert (project / "docs/BUILD-GUIDE.md").read_text() == "new guide"
     assert not list((project / ".build-work").iterdir())
 

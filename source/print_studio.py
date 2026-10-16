@@ -127,7 +127,7 @@ def main():
     server,port=bind(args.host,args.port,handler=Handler);url=f'http://{args.host}:{port}/'
     if port!=args.port:print(f'Port {args.port} is busy; using the next free port {port}.')
     ADDRESS.parent.mkdir(parents=True,exist_ok=True);ADDRESS.write_text(url+'\n')   # for source/print_shot.mjs
-    print(f'Moomin House print studio: {url}  (Ctrl+C to stop)\n'
+    print(f'Lanternwood House print studio: {url}  (Ctrl+C to stop)\n'
           f'Edit source/prints/*.py and the page follows. Publish to prints/ with `make prints`.',flush=True)
     if args.open:webbrowser.open(url)
     try:server.serve_forever()

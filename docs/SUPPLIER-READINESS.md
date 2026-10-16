@@ -66,7 +66,7 @@ Confirm (all on the checklist page):
 
 ## 6. What to send
 
-`output/pdf/Moomin-House-Supplier.pdf` and `output/Moomin-House-Supplier-Cut.dxf`. The shop asked for "the whole job in one vector file, only what needs to be cut", and this is that file (also attached to every GitHub release):
+`output/pdf/Lanternwood-House-Supplier.pdf` and `output/Lanternwood-House-Supplier-Cut.dxf`. The shop asked for "the whole job in one vector file, only what needs to be cut", and this is that file (also attached to every GitHub release):
 
 - DXF R12 in millimetres, 1:1. Only `POLYLINE` and `CIRCLE` entities: no sheet frames, labels or engraving.
 - One layer and colour per thickness: `CUT_3MM` red, `CUT_6MM` green. Laser software maps each colour to its own power.

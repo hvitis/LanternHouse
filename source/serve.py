@@ -1,4 +1,4 @@
-"""Serve the interactive 3D viewer for the Moomin House model.
+"""Serve the interactive 3D viewer for the Lanternwood House model.
 
     .venv/bin/python source/serve.py              # http://127.0.0.1:8765/ (or the next free port)
     .venv/bin/python source/serve.py --open       # also opens the browser
@@ -12,6 +12,7 @@ and the published 3D prints in prints/ (for prints.html) are served, on the loca
 """
 import argparse, errno, http.server, json, mimetypes, sys, time, webbrowser
 from pathlib import Path
+import naming
 
 ROOT=Path(__file__).resolve().parents[1]
 VIEWER=(ROOT/'source/viewer').resolve()
@@ -71,7 +72,7 @@ def main():
     DATA['/data/dxf-labels.json'].write_text(json.dumps(drawing['labels']),encoding='utf-8')
     server,port=bind(args.host,args.port);url=f'http://{args.host}:{port}/'
     if port!=args.port:print(f'Port {args.port} is busy; using the next free port {port}.')
-    print(f'Moomin House 3D viewer: {url}  (Ctrl+C to stop)',flush=True)
+    print(f'{naming.NAME} 3D viewer: {url}  (Ctrl+C to stop)',flush=True)
     if args.open:webbrowser.open(url)
     try:server.serve_forever()
     except KeyboardInterrupt:print()

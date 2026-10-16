@@ -8,7 +8,7 @@ import {chromium} from 'playwright';
 
 const root = fileURLToPath(new URL('../_site/', import.meta.url));
 const screenshots = fileURLToPath(new URL('../output/viewer-smoke/', import.meta.url));
-const prefix = '/moominshouse/';
+const prefix = '/lanternwood-house/';
 const model = JSON.parse(await readFile(resolve(root, 'data/parts.json'), 'utf8'));
 const mime = {'.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.txt': 'text/plain'};
 const server = createServer(async (req, res) => {
@@ -302,7 +302,7 @@ try {
     await page.locator('#dxfPieceIds').check();
     await page.screenshot({path: resolve(screenshots, `dxf-${name}.png`)});
     const downloadEvent = page.waitForEvent('download');await page.locator('#dxfDownload').click();const download = await downloadEvent;
-    assert.equal(download.suggestedFilename(), 'Moomin-House-Supplier-Cut.dxf');
+    assert.equal(download.suggestedFilename(), 'Lanternwood-House-Supplier-Cut.dxf');
     assert.equal(await readFile(await download.path(), 'utf8'), await readFile(resolve(root, 'data/house.dxf'), 'utf8'));
     await page.locator('#dxfFile').setInputFiles({name: 'invalid.dxf', mimeType: 'application/dxf', buffer: Buffer.from('invalid')});
     await page.locator('#dxfStatus[role="alert"]').waitFor();

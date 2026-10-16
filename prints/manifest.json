@@ -30,7 +30,7 @@
    "title": "Bathtub",
    "notes": "Print upright, as shown, with no supports: the standard Ender 3 PLA profile (0.2 mm layers, 20 % infill) is fine.",
    "color": "#FFF3DB",
-   "about": "A clawfoot bathtub for the Moomin House, wide enough for Moomintroll to sit in, printed upright with no supports.\n\nThe sides flare outward as they rise and the rim rolls out over a 45° lip, so no surface leans out more than 45°.\nUnderneath, the tub narrows at 45° to an oval plinth, and four cone feet stand on the bed at its corners. The\ninside is one smooth shell with a curved floor and a plug hole. It has no taps on purpose: a thin tap could snap\noff and become a part small enough to swallow.",
+   "about": "A clawfoot bathtub for Lanternwood House, wide enough for the Rowan family to sit in, printed upright with no supports.\n\nThe sides flare outward as they rise and the rim rolls out over a 45° lip, so no surface leans out more than 45°.\nUnderneath, the tub narrows at 45° to an oval plinth, and four cone feet stand on the bed at its corners. The\ninside is one smooth shell with a curved floor and a plug hole. It has no taps on purpose: a thin tap could snap\noff and become a part small enough to swallow.",
    "params": {
     "length": {
      "value": 76,
@@ -105,7 +105,7 @@
      "unit": "mm"
     }
    },
-   "hash": "c2653f825eb6fe4f",
+   "hash": "963439957537174b",
    "generator": "build123d 0.13.0",
    "files": {
     "stl": {
@@ -189,7 +189,7 @@
    "title": "Chair",
    "notes": "Print upright, as shown, with no supports: the standard Ender 3 PLA profile (0.2 mm layers, 20 % infill) is fine.",
    "color": "#BD8B5D",
-   "about": "A chair for the Moomin House, sized for Moomintroll, that prints upright with no supports.\n\nThe four legs are what is left of a solid block after two pointed tunnels are cut through it, front to back and\nside to side. Their roofs lean 45°, the most an FDM printer prints without support, so the seat needs none. The\nback is a slab with an arched top. The outer corners, the seat and the back are rounded; the bottom edges stay\nsharp, because a rounded bottom edge would overhang.",
+   "about": "A chair for Lanternwood House, sized for the Rowan family, that prints upright with no supports.\n\nThe four legs are what is left of a solid block after two pointed tunnels are cut through it, front to back and\nside to side. Their roofs lean 45°, the most an FDM printer prints without support, so the seat needs none. The\nback is a slab with an arched top. The outer corners, the seat and the back are rounded; the bottom edges stay\nsharp, because a rounded bottom edge would overhang.",
    "params": {
     "width": {
      "value": 34.0,
@@ -256,7 +256,7 @@
      "unit": "mm"
     }
    },
-   "hash": "39661554f39e8427",
+   "hash": "d43885c3a4f046a0",
    "generator": "build123d 0.13.0",
    "files": {
     "stl": {
@@ -340,7 +340,7 @@
    "title": "Chandelier",
    "notes": "Print upright, as shown, with no supports: the standard Ender 3 PLA profile (0.2 mm layers, 20 % infill) is fine.",
    "color": "#D2AD63",
-   "about": "A classic hanging chandelier for the Moomin House, printed upright with no supports.\n\nFeatures a drop finial base on the printer bed, a flared 45° gallery bowl, four candle holders\nwith tapered candles and flame finials, a central stem, and a self-supporting top suspension loop.\nAll overhangs are 45° or steeper, allowing clean printing without supports.",
+   "about": "A classic hanging chandelier for Lanternwood House, printed upright with no supports.\n\nFeatures a drop finial base on the printer bed, a flared 45° gallery bowl, four candle holders\nwith tapered candles and flame finials, a central stem, and a self-supporting top suspension loop.\nAll overhangs are 45° or steeper, allowing clean printing without supports.",
    "params": {
     "diameter": {
      "value": 46,
@@ -383,7 +383,7 @@
      "unit": "mm"
     }
    },
-   "hash": "df4935a8f573c883",
+   "hash": "5c043a245086bee7",
    "generator": "build123d 0.13.0",
    "files": {
     "stl": {
@@ -467,7 +467,7 @@
    "title": "Tiled stove",
    "notes": "Print upright, as shown, with no supports: the standard Ender 3 PLA profile (0.2 mm layers, 20 % infill) is fine.",
    "color": "#FFF3DB",
-   "about": "A traditional Nordic tiled stove (kakelugn) for the Moomin House, printed upright with no supports.\n\nThe kakelugn features a sturdy round plinth on the printer bed, an arched firebox door with raised\nmoulding on the lower drum, a flared waist shelf, an upper cylindrical tiled column, and an ornate\nflared crown cornice. All transitions and overhangs are 45° or steeper, so it prints cleanly without\nany support structures.",
+   "about": "A traditional Nordic tiled stove (kakelugn) for Lanternwood House, printed upright with no supports.\n\nThe kakelugn features a sturdy round plinth on the printer bed, an arched firebox door with raised\nmoulding on the lower drum, a flared waist shelf, an upper cylindrical tiled column, and an ornate\nflared crown cornice. All transitions and overhangs are 45° or steeper, so it prints cleanly without\nany support structures.",
    "params": {
     "diameter": {
      "value": 40,
@@ -526,7 +526,7 @@
      "unit": "mm"
     }
    },
-   "hash": "4211765bfc332cc3",
+   "hash": "07e2a61d728a3e3a",
    "generator": "build123d 0.13.0",
    "files": {
     "stl": {
@@ -610,7 +610,7 @@
    "title": "Round table",
    "notes": "Print upright, as shown, with no supports: the standard Ender 3 PLA profile (0.2 mm layers, 20 % infill) is fine.",
    "color": "#FFF3DB",
-   "about": "A round table for the Moomin House on one flared pedestal, printed upright with no supports.\n\nThe column widens into the table top in a 45° cone, the most an FDM printer prints without support, so the\nunderside of the top needs none. The top's upper edge and the foot are rounded.",
+   "about": "A round table for Lanternwood House on one flared pedestal, printed upright with no supports.\n\nThe column widens into the table top in a 45° cone, the most an FDM printer prints without support, so the\nunderside of the top needs none. The top's upper edge and the foot are rounded.",
    "params": {
     "diameter": {
      "value": 52,
@@ -669,7 +669,7 @@
      "unit": "mm"
     }
    },
-   "hash": "bd318a22f26b8bb7",
+   "hash": "986ec9e10f01cd7c",
    "generator": "build123d 0.13.0",
    "files": {
     "stl": {

@@ -1,4 +1,4 @@
-// Moomin House prints: every 3D-printable design in prints/manifest.json, standing on the printer bed, with its
+// Lanternwood House prints: every 3D-printable design in prints/manifest.json, standing on the printer bed, with its
 // print checks and downloads. Served by source/print_studio.py the same page is the live studio: each save of a
 // design reloads it, and the sliders rebuild the part on the Mac.
 import * as THREE from 'three';
@@ -250,7 +250,7 @@ async function render(entry,{frame=false}={}){
   if(entry.triangles)facts.push(['Mesh',`${entry.triangles.toLocaleString('en')} triangles`]);
   $('facts').replaceChildren(...facts.flatMap(([k,v])=>[el('dt',{},k),el('dd',{},v)]));
   $('downloads').replaceChildren(...Object.entries(entry.files||{}).map(([kind,f])=>
-    el('a',{href:fileUrl(entry,f),download:`moomin-house-${entry.name}.${kind}`,title:DOWNLOADS[kind][1]},DOWNLOADS[kind][0],el('small',{},`${Math.max(1,Math.round(f.bytes/1024))} KB`))));
+    el('a',{href:fileUrl(entry,f),download:`lanternwood-house-${entry.name}.${kind}`,title:DOWNLOADS[kind][1]},DOWNLOADS[kind][0],el('small',{},`${Math.max(1,Math.round(f.bytes/1024))} KB`))));
   $('notes').textContent=entry.notes||'';
   $('checks').replaceChildren(...(entry.checks||[]).map(c=>el('li',{className:c.status},el('span',{className:'mark','aria-label':c.status},MARKS[c.status]),el('span',{},c.label,el('span',{className:'detail'},c.detail)))));
   renderParams(entry);renderSub();renderList();

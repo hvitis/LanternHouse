@@ -1,4 +1,4 @@
-"""Soft clay-look renders of the thermo-clay Moomin figures (orthographic, true scale, transparent).
+"""Soft clay-look renders of the thermo-clay Rowan family figures (orthographic, true scale, transparent).
 
 A small numpy rasteriser fills a G-buffer (depth, normal, colour, occlusion) from the clay meshes and
 shades it like matte polymer clay: wrapped key light, cool fill, rim light, a gentle satin highlight
@@ -64,6 +64,7 @@ def shade(N,albedo,ao,black):
     return albedo*(diffuse+sky+rimlight)+spec*(.4+.6*a)
 
 def render_view(name,view,step=.45,px=PX):
+    OUT.mkdir(parents=True,exist_ok=True)
     V,F,Nrm,C,mat=clay.mesh(name,step)
     R=camera(*VIEWS[view]);P=V@R.T
     lo,hi=P[:,:2].min(0),P[:,:2].max(0);pad=4
@@ -71,12 +72,10 @@ def render_view(name,view,step=.45,px=PX):
     xy=np.stack([(P[:,0]-lo[0]+pad)*px,(hi[1]+pad-P[:,1])*px],1)
     ao=occlusion(name,V,Nrm)
     pal=srgb_to_linear(np.array([[int(h[i:i+2],16)/255 for i in (1,3,5)] for h in clay.COLOURS.values()]))
-    attrs=np.concatenate([Nrm@R.T,pal[np.where(mat==clay.APRON,0,C)],ao[:,None],(C==1)[:,None],(mat==clay.APRON)[:,None],V[:,1:2]],1).astype(float)
+    attrs=np.concatenate([Nrm@R.T,pal[C],ao[:,None],(C==clay.BLACK)[:,None]],1).astype(float)
     z,hit,g=rasterise(xy,P[:,2],F,attrs,(Wd,Ht))
     N=g[...,:3];N/=np.maximum(np.linalg.norm(N,axis=-1,keepdims=True),1e-9)
-    # Apron stripes per pixel, so their edges stay crisp.
-    stripe=(np.floor(g[...,9]/(clay.STRIPE*clay.scale(name)))%2==0)&(g[...,8]>.5)
-    albedo=np.where(stripe[...,None],pal[2],g[...,3:6])
+    albedo=g[...,3:6]
     col=linear_to_srgb(shade(N,albedo,g[...,6],g[...,7]>.5))
     rgba=np.zeros((Ht,Wd,4),np.uint8);rgba[...,:3]=(col*255).astype(np.uint8);rgba[...,3]=hit*255
     img=Image.fromarray(rgba,'RGBA')
@@ -92,8 +91,9 @@ def render_view(name,view,step=.45,px=PX):
     (OUT/f'clay-{name}-{view}.json').write_text(json.dumps(meta))
     return path
 
-def family(names=('pappa','mamma','troll','snorkmaiden','snufkin','littlemy'),view='three-quarter',gap=6):
+def family(names=('elias','mira','ada','theo'),view='three-quarter',gap=6):
     """The figures side by side at one scale, standing on one ground line."""
+    OUT.mkdir(parents=True,exist_ok=True)
     ims=[Image.open(OUT/f'clay-{n}-{view}.png') for n in names];metas=[json.loads((OUT/f'clay-{n}-{view}.json').read_text()) for n in names]
     k=metas[0]['px_per_mm'];ground=max(m['ground_from_top_mm'] for m in metas)*k;below=max(im.height-m['ground_from_top_mm']*k for im,m in zip(ims,metas))
     sheet=Image.new('RGBA',(int(sum(im.width for im in ims)+gap*k*(len(ims)-1)),int(ground+below)),(0,0,0,0));x=0

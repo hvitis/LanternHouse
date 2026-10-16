@@ -1,6 +1,6 @@
 """Plywood thickness check: the house built from the nominal templates with real, measured sheets.
 
-    make tolerance        (or: MOOMIN_HEADLESS=1 <FreeCAD python> source/thickness_check.py)
+    make tolerance        (or: LANTERNWOOD_HEADLESS=1 <FreeCAD python> source/thickness_check.py)
 
 Bought plywood is rarely its nominal thickness; config thickness_tolerance gives the measured band per nominal
 thickness. Every plywood part keeps its nominal outline and place but is rebuilt at the thinnest and then the
@@ -12,7 +12,7 @@ slot, or a door or drawer gap that the real thickness would close. Solid-wood st
 """
 import json,sys,time
 from pathlib import Path
-import build_cad as bc   # sets up FreeCAD (headless with MOOMIN_HEADLESS=1)
+import build_cad as bc   # sets up FreeCAD (headless with LANTERNWOOD_HEADLESS=1)
 from model import build, BOUGHT
 
 ROOT=Path(__file__).resolve().parents[1]

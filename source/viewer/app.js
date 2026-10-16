@@ -1,4 +1,4 @@
-// Moomin House 3D viewer: every solid is rebuilt from output/parts.json (the same profiles,
+// Lanternwood House 3D viewer: every solid is rebuilt from output/parts.json (the same profiles,
 // thicknesses and placements the CAD export uses). Walls and doors turn about their real hinge axes,
 // the hidden plinth drawer slides along its guides, and dimension annotations come from the model.
 import * as THREE from 'three';
@@ -93,7 +93,7 @@ for(const i of instances){
     mesh.add(tag);pieceLabels.push(tag);
   }
 }
-// Thermo-clay Moomins: closed meshes from clay.py (base64 arrays), one per floor, placed by derived.figures.
+// Thermo-clay figures: closed meshes from clay.py (base64 arrays), placed by derived.figures.
 function decode(text,Type){const bin=atob(text),bytes=new Uint8Array(bin.length);for(let k=0;k<bin.length;k++)bytes[k]=bin.charCodeAt(k);return new Type(bytes.buffer);}
 const clayGeometry={};
 for(const [key,c] of Object.entries(data.clay??{})){

@@ -1,11 +1,11 @@
 {
   "$schema": "./config.schema.json",
-  "title": "Moomin House",
+  "title": "Lanternwood House",
   "height": 778.4,
   "base_diameter": 522.666667,
   "plinth": {"height": 61.6, "apothem": 165.2, "panel": 6.0, "drawer": {"direction": 30.0, "half_width": 74.666667, "height": 50.4, "back": -112.0, "travel": 200.0, "stop": {"dowel": 6.0, "slot": 6.6, "margin": 1.0}}},
   "partition": {"x": 0.0, "door_y": -107.333333, "door_width": 38, "door_height": 93.333333, "front_gap": 0.0, "top_gap": 1.0},
-  "figures": {"levels": [["mamma", "snufkin"], ["pappa", "snorkmaiden"], ["troll"], ["littlemy"]], "turn": 25.0, "heights": {"troll": 42.933333, "mamma": 50.4, "pappa": 60.666667, "snufkin": 70.0, "snorkmaiden": 49.0, "littlemy": 62.0}, "door_clearance": [4.0, 6.0], "clay": {"density": 1.7, "block": 56.0, "allowance": 0.1, "foil_wall": 6.0}, "small_parts": [31.7, 57.1]},
+  "figures": {"levels": [["elias"], ["mira"], ["ada"], ["theo"]], "turn": 25.0, "heights": {"elias": 72.0, "mira": 68.0, "ada": 60.0, "theo": 58.0}, "door_clearance": [4.0, 6.0], "clay": {"density": 1.7, "block": 56.0, "allowance": 0.1, "foil_wall": 6.0}, "small_parts": [31.7, 57.1]},
   "stairs": {"width": 52.266667, "risers": 4, "tread": 14.933333},
   "tower_diameter": 326.666667,
   "roof_diameter": 373.333333,

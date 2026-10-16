@@ -4,20 +4,29 @@ Everything is drawn here (no generated artwork): sky, sun, clouds, hills, meadow
 flowers, then the current house render from render.py, then the title blended into the sky.
 """
 from __future__ import annotations
-import json, math, random
+import json, math, random, sys
 from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT=Path(__file__).resolve().parents[1]
+if str(ROOT / 'source') not in sys.path:
+    sys.path.insert(0, str(ROOT / 'source'))
+import naming
+
 W,H=1754,2480   # A4 portrait at about 212 dpi
 FONT='/System/Library/Fonts/Supplemental/ChalkboardSE.ttc'   # rounded, hand-lettered children's font
 
 def font(size,bold=True):
     try:return ImageFont.truetype(FONT,size,index=2 if bold else 1)
     except OSError:pass
-    try:return ImageFont.truetype('DejaVuSans-Bold.ttf' if bold else 'DejaVuSans.ttf',size)
-    except OSError:return ImageFont.load_default(size)   # Windows and minimal Linux: Pillow's bundled font
+    for path in [
+        ROOT / 'source/fonts' / ('DejaVuSans-Bold.ttf' if bold else 'DejaVuSans.ttf'),
+        'DejaVuSans-Bold.ttf' if bold else 'DejaVuSans.ttf',
+    ]:
+        try:return ImageFont.truetype(str(path),size)
+        except OSError:pass
+    return ImageFont.load_default(size)
 
 def gradient(top,bottom,h0,h1):
     t=np.clip((np.arange(H)[:,None]-h0)/max(h1-h0,1),0,1)
@@ -90,22 +99,32 @@ def main():
     grain=(np.random.default_rng(3).normal(0,7,(H,W,1))).repeat(3,2);arr=np.array(img).astype(float);arr[...,:3]=np.clip(arr[...,:3]+grain,0,255)
     img=Image.fromarray(arr.astype(np.uint8),'RGBA')
     # Hand-lettered title, letter by letter with a little bounce, blended with a soft shadow and glow.
-    title='Moomin House';f=font(232);sub=font(78,False)
+    title=naming.NAME
+    title_size=125
+    f=font(title_size)
+    while sum(f.getlength(ch) for ch in title)+8*len(title)>W*0.75 and title_size>70:
+        title_size-=2
+        f=font(title_size)
+    sub_size=max(int(title_size*0.5),45)
+    sub=font(sub_size,False)
     layer=Image.new('RGBA',(W,H));shade=Image.new('RGBA',(W,H))
-    widths=[f.getlength(ch) for ch in title];x=(W-sum(widths)-8*len(title))/2;y0=165
+    widths=[f.getlength(ch) for ch in title];x=(W-sum(widths)-8*len(title))/2;y0=175
     palette=[(47,127,191),(210,70,60)]
+    stroke_w=max(int(title_size*0.07),7)
+    tile_h=int(title_size*2.0)
     for k,ch in enumerate(title):
         if ch==' ':x+=widths[k]+8;continue
-        tile=Image.new('RGBA',(int(widths[k])+80,330));td=ImageDraw.Draw(tile)
-        td.text((40,20),ch,font=f,fill=palette[k%2 if k<6 else (k+1)%2]+(255,),stroke_width=12,stroke_fill=(255,255,255,255))
-        tile=tile.rotate(rnd.uniform(-6,6),resample=Image.BICUBIC,expand=False);dy=int(14*math.sin(k*1.3))
+        tile=Image.new('RGBA',(int(widths[k])+80,tile_h));td=ImageDraw.Draw(tile)
+        td.text((40,20),ch,font=f,fill=palette[k%2 if k<11 else (k+1)%2]+(255,),stroke_width=stroke_w,stroke_fill=(255,255,255,255))
+        tile=tile.rotate(rnd.uniform(-5,5),resample=Image.BICUBIC,expand=False);dy=int(10*math.sin(k*1.3))
         layer.alpha_composite(tile,(int(x-40),y0+dy));sh=Image.new('RGBA',tile.size,(30,60,70,0));sh.putalpha(tile.getchannel('A').point(lambda v:int(v*.45)))
-        shade.alpha_composite(sh,(int(x-40)+10,y0+dy+14));x+=widths[k]+8
-    img.alpha_composite(shade.filter(ImageFilter.GaussianBlur(10)));img.alpha_composite(layer)
+        shade.alpha_composite(sh,(int(x-40)+8,y0+dy+10));x+=widths[k]+8
+    img.alpha_composite(shade.filter(ImageFilter.GaussianBlur(8)));img.alpha_composite(layer)
     text='A plywood house, made by hand';tw=sub.getlength(text)
-    glow=Image.new('RGBA',(W,H));ImageDraw.Draw(glow).text(((W-tw)/2,y0+300),text,font=sub,fill=(255,255,255,255),stroke_width=10,stroke_fill=(255,255,255,255))
-    img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(8)))
-    ImageDraw.Draw(img).text(((W-tw)/2,y0+300),text,font=sub,fill=(40,72,73,255))
+    sub_y=y0+int(title_size*1.85)
+    glow=Image.new('RGBA',(W,H));ImageDraw.Draw(glow).text(((W-tw)/2,sub_y),text,font=sub,fill=(255,255,255,255),stroke_width=8,stroke_fill=(255,255,255,255))
+    img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(6)))
+    ImageDraw.Draw(img).text(((W-tw)/2,sub_y),text,font=sub,fill=(40,72,73,255))
     img.convert('RGB').save(ROOT/'output/previews/cover.png',optimize=True)
     print('Cover saved: output/previews/cover.png')
     try:

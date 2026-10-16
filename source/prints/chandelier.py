@@ -1,4 +1,4 @@
-"""A classic hanging chandelier for the Moomin House, printed upright with no supports.
+"""A classic hanging chandelier for Lanternwood House, printed upright with no supports.
 
 Features a drop finial base on the printer bed, a flared 45° gallery bowl, four candle holders
 with tapered candles and flame finials, a central stem, and a self-supporting top suspension loop.

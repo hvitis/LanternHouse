@@ -8,7 +8,7 @@ import {chromium} from 'playwright';
 
 const root = fileURLToPath(new URL('../_site/', import.meta.url));
 const screenshots = fileURLToPath(new URL('../output/viewer-smoke/', import.meta.url));
-const prefix = '/moominshouse/';
+const prefix = '/lanternwood-house/';
 const model = JSON.parse(await readFile(resolve(root, 'data/parts.json'), 'utf8'));
 const mime = {'.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.txt': 'text/plain'};
 const server = createServer(async (req, res) => {
@@ -33,7 +33,7 @@ try {
   browser=await chromium.launch({args:['--enable-unsafe-swiftshader']});
   await mkdir(screenshots,{recursive:true});
   const guide=JSON.parse(await readFile(resolve(root,'data/assembly.json'),'utf8'));
-  const storageKey='moomin-house:assembly:v1';
+  const storageKey='lanternwood-house:assembly:v1';
   for(const [name,viewport] of [['desktop',{width:1440,height:1000}],['mobile',{width:390,height:844}]]){
     const page=await browser.newPage({viewport,hasTouch:name==='mobile'});page.setDefaultTimeout(30000);
     const errors=[];page.on('pageerror',error=>errors.push(error.message));

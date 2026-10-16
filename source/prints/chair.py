@@ -1,4 +1,4 @@
-"""A chair for the Moomin House, sized for Moomintroll, that prints upright with no supports.
+"""A chair for Lanternwood House, sized for the Rowan family, that prints upright with no supports.
 
 The four legs are what is left of a solid block after two pointed tunnels are cut through it, front to back and
 side to side. Their roofs lean 45°, the most an FDM printer prints without support, so the seat needs none. The

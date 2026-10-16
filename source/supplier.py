@@ -12,11 +12,12 @@ from reportlab.lib.utils import simpleSplit, ImageReader
 from PIL import Image, ImageOps
 from pypdf import PdfReader, PdfWriter
 from pypdf.generic import NameObject, TextStringObject
+import cnc, naming
 from model import BOUGHT
 
 ROOT=Path(__file__).resolve().parents[1]
 DEFAULTS={'revision':'SUP-004','material':'birch_plywood_raw','grade':'2/2','include_optional':False,'engraving':'none','maximum_sheet_mm':[297,420],'stock_sizes_mm':[[297,420]],'cutting_tolerance_mm':None,'thickness_tolerance_mm':None}
-REGULAR='MoominSans';BOLD='MoominSans-Bold'
+REGULAR=naming.FONT_REGULAR;BOLD=naming.FONT_BOLD
 
 def fonts():
     for name,file in ((REGULAR,'DejaVuSans.ttf'),(BOLD,'DejaVuSans-Bold.ttf')):
@@ -98,7 +99,7 @@ def build(data,nest,cfg,lang='pl',output=None):
     import cnc
     fonts();tr=catalog(lang);options=settings(cfg);sheets=sheets_for(data,nest,options)
     parts=data['parts'];quantities=Counter(item['part'] for sheet in sheets for item in sheet['items'])
-    path=Path(output) if output else ROOT/'output/pdf/Moomin-House-Supplier.pdf'
+    path=Path(output) if output else ROOT/'output/pdf'/naming.PDF_SUPPLIER
     path.parent.mkdir(parents=True,exist_ok=True)
     buf=io.BytesIO();c=canvas.Canvas(buf,pagesize=A4,pageCompression=1);pages=[];width,height=A4
     def name(pid):return tr['parts'].get(pid,parts[pid]['name'])
@@ -112,7 +113,7 @@ def build(data,nest,cfg,lang='pl',output=None):
         text(tr['revision']+': '+options['revision'],40,height-76,9)
         pages.append({'page':len(pages)+1,'role':role,'title':title,'size_mm':[210,297]})
     def finish():
-        text('Moomin House / '+options['revision'],40,24,8);text(len(pages),width-55,24,8);c.showPage()
+        text(naming.NAME+' / '+options['revision'],40,24,8);text(len(pages),width-55,24,8);c.showPage()
     start(tr['title'],'specification')
     bw_house=house_bw_image()
     # Info about the license is preserved here but hidden for now:
@@ -239,12 +240,12 @@ def build(data,nest,cfg,lang='pl',output=None):
         finish()
     c.save();buf.seek(0);reader=PdfReader(buf);writer=PdfWriter()
     for page,meta in zip(reader.pages,pages):
-        page[NameObject('/MoominPageRole')]=TextStringObject(meta['role'])
-        if 'sheet' in meta:page[NameObject('/MoominSheetID')]=TextStringObject(meta['sheet'])
-        if 'operation' in meta:page[NameObject('/MoominOperation')]=TextStringObject(meta['operation'])
+        page[NameObject(naming.PDF_KEY_PAGE_ROLE)]=TextStringObject(meta['role'])
+        if 'sheet' in meta:page[NameObject(naming.PDF_KEY_SHEET_ID)]=TextStringObject(meta['sheet'])
+        if 'operation' in meta:page[NameObject(naming.PDF_KEY_OPERATION)]=TextStringObject(meta['operation'])
         writer.add_page(page)
     for meta in pages:writer.add_outline_item(meta['title'],meta['page']-1)
-    writer.add_metadata({'/Title':'Moomin House | '+tr['title'],'/Author':'Moomin House','/Revision':options['revision']})
+    writer.add_metadata({'/Title':f'{naming.NAME} | '+tr['title'],'/Author':naming.NAME,'/Revision':options['revision']})
     writer._root_object[NameObject('/Lang')]=TextStringObject(lang)
     with path.open('wb') as f:writer.write(f)
     csvpath=path.with_suffix('.csv')

@@ -1,6 +1,6 @@
-# Moomin House: Risk Assessment & Mitigation Record
+# Lanternwood House: Risk Assessment & Mitigation Record
 
-This document records the structural, mechanical, chemical and child-safety risks of the CNC birch-plywood Moomin House, with emphasis on use by a **3-year-old**, and what revision 7 (2026-10-15) did about each. The original findings came from CalculiX FEA (`make stress`), Eurocode 5 hand checks and the toy-safety standards EN 71-1, EN 71-3, ASTM F963 and 16 CFR 1500/1501.
+This document records the structural, mechanical, chemical and child-safety risks of the CNC birch-plywood Lanternwood House, with emphasis on use by a **3-year-old**, and what revision 7 (2026-10-15) did about each. The original findings came from CalculiX FEA (`make stress`), Eurocode 5 hand checks and the toy-safety standards EN 71-1, EN 71-3, ASTM F963 and 16 CFR 1500/1501.
 
 Every mitigation below is in the model and checked on each build: `make check` (model tests), `make all` (CAD collision, swing, door, drawer and roof-lift checks, release checks), `make stackup` (`source/stackup.py`, joint tolerance chains; `source/risk_audit.py`, tip-over, small parts, magnets) and `make stress` (FEA and fastener checks). Physical checks the CAD cannot make are a printed page in the instructions ("Dry-fit and safety checks").
 

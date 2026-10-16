@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id);
-export const STORAGE_KEY='moomin-house:assembly:v1';
-export const LANG_STORAGE_KEY='moomin-house:instructions:lang';
+export const STORAGE_KEY='lanternwood-house:assembly:v1';
+export const LANG_STORAGE_KEY='lanternwood-house:instructions:lang';
 
 let manifest,progress,scene,sceneLoading,model,initializing;
 function getStoredLang(){try{return localStorage.getItem(LANG_STORAGE_KEY)||'pl';}catch{return 'pl';}}
@@ -193,7 +193,7 @@ function updateLanguageUI(){
   if(pdfBtn){
     pdfBtn.textContent=dict.downloadPdf;
     pdfBtn.href=isPl?'./data/checklist-pl.pdf':'./data/checklist-en.pdf';
-    pdfBtn.setAttribute('download',isPl?'Domek-Muminkow-Lista-Kontrolna.pdf':'Moomin-House-Checklist.pdf');
+    pdfBtn.setAttribute('download',isPl?'Lanternwood-House-Checklist-PL.pdf':'Lanternwood-House-Checklist.pdf');
   }
   if($('instructionIssues'))$('instructionIssues').replaceChildren(...(isPl&&manifest.issues_pl?manifest.issues_pl:manifest.issues).map(issue=>text('p',issue)));
   if($('instructionFit'))$('instructionFit').textContent=dict.fit;

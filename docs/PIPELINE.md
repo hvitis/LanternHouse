@@ -9,7 +9,7 @@ Every part, placement, PDF page, cut sheet and render is generated from `source/
 | **FreeCAD 1.1+ bundled Python** | `build_cad.py`, `audit_connections.py`, `thickness_check.py`, `run_stress_tests.py` | FreeCAD, Part, Sketcher, Mesh (the OpenCASCADE solid kernel), numpy, shapely |
 | **Your own Python 3.12+** (`.venv`) | `model.py`, `nest.py`, `stock.py`, `render.py`, `cover.py`, `decorate_cad.py`, `book.py`, `cut_file.py`, `verify.py`, `package.py`, `serve.py`, `config_check.py`, `export_viewer.py`, `release.py` | `requirements.txt`: reportlab, Pillow, numpy, pypdf, jsonschema, shapely (plus pytest from `requirements-dev.txt` for the tests) |
 
-`make all` runs everything in order: `make check` (config check and tests), `make build` (`source/rebuild.py`) and `make tolerance` (`thickness_check.py`). `source/rebuild.py` drives both runtimes. It checks the config first (`config_check.py`) and copies the build inputs into `.build-work/`. It starts with fresh output there. A failed build preserves the previous `output/` and keeps its diagnostics. A successful build replaces `output/` and updates the generated documentation. Concurrent edits to the copied inputs stop publication. It then runs the FreeCAD stages headless (`MOOMIN_HEADLESS=1`, `QT_QPA_PLATFORM=offscreen`), then the rest in the Python that launched it. Any failed check stops the build: `build_cad.py` exits with a list of the failures before nesting starts, and `verify.py` and `package.py` refuse to continue.
+`make all` runs everything in order: `make check` (config check and tests), `make build` (`source/rebuild.py`) and `make tolerance` (`thickness_check.py`). `source/rebuild.py` drives both runtimes. It checks the config first (`config_check.py`) and copies the build inputs into `.build-work/`. It starts with fresh output there. A failed build preserves the previous `output/` and keeps its diagnostics. A successful build replaces `output/` and updates the generated documentation. Concurrent edits to the copied inputs stop publication. It then runs the FreeCAD stages headless (`LANTERNWOOD_HEADLESS=1`, `QT_QPA_PLATFORM=offscreen`), then the rest in the Python that launched it. Any failed check stops the build: `build_cad.py` exits with a list of the failures before nesting starts, and `verify.py` and `package.py` refuse to continue.
 
 `model.py` itself needs only numpy, so `source/serve.py` can generate the viewer data without FreeCAD.
 
@@ -49,19 +49,19 @@ flowchart LR
 
 | Order | Script | Runtime | Reads | Writes |
 | --- | --- | --- | --- | --- |
-| 1 | `build_cad.py` | FreeCAD | `config.json` via `model.py`, `clay.py` | `output/parts.json`, native `MoominHouse.FCStd`, the closed, open and exploded STEP files, one STEP per part, one DXF per profile, `previews/mesh.json`, `reports/cad-validation.json` (overlaps, wall swing to the stop posts, door sweep, drawer, roof lift, window clearance, figures through doorways); exits with an error if any of them fails |
+| 1 | `build_cad.py` | FreeCAD | `config.json` via `model.py`, `clay.py` | `output/parts.json`, native `LanternwoodHouse.FCStd`, the closed, open and exploded STEP files, one STEP per part, one DXF per profile, `previews/mesh.json`, `reports/cad-validation.json` (overlaps, wall swing to the stop posts, door sweep, drawer, roof lift, window clearance, figures through doorways); exits with an error if any of them fails |
 | 2 | `audit_connections.py` | FreeCAD | `parts.json` | `reports/furniture-connections.json` |
 | 3 | `nest.py` (+ `stock.py`, `cnc.py`, `dxf_r12.py`) | venv (shapely, one process per part order) | `parts.json` | `nesting.json` (with each sheet's hand-drilling list), full-size sheet SVGs, CNC operation SVG/DXF sheets and one layered DXF per sheet |
 | 4 | `stackup.py`, `risk_audit.py` | venv | `parts.json` | `reports/stackup.json` (joint tolerance chains), `reports/risk-audit.json` (tip-over, small parts, magnets); either exits with an error on a failure |
 | 5 | `render.py` (+ `clay_render.py`) | venv | `parts.json`, `previews/mesh.json` | the CAD-derived illustrations and the clay figure renders in `output/previews/` |
 | 6 | `cover.py` | venv | `previews/cover-house.png` | `previews/cover.png` |
 | 7 | `readme_images.py` (+ `social_preview.py`) | venv | `output/previews/` | web-optimised illustrations in `docs/images/` and `.github/social-preview.png` for the README |
-| 8 | `decorate_cad.py` | venv | `MoominHouse.FCStd`, `parts.json` | GUI colours and visibility saved into the `.FCStd`, `reports/native-materials.json` |
+| 8 | `decorate_cad.py` | venv | `LanternwoodHouse.FCStd`, `parts.json` | GUI colours and visibility saved into the `.FCStd`, `reports/native-materials.json` |
 | 9 | `book.py` (+ `shingles.py`, `supplier.py`, `pdf_assembly.py`) | venv | `parts.json`, `nesting.json`, previews, CAD report, locale catalogs | eight PDFs, supplier CSV, PDF report, template indices, supplier index and clickable contents index |
-| 10 | `cut_file.py` | venv | `parts.json`, `nesting.json` | `output/Moomin-House-Supplier-Cut.dxf` (every sheet's cutting lines in one DXF, one layer per thickness) and `reports/supplier-cut-file.json` |
+| 10 | `cut_file.py` | venv | `parts.json`, `nesting.json` | `output/Lanternwood-House-Supplier-Cut.dxf` (every sheet's cutting lines in one DXF, one layer per thickness) and `reports/supplier-cut-file.json` |
 | 11 | `verify.py` | venv | everything above | `reports/release-validation.json`, `parts.csv`, `hardware.csv`, `stock.csv` |
 | 12 | `thickness_check.py` (with `--tolerance`) | FreeCAD | the built model | `reports/thickness-tolerance.json`; failure stops packaging |
-| 13 | `package.py` | venv | the validation report, `nesting.json` | `output/Moomin-House-Build-Kit.zip`, `reports/build-manifest.json`, and the stock tables in `docs/BUILD-GUIDE.md` |
+| 13 | `package.py` | venv | the validation report, `nesting.json` | `output/Lanternwood-House-Build-Kit.zip`, `reports/build-manifest.json`, and the stock tables in `docs/BUILD-GUIDE.md` |
 
 `package.py` refuses to package if any release check failed. With `--tolerance`, it also requires passing thickness evidence. Both reports and the manifest are inside the ZIP. Before packaging, `thickness_check.py` (FreeCAD) rebuilds every plywood part at the thinnest and thickest end of `thickness_tolerance`, about its mid-plane, reruns the CAD checks and writes `reports/thickness-tolerance.json`. Overlaps between parts that already touch at nominal size count as shifts; an overlap where the design had a gap fails the check. `verify_gui.py` is an optional extra: run it with FreeCAD's Python to check that the saved GUI document restores.
 
@@ -128,7 +128,7 @@ To add a part, call `add(...)` to define its profile and `put(...)` (or `upright
 | `base_diameter` | The round grey base. |
 | `plinth` | Plinth height and apothem, panel thickness, and the hidden drawer (direction, size, travel). |
 | `partition` | The room dividers and their doorways. |
-| `figures` | Which clay Moomin stands on which floor (`levels`), their turn, their finished `heights`, the `door_clearance` every figure must have in every doorway, and the clay estimate (`density`, `block`, `allowance`, `foil_wall`). |
+| `figures` | Which clay figure stands on which floor (`levels`), their turn, their finished `heights`, the `door_clearance` every figure must have in every doorway, and the clay estimate (`density`, `block`, `allowance`, `foil_wall`). |
 | `stairs` | The veranda side stair. |
 | `tower_diameter`, `roof_diameter`, `floor_pitch`, `wall_height` | The main proportions. |
 | `thickness` | Plywood thickness per role: `structure`, `base`, `wall`, `furniture`, `detail`, `floor`. Each is 3 or 6 mm, the only two sheet thicknesses: `structure` (6) covers the pillars, `detail` (3) the doors, railings, trim, seam strips , `furniture` (3) the drawer bottom. |
@@ -173,7 +173,7 @@ make build      # the full rebuild writes it after the book (cut_file.py)
 make cutfile    # rewrite it from the last build's nesting, about a second, no FreeCAD
 ```
 
-Both write `output/Moomin-House-Supplier-Cut.dxf` and `output/reports/supplier-cut-file.json` (each sheet's slot origin, the layers and the blind or hand-drilled features left out). `make cutfile` reads `output/parts.json` and `output/nesting.json` and does not re-nest. After a change to the design or the config, run `make build`, so the DXF and the supplier PDF's sheet maps come from the same nesting. `verify.py` re-reads the file in every build and fails if any outline, opening or through hole is missing. Pushing a `v*` tag rebuilds everything in CI and attaches the DXF to the release; `release.py` attaches it too.
+Both write `output/Lanternwood-House-Supplier-Cut.dxf` and `output/reports/supplier-cut-file.json` (each sheet's slot origin, the layers and the blind or hand-drilled features left out). `make cutfile` reads `output/parts.json` and `output/nesting.json` and does not re-nest. After a change to the design or the config, run `make build`, so the DXF and the supplier PDF's sheet maps come from the same nesting. `verify.py` re-reads the file in every build and fails if any outline, opening or through hole is missing. Pushing a `v*` tag rebuilds everything in CI and attaches the DXF to the release; `release.py` attaches it too.
 
 Add `--lang en` to `rebuild.py` for an English supplier appendix. With current CAD, nesting and previews already generated, `.venv/bin/python source/book.py --lang pl` rebuilds only the PDFs and PDF indices. Run `source/verify.py` and `source/package.py` afterwards to refresh validation and the kit. Each run produces one appendix language; production contours are identical across languages. Supplier and contents pages embed the bundled DejaVu Sans fonts for Polish characters; the workshop book keeps its existing fonts.
 
@@ -245,4 +245,4 @@ git commit ... && git push                                   # release.py insist
 - the build kit contains the `original/` reference photos;
 - the source isn't committed, or the commit isn't pushed.
 
-It attaches the PDFs, `Moomin-House-Supplier-Cut.dxf` and `Moomin-House-Build-Kit.zip`. The tag workflow (`.github/workflows/release.yml`) attaches the same files plus the supplier CSV. The release notes give page counts, sizes and the plywood stock tables.
+It attaches the PDFs, `Lanternwood-House-Supplier-Cut.dxf` and `Lanternwood-House-Build-Kit.zip`. The tag workflow (`.github/workflows/release.yml`) attaches the same files plus the supplier CSV. The release notes give page counts, sizes and the plywood stock tables.

@@ -5,11 +5,12 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 def rgba(hexval):return int(hexval[1:]+'ff',16)
 def main():
-    data=json.loads((ROOT/'output/parts.json').read_text());path=ROOT/'output/cad/MoominHouse.FCStd'
-    with zipfile.ZipFile(path) as z:entries={n:z.read(n) for n in z.namelist() if n!='GuiDocument.xml' and not n.startswith('MoominMaterial_')}
+    data=json.loads((ROOT/'output/parts.json').read_text());path=ROOT/'output/cad/LanternwoodHouse.FCStd'
+    with zipfile.ZipFile(path) as z:entries={n:z.read(n) for n in z.namelist() if n!='GuiDocument.xml' and not n.startswith('LanternwoodMaterial_')}
     native=ET.fromstring(entries['Document.xml']);root=ET.Element('Document',SchemaVersion='1',HasExpansion='1');ET.SubElement(root,'Expand');views=ET.SubElement(root,'ViewProviderData',Count='0')
     inst={i['id'].replace('-','_'):i for i in data['instances'] if not data['parts'][i['part']].get('render_only')};count=0
-    figures={f['id'].replace('-','_') for f in data['derived']['figures']}   # thermo-clay solids, white clay
+    figures={f['id'].replace('-','_') for f in data['derived']['figures']}   # thermo-clay solids
+    DOMINANT_COLOR={'elias':'#25374C','mira':'#7C9B84','ada':'#BD5147','theo':'#CCA030'}
     for obj in native.find('Objects').findall('Object'):
         name=obj.attrib['name'];typ=obj.attrib.get('type','');count+=1
         vp=ET.SubElement(views,'ViewProvider',name=name,expanded='0',treeRank='-1',Extensions='True')
@@ -19,10 +20,10 @@ def main():
         prop=ET.SubElement(props,'Property',name='Visibility',type='App::PropertyBool',status='1');ET.SubElement(prop,'Bool',value=str(visible).lower())
         if typ.startswith('Part::'):
             hexval=(item.get('color') or data['parts'][item['part']]['color']) if item else '#BD8B5D'
-            if name in figures:hexval=data['clay'][next(f['key'] for f in data['derived']['figures'] if f['id'].replace('-','_')==name)]['mesh']['palette'][0]
+            if name in figures:hexval=DOMINANT_COLOR.get(next(f['key'] for f in data['derived']['figures'] if f['id'].replace('-','_')==name),'#25374C')
             if name.startswith('FS_'):hexval='#C19A55'
             if name.startswith('J_'):hexval='#B56535'
-            filename='MoominMaterial_'+name
+            filename='LanternwoodMaterial_'+name
             # Native PropertyMaterialList version 3: count, four colors, floats, three empty strings.
             entries[filename]=struct.pack('<IIIIIffIII',1,0x555555ff,rgba(hexval),0x777777ff,0xff,.25,0,0,0,0)
             prop=ET.SubElement(props,'Property',name='ShapeAppearance',type='App::PropertyMaterialList',status='1');ET.SubElement(prop,'MaterialList',file=filename,version='3')

@@ -1,4 +1,4 @@
-"""A traditional Nordic tiled stove (kakelugn) for the Moomin House, printed upright with no supports.
+"""A traditional Nordic tiled stove (kakelugn) for Lanternwood House, printed upright with no supports.
 
 The kakelugn features a sturdy round plinth on the printer bed, an arched firebox door with raised
 moulding on the lower drum, a flared waist shelf, an upper cylindrical tiled column, and an ornate

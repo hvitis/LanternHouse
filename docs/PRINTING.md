@@ -1,6 +1,6 @@
 # 3D-printable furniture
 
-The house's furniture and accessories can also be 3D printed. Each design is a short Python file. Its STL, 3MF and STEP files are generated on the Mac, and the [prints page](https://hvitis.github.io/MoominsHouse/#printables) shows every published design in 3D with its print checks and downloads. It is the **3D printables** tab of the viewer (`#printables`, which loads `prints.html?embedded=1`); `prints.html` also works on its own. The designs are checked for a stock Creality Ender 3.
+The house's furniture and accessories can also be 3D printed. Each design is a short Python file. Its STL, 3MF and STEP files are generated on the Mac, and the [prints page](https://hvitis.github.io/lanternwood-house/#printables) shows every published design in 3D with its print checks and downloads. It is the **3D printables** tab of the viewer (`#printables`, which loads `prints.html?embedded=1`); `prints.html` also works on its own. The designs are checked for a stock Creality Ender 3.
 
 | Where | What runs | Needs |
 | --- | --- | --- |

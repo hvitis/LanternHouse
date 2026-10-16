@@ -1,12 +1,13 @@
 """Generate GitHub repository social media preview (1280x640 px).
 
-Displays the 3D-rendered opened Moomin House with the project title set in DejaVuSans-Bold
+Displays the 3D-rendered opened Lanternwood House with the project title set in DejaVuSans-Bold
 (the font used on the supplier/specification PDF first page).
 """
 from __future__ import annotations
 import argparse
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
+import naming
 
 ROOT = Path(__file__).resolve().parents[1]
 W, H = 1280, 640
@@ -15,7 +16,7 @@ def generate(output=None, dark=True, furnished=True):
     # Load fonts (font from PDF first page: DejaVuSans-Bold)
     font_bold = ROOT / 'source/fonts/DejaVuSans-Bold.ttf'
     font_reg = ROOT / 'source/fonts/DejaVuSans.ttf'
-    f_title = ImageFont.truetype(str(font_bold), 68)
+    f_title = ImageFont.truetype(str(font_bold), 52)
     f_sub = ImageFont.truetype(str(font_reg), 22)
     f_badge = ImageFont.truetype(str(font_bold), 15)
     f_tag = ImageFont.truetype(str(font_bold), 12)
@@ -93,14 +94,14 @@ def generate(output=None, dark=True, furnished=True):
     draw.text((tx + 12, ty - 42), tag_text, font=f_tag, fill=badge_text)
 
     # Main Title using font from PDF first page
-    draw.text((tx, ty), 'Moomin House', font=f_title, fill=text_color)
+    draw.text((tx, ty), naming.NAME, font=f_title, fill=text_color)
 
     # Subtitle
     sub_lines = [
         'Complete FreeCAD workshop, cutting templates,',
         'A3 CNC sheets & 4-storey building guide'
     ]
-    sy = ty + 95
+    sy = ty + 75
     for sline in sub_lines:
         draw.text((tx, sy), sline, font=f_sub, fill=sub_color)
         sy += 32

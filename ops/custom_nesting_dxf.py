@@ -1,6 +1,6 @@
 """Custom plywood stock calculation and DXF cut generator for 500x300 (3mm) and 400x300 (6mm).
 
-Uses existing MoominsHouse calculation pipeline, stock optimizer (source/stock.py),
+Uses existing Lanternwood House calculation pipeline, stock optimizer (source/stock.py),
 nesting engine (source/nest.py), CNC cutting path extractor (source/cnc.py), and DXF R12 writer (source/dxf_r12.py).
 """
 import copy, json, math, os, sys
@@ -16,7 +16,7 @@ from dxf_r12 import DXF, COLOURS, thickness_layer as layer
 from shapely.geometry import Polygon, box
 
 OUTPUT_DIR = ROOT / 'output/custom_500x300_400x300'
-MASTER_DXF = OUTPUT_DIR / 'Moomin-House-Custom-Cut-500x300-400x300.dxf'
+MASTER_DXF = OUTPUT_DIR / 'Lanternwood-House-Custom-Cut-500x300-400x300.dxf'
 REPORT_JSON = OUTPUT_DIR / 'custom-stock-report.json'
 
 COLUMNS = 5
@@ -212,7 +212,7 @@ def export_dxfs(data, sheets, stats):
     
     # Save report JSON
     report = {
-        'title': 'Moomin House Custom Plywood Optimization (500x300 3mm & 400x300 6mm)',
+        'title': 'Lanternwood House Custom Plywood Optimization (500x300 3mm & 400x300 6mm)',
         'summary': {
             'plywood_3mm_500x300': stats['3mm']['sheet_count'],
             'plywood_6mm_400x300': stats['6mm']['sheet_count'],

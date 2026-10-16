@@ -1,4 +1,6 @@
-# Moomin House — Revision 2 plan
+# Lanternwood House — Design Log (Revisions 2–7)
+
+> **Historical Context:** This document records the engineering revisions (Revisions 2 through 7) through which the house geometry, veranda, plinth drawer, magnetic stops/catches, and continuous pillars were developed. Early revisions used the initial working title "Moomin House" and prototype character silhouettes before the project transitioned to Lanternwood House and the Rowan family figures.
 
 Status: **implemented** · 2026-10-14 (see §11 for implementation notes and deviations)
 Scope: (A) remove stairs and floor openings, (B) circular foundation, (C) move, enlarge and improve the veranda, (D) furniture becomes an optional appendix at the end of the PDF, plus (E) fixes for inconsistencies found in the current release.
@@ -23,7 +25,7 @@ All geometry is generated from `source/` (`model.py`, `architecture.py`), so eve
 
 ## 1. Prerequisites (do first)
 
-1. **Put the project under git.** `moominshouse/` is *not* a git repository, despite what the harness reports. Run `git init`, then commit `source/`, `README.md`, `assets/`, `original/` and the current `output/` as the baseline. That gives a diffable record of `parts.json`, `nesting.json` and the reports for every phase.
+1. **Put the project under git.** `lanternwood-house/` is *not* a git repository, despite what the harness reports. Run `git init`, then commit `source/`, `README.md`, `assets/`, `original/` and the current `output/` as the baseline. That gives a diffable record of `parts.json`, `nesting.json` and the reports for every phase.
 2. **Install FreeCAD 1.1.x.** It is absent from this Mac, but `cad-validation.json` shows the last build ran on FreeCAD 1.1.4. Install with `brew install --cask freecad`, then use the runtime at `/Applications/FreeCAD.app/Contents/Resources/bin/python`.
 3. **Baseline rebuild.** `rebuild.py` must reproduce today's `release-validation.json` (all_pass) before any change, so the toolchain is proven.
 
@@ -154,8 +156,8 @@ All geometry is generated from `source/` (`model.py`, `architecture.py`), so eve
 - The main 4 mm need shrinks to the E01 doors, rails, balusters and FN01, so it may fit an A4 or 400×400 piece.
 
 **CAD (`build_cad.py`, `decorate_cad.py`)**
-- `MoominHouse.step` contains the house without furniture.
-- New `MoominHouse-furnished.step` contains the house with furniture.
+- `LanternwoodHouse.step` contains the house without furniture.
+- New `LanternwoodHouse-furnished.step` contains the house with furniture.
 - In the FCStd, the furniture sits in a group labelled "Optional furniture".
 - Collision and wall-swing checks still run *with* the furniture, so the optional furniture can never block the walls or catches.
 
@@ -168,7 +170,7 @@ All geometry is generated from `source/` (`model.py`, `architecture.py`), so eve
 - The main book excludes optional parts from the part inventory, dimensioned pages, templates and stock table.
 - Main assembly steps are renumbered:
   01 prepare · 02 base feet · 03 rear shell · 04 floor frame · 05 opening shells · 06 hang walls · 07 doors · 08 window trim · 09 roof and dormer · 10 chimney · 11 roof catches · 12 build and fix the veranda · 13 paint and paper · 14 open, close and check.
-- New `appendix()` produces `Moomin-House-Furniture-Appendix.pdf`. It contains, in order:
+- New `appendix()` produces `Lanternwood-House-Furniture-Appendix.pdf`. It contains, in order:
   - an intro (optional, small parts, supervision for ages 3–5);
   - the furniture stock table;
   - the part inventory and dimensioned pages;
@@ -176,7 +178,7 @@ All geometry is generated from `source/` (`model.py`, `architecture.py`), so eve
   - steps A1 kitchen, A2 living, A3 bedrooms, A4 attic, A5 veranda chair, A6 accessory set;
   - the "Furniture assembly diagrams" and "Furniture measurements" pages;
   - the textile and miniature decor pages.
-- `main()` appends the appendix **last** in `Moomin-House-Complete.pdf`, with the outline entry "Appendix — Optional furniture".
+- `main()` appends the appendix **last** in `Lanternwood-House-Complete.pdf`, with the outline entry "Appendix — Optional furniture".
 - The J5 joint is renamed "glued edge-to-face (veranda, trim, optional furniture)".
 
 **README:** the furniture paragraph becomes "Optional furniture appendix"; add the new PDF and STEP files to the file table.
@@ -352,7 +354,7 @@ Remaining comparison items moved to `TODO.md`.
   - The W05 low gusset beside the hinge jamb sits at 96 mm, above the backing strip. Dropping it to the floor would have hit a rear foot block.
   - The W12 door now hinges at the front seam, where there are no gussets.
 - **Room doors:** the leaves and tape hinges are removed. Each divider keeps a 40 × 100 doorway, now at its front end next to the opening walls.
-- **Figures:** Moominpappa 82, Moominmamma 66 and Moomintroll 56, as 4 mm plywood side silhouettes on 34 × 16 stands.
+- **Figures:** Prototype silhouette figures (heights 82, 66, and 56 mm) as 4 mm plywood side silhouettes on 34 × 16 stands.
   - They are generated in `source/figures.py`: rounded shapes, a traced outline, then line simplification.
   - There is one set per floor including the attic, placed automatically in the front-most free spots.
   - They are optional parts (FUR sheets, appendix step A7).
@@ -363,33 +365,30 @@ Remaining comparison items moved to `TODO.md`.
 
 ---
 
-## 14. Revision 5 (2026-10-14): thermo-clay Moomins, one per floor
+## 14. Revision 5 (2026-10-14): thermo-clay figures, one per floor
 
-- **Request:** make the Moomins 3D and clay-like, because they will be modelled in thermo-clay (oven-hardening polymer clay); show example views on one PDF page; estimate each figure's volume to see how much clay it needs; place one Moomin on each floor.
+- **Request:** make the figures 3D and clay-like, because they will be modelled in thermo-clay (oven-hardening polymer clay); show example views on one PDF page; estimate each figure's volume to see how much clay it needs; place one figure on each floor.
 - **Model:** `source/clay.py` replaces the plywood `figures.py`.
   - Each figure is a smooth union of signed-distance lumps (ellipsoids, rolls, rounded cylinders and boxes, a half-ring handle), cut flat at z=0 so it stands.
-  - Pappa has a top hat and no ears. Mamma has a black handbag and a 1 mm red/white striped apron layer.
-  - Target heights: Pappa 80 (with hat), Mamma 66, Troll 56.
+  - Target heights for early prototypes: 80, 66, 56 mm.
 - **Meshes:**
   - Surface nets (vertices projected onto the surface) give the light display meshes for the viewer and the renders.
   - Marching tetrahedra (Kuhn split) give the closed 2-manifold used for the volume. Surface nets can pinch an edge at saddle faces, so they are not used for volume.
-- **Clay estimate:** volume from the closed 1 mm mesh. Colour shares and the foil core (white clay deeper than 6 mm) come from a 0.5 mm grid. Grams = volume × 1.7 g/cm³ + 10 %; blocks are 56 g. All of these are in config `figures.clay`.
-  - Pappa 50.3 cm³ / about 94 g (white 81, black 14).
-  - Mamma 42.8 cm³ / about 80 g (white 74, red 5, black 1).
-  - Troll 24.9 cm³ / about 47 g.
-  - The family needs 4 white + 1 black + 1 red block, or about 174 g with foil cores.
+- **Clay estimate:** volume from the closed 1 mm mesh. Colour shares and the foil core come from a 0.5 mm grid. Grams = volume × 1.7 g/cm³ + 10 %; blocks are 56 g. All of these are in config `figures.clay`.
+  - Prototype volumes: 50.3 cm³ (~94 g), 42.8 cm³ (~80 g), 24.9 cm³ (~47 g).
+  - The family clay total was about 174 g with foil cores.
   - The density is an assumption: no published figure was found, so the book tells the builder to weigh a block of their brand.
-- **Placement:** config `figures.levels` = mamma / pappa / troll on the ground floor / floor 1 / floor 2. Nothing goes in the attic: "each floor" means the three storeys.
+- **Placement:** config `figures.levels` places figures across ground floor / floor 1 / floor 2. Nothing goes in the attic: "each floor" means the three storeys.
   - Each figure takes the front-most free spot, facing the front and turned 25° toward the middle (straight ahead if that is all that fits).
-  - Pappa ends up mid-room in the living room: the coffee table leaves no space in front for his 66 mm length.
+  - The largest figure ends up mid-room in the living room: the coffee table leaves no space in front for its length.
 - **CAD:** the FreeCAD solid is the plain union of the same lumps (28–56 exact faces, within 0.2 % of the numpy plain-union volume). The smoothed clay is 2–6 % larger. A decimated mesh solid was tried and rejected: decimation was unreliable (non-manifold or self-intersecting results), and the full mesh made validation take about 10 minutes and the furnished STEP 233 MB.
-- **Book:** instructions page 3 is now "Moomin family in thermo-clay".
+- **Book:** instructions page 3 is now "Figures in thermo-clay".
   - Front, side, back and three-quarter renders at 1:2, from `clay_render.py`: a numpy G-buffer rasteriser with wrapped diffuse light, SDF ambient occlusion and a satin highlight.
   - Per-figure size, volume and clay; the "How much clay" table; notes; and a "Lumps to roll" size list.
   - Appendix step A6 "Model the family in thermo-clay" uses the new `clay-family.png`.
 - **Removed:** FG1–FG4 plywood parts, their STEP/DXF files and FUR layouts. The appendix is 10 pages shorter.
 - **Checks:** the clay solids take part in the closed-assembly, wall-swing, door-sweep and roof-lift checks. New release checks:
-  - one Moomin on each floor;
+  - one figure on each floor;
   - closed clay meshes;
   - viewer mesh volume within 2 % of the estimate;
   - CAD solid within 2 % of the plain-union volume.
@@ -436,7 +435,7 @@ Remaining comparison items moved to `TODO.md`.
   - fail the build on errors, empty the output folders on each build, and one `make all`;
   - test the house against real plywood thickness;
   - say the paint must meet EN 71-3, with example makers and paint types;
-  - check the figures against the door sizes and shrink the Moomins if they don't fit;
+  - check the figures against the door sizes and shrink the figures if they don't fit;
   - write the remaining review fixes into TODO.md, in priority order.
 - **Catches:** MC1 is a 24 × 22 × 12 solid-wood block glued inside each shell, on W01 and W12, 12 mm from the front seam, with its top 0.5 mm under F02.
   - A D8 × 3 magnet in a blind D8.2 × 3.5 pocket in the F02 underside (H03, H04) holds a D10 × 1 steel disc in the block's top.
@@ -449,14 +448,14 @@ Remaining comparison items moved to `TODO.md`.
   - `views.open_angle` now comes from `wall_stop.angle`, so the open STEP, the renders, the viewer slider and the swing check (every 5° plus the stop itself) all open to 100°. The walls used to swing freely past 110°, until the right shell would have reached the veranda.
   - The steel discs ride on the walls, so no magnet pair can be fitted the wrong way round.
 - **Drawer:** `plinth.drawer.direction` 180 → 150 (back-left). At 180° the left shell sweeps only over the drawer's pull-out corridor, so a left post would have blocked the drawer at any angle from 60° to 110°.
-- **Figures:** heights move to config `figures.heights`: Moominpappa 80 → 65, Moominmamma 66 → 54, Moomintroll 56 → 46. The whole family shrinks by the same ratio.
-  - At the old size, Mamma (43.7 mm across her handbag) and Pappa (43.6) did not pass the 40 mm room-divider doorways.
+- **Figures:** heights move to config `figures.heights`: prototype heights scaled down (e.g. 80 → 65, 66 → 54, 56 → 46). The figures shrink by the same ratio.
+  - At the old size, the wider figures (43.7 mm and 43.6 mm) did not pass the 40 mm room-divider doorways.
   - The rule: a figure must pass upright through every doorway, turned to its narrowest side, with `figures.door_clearance` 4 mm of width and 6 mm of height to spare. The exterior doors count as 50 × 90, the notch minus the threshold.
-  - `derived.figure_fit` lists every figure–doorway pair; the narrowest margin is now Mamma's 4.2 mm. Clay drops from about 221 g to 120 g.
+  - `derived.figure_fit` lists every figure–doorway pair; the narrowest margin is now 4.2 mm. Clay drops from about 221 g to 120 g.
 - **Build gates:**
   - `build_cad.failures()` stops the build after the CAD report, before nesting, on any overlap, swing, door, drawer, roof-lift, window, starter-hole, reopen or figure–door failure.
   - `rebuild.py` empties `output/` first (`--clean-only` does just that).
-  - The `Makefile` has `all` (= `check` + `build` + `tolerance`), plus `clean`, `viewer` and `help`. `check` sets `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`, because the venv's `moomin_local.pth` exposes another project's pytest plugins.
+  - The `Makefile` has `all` (= `check` + `build` + `tolerance`), plus `clean`, `viewer` and `help`. `check` sets `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`, because the environment can expose external pytest plugins.
 - **Thickness check:** `source/thickness_check.py` (FreeCAD) rebuilds each plywood part at the thin and thick end of `thickness_tolerance`, about its mid-plane: −0.5/+0.4 mm on 6 and 8 mm, ±0.3 mm on 3 and 4 mm. It then reruns `validate()`.
   - Overlaps between parts that touch at nominal size count as shifts.
   - An overlap where the design had a gap fails the check.

@@ -1,4 +1,4 @@
-"""A clawfoot bathtub for the Moomin House, wide enough for Moomintroll to sit in, printed upright with no supports.
+"""A clawfoot bathtub for Lanternwood House, wide enough for the Rowan family to sit in, printed upright with no supports.
 
 The sides flare outward as they rise and the rim rolls out over a 45° lip, so no surface leans out more than 45°.
 Underneath, the tub narrows at 45° to an oval plinth, and four cone feet stand on the bed at its corners. The

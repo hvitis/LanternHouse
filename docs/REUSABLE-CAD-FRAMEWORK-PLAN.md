@@ -1,6 +1,6 @@
 # Reusable CAD framework: refactoring plan and human workflow
 
-This document proposes a reusable framework for the Moomin house, a new castle, and later models.
+This document proposes a reusable framework for Lanternwood House, a new castle, and later models.
 It describes future work. It does not implement the framework or define the castle design.
 
 The target is one shared pipeline that accepts a selected model and generates its CAD, drawings, calculations, instructions, and build kit.
@@ -11,7 +11,7 @@ The source and workflow files were inspected. No CAD build or physical validatio
 
 ## 1. Scope and design decisions
 
-- Keep the Moomin house as the first model package. Add the castle as a separate package.
+- Keep Lanternwood House as the first model package. Add the castle as a separate package.
 - Start with plywood assemblies, purchased components, and optional display geometry, which match the existing pipeline.
 - Keep FreeCAD as the first CAD backend. Isolate its runtime so other stages need no FreeCAD installation.
 - Use one Python repository and explicit interfaces. A separate service or public plugin marketplace is unnecessary initially.
@@ -30,7 +30,7 @@ Future fabrication methods require explicit adapters and capability declarations
 | Area | Evidence in the current source | Consequence for another model |
 | --- | --- | --- |
 | Model construction | `source/model.py` loads `CFG` at import and mutates shared part, instance, hardware, and joint collections. | Two models or configurations cannot be treated as independent inputs without careful state management. |
-| Geometry and helpers | `model.py` combines polygon helpers, profile registration, placements, house geometry, furniture, figures, and derived dimensions. | General helpers and Moomin design rules share one module. |
+| Geometry and helpers | `model.py` combines polygon helpers, profile registration, placements, house geometry, furniture, figures, and derived dimensions. | General helpers and Lanternwood design rules share one module. |
 | Fabrication | `source/fabrication.py` imports `model`, mutates its collections, and addresses `B01`, `F00`, `F01`, `F02`, and `R02`. | Panel splitting and seam support depend on the house layout. |
 | Configuration | `config_check.py` requires A3 blanks, three equal stories, specific facets, and house-specific relationships. | A valid castle can fail unrelated house rules. |
 | CAD and checks | `build_cad.py` creates solids, exports files, derives contacts, and checks specific wall, door, drawer, and roof motions. | Exporting another model requires changes to the same script. |
@@ -38,7 +38,7 @@ Future fabrication methods require explicit adapters and capability declarations
 | Nesting and purchasing | `nest.py` and `stock.py` share packing logic and depend on model constants. Some placement choices use roof part IDs. | The packing engine is reusable, but selection and policies need separation. |
 | Sheet selection | `stock.py` explores supplier formats. Configuration and production checks restrict the current design to A3. | A cheaper purchase layout does not automatically become an accepted production layout. |
 | PDF generation | `book.py` combines drawing utilities with house instructions, named part IDs, decor, figures, and filenames. | Generic page generation cannot be selected independently from house content. |
-| Supplier exports | `supplier.py`, `pdf_checks.py`, and `cut_file.py` contain project names, PDF metadata keys, or fixed output paths. | A castle can inherit Moomin branding and asset expectations. |
+| Supplier exports | `supplier.py`, `pdf_checks.py`, and `cut_file.py` contain project names, PDF metadata keys, or fixed output paths. | A castle can inherit Lanternwood branding and asset expectations. |
 | Validation | `verify.py` mixes reusable checks with exact house quantities, six doors, wall facets, floor thicknesses, and figure rules. | A different design cannot use the release gate unchanged. |
 | Engineering analysis | `stackup.py`, `risk_audit.py`, and `run_stress_tests.py` contain house-specific joints, loads, support positions, or materials. | Reusing an equation requires separating it from its particular engineering case. |
 | Orchestration | `rebuild.py` empties the shared `output/` folder and runs a fixed script sequence. | Switching models replaces previous outputs and assumes every feature exists. |
@@ -83,7 +83,7 @@ flowchart TB
 ```
 
 The model package depends on the common contract and geometry helpers.
-Shared services depend on those contracts, never on `models.moomin_house` or `models.castle`.
+Shared services depend on those contracts, never on `models.lanternwood_house` or `models.castle`.
 The runner selects and loads a model package through one explicit registry.
 
 FreeCAD consumes serialized inputs in its own process. It returns artifacts and reports through documented paths.
@@ -107,7 +107,7 @@ framework/
   exporters/             DXF, SVG, CSV, manifests, archives
   pipeline/              Configuration resolution, stages, dependencies, CLI
 models/
-  moomin_house/          Existing design, presets, checks, instructions, assets
+  lanternwood_house/     Existing design, presets, checks, instructions, assets
   castle/                New design using the same contracts
 profiles/
   materials/             Nominal sizes, measured bands, density, grade
@@ -172,7 +172,7 @@ The order below favors small, reviewable changes. Each item includes a concrete 
 
 | # | Elements to refactor | Planned change | Completion condition |
 | --- | --- | --- | --- |
-| 1 | Existing outputs and tests | Capture a reproducible Moomin baseline before moving behavior. Record configuration, counts, dimensions, layouts, and reports. | Later builds can explain every intended difference from the baseline. |
+| 1 | Existing outputs and tests | Capture a reproducible Lanternwood baseline before moving behavior. Record configuration, counts, dimensions, layouts, and reports. | Later builds can explain every intended difference from the baseline. |
 | 2 | Data dictionaries and `parts.json` | Define the versioned contracts above and adapt current data into them. | A serialized model passes schema and reference checks without importing its generator. |
 | 3 | `model.py`, `architecture.py` | Move the house generator into a model package. Replace import-time configuration and globals with an explicit build context. | Two configurations build in either order without leaking state. |
 | 4 | Helpers in `model.py` | Extract profile builders, placement transforms, geometry normalization, and compatible deduplication. | Shared helpers accept explicit inputs and contain no house IDs or dimensions. |
@@ -205,7 +205,7 @@ Reject unknown keys and incompatible overrides. Save the complete resolved confi
 Changing a purchase-planner thickness mapping must not silently change the manufactured design.
 A real material substitution requires new fit, strength, tolerance, and geometry results before production export.
 
-The current 3 mm and 6 mm restrictions belong to the Moomin preset and its manufacturing rules.
+The current 3 mm and 6 mm restrictions belong to the Lanternwood preset and its manufacturing rules.
 The framework supports any thickness that its selected model and process can validate.
 
 ### Geometry and fabrication preparation

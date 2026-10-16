@@ -6,7 +6,7 @@ sys.path.insert(0,str(Path(sys.executable).resolve().parent.parent/'lib'))
 import FreeCAD as App
 import FreeCADGui as Gui
 def main():
-    Gui.showMainWindow();doc=App.openDocument(str(ROOT/'output/cad/MoominHouse.FCStd'))
+    Gui.showMainWindow();doc=App.openDocument(str(ROOT/'output/cad/LanternwoodHouse.FCStd'))
     data=json.loads((ROOT/'output/parts.json').read_text());samples={}
     ok=True
     for name,pid in [('W02_01','W02'),('R01_01','R01'),('F01_01','F01')]:

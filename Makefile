@@ -1,8 +1,8 @@
-# Build the Moomin House on this machine. FreeCAD 1.1+ supplies the CAD kernel; everything else runs in .venv.
+# Build Lanternwood House on this machine. FreeCAD 1.1+ supplies the CAD kernel; everything else runs in .venv.
 # Every target stops at the first failed check.
 FREECAD_PYTHON ?= /Applications/FreeCAD.app/Contents/Resources/bin/python
 PYTHON ?= .venv/bin/python
-FREECAD_ENV = MOOMIN_HEADLESS=1 QT_QPA_PLATFORM=offscreen
+FREECAD_ENV = LANTERNWOOD_HEADLESS=1 QT_QPA_PLATFORM=offscreen
 
 .PHONY: all check build tolerance stackup cutfile clean viewer site stress images prints studio joints specs lint format help
 

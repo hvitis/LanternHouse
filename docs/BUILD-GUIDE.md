@@ -17,7 +17,7 @@ The ground floor has five windows, the middle and bedroom floors have six each, 
 
 Its door opens outward onto the deck. The main entrance on W12 has a separate small gabled canopy.
 
-The house stands on a 61.6 mm stone plinth on a 6 mm base, with the floor levels listed below. A drawer hidden in the plinth is about 46 mm deep inside and slides 200 mm out to the back-right, where a dowel in its bottom slot stops it; its front is two stone plinth panels with a finger notch underneath. Each storey has one room divider with a 38 × 93.3 doorway at its front end, reaching the edge of the floors to the opening walls, with a 3 mm door leaf on cotton-tape hinges. The two front wall shells hang 1 mm above the plinth, click shut on wall catches under the attic floor and stop at 100° against two small garden posts on the base; the four magnets are sealed inside hardwood. Six thermo-clay (oven-hardening polymer clay) figures live in the house: Moominmamma and Snufkin on the ground floor, Moominpappa and the Snork Maiden in the living room, Moomintroll in the bedrooms and Little My in the attic. The veranda deck is level with the ground floor, on a blue skirt with a 4-step side stair, and a rope ladder runs from its roof to the eave beside the dormer. The main entrance and the back door (W09, kitchen side, with a lean-to canopy and a woodpile beside it) have 4 stone steps each. All three doors open outward.
+The house stands on a 61.6 mm stone plinth on a 6 mm base, with the floor levels listed below. A drawer hidden in the plinth is about 46 mm deep inside and slides 200 mm out to the back-right, where a dowel in its bottom slot stops it; its front is two stone plinth panels with a finger notch underneath. Each storey has one room divider with a 38 × 93.3 doorway at its front end, reaching the edge of the floors to the opening walls, with a 3 mm door leaf on cotton-tape hinges. The two front wall shells hang 1 mm above the plinth, click shut on wall catches under the attic floor and stop at 100° against two small garden posts on the base; the four magnets are sealed inside hardwood. Four thermo-clay (oven-hardening polymer clay) figures live in the house: Elias Rowan on the ground floor, Mira Rowan on floor 1, Ada Rowan on floor 2 and Theo Rowan in the attic. The veranda deck is level with the ground floor, on a blue skirt with a 4-step side stair, and a rope ladder runs from its roof to the eave beside the dormer. The main entrance and the back door (W09, kitchen side, with a lean-to canopy and a woodpile beside it) have 4 stone steps each. All three doors open outward.
 
 The F01 floors have four pillar openings each. There are no stairs inside. Play access is through the opening walls and the lift-off roof. The furniture appears in the 3D viewer and renders only. It has no CAD plans, printouts or cutting sheets.
 
@@ -25,27 +25,27 @@ The F01 floors have four pillar openings each. There are no stairs inside. Play 
 
 | File | Contents |
 | --- | --- |
-| `output/pdf/Moomin-House-Complete.pdf` | Cover, clickable contents, dimensioned plan, clay figures, hardware shopping list, illustrated instructions, dimensioned parts, full-size cutting printouts, decor, clay family and the supplier appendix at the end. Use the contents for page numbers. |
-| `output/pdf/Moomin-House-Instructions.pdf` | Assembly sequence, screw sections, hinge axes, glue joints, tools and workshop hints |
-| `output/pdf/Moomin-House-Cutting-Templates.pdf` | Calibration page, packed sheet layouts, overlapping A4 tiles, white 3 mm template headers and solid wood templates |
-| `output/pdf/Moomin-House-3mm-Hand-Templates.pdf` | House 3 mm parts only. Each large part uses two A4 pages with a 10 mm overlap. |
-| `output/pdf/Moomin-House-Supplier.pdf` | Polish specification, inventory, reference maps, and clean A3 production pages grouped by thickness and operation. Separate from the A4 complete book. |
-| `output/Moomin-House-Supplier-Cut.dxf` | Everything the supplier cuts in one DXF R12 file (mm, 1:1): closed outlines, openings and through holes, one layer and colour per thickness, no frames or text. Blind pockets and holes are not in it. |
-| `output/pdf/Moomin-House-Dimensioned-Parts.pdf` | House part inventory with page numbers; every profile dimensioned, several scaled references per page; hole diameter, depth and local coordinates; hinge checking templates |
-| `output/pdf/Moomin-House-Decor.pdf` | Paint palette, stone plinth panels, and fish-scale roof shingle strips cut one course at a time so they wrap the 12-facet roof |
-| `output/pdf/Moomin-House-Clay-Family.pdf` | Instructions for the clay family |
-| `output/cad/MoominHouse.FCStd` | Editable native FreeCAD document: colored assembly, construction profiles, screw solids and glue/axis guides |
-| `output/cad/MoominHouse.step` | Closed house as solids, without furniture |
-| `output/cad/MoominHouse-open.step` | Walls opened to the 100° stop posts and roof lifted; the veranda stays in place |
-| `output/cad/MoominHouse-exploded.step` | Separated structural assemblies |
+| `output/pdf/Lanternwood-House-Complete.pdf` | Cover, clickable contents, dimensioned plan, clay figures, hardware shopping list, illustrated instructions, dimensioned parts, full-size cutting printouts, decor, clay family and the supplier appendix at the end. Use the contents for page numbers. |
+| `output/pdf/Lanternwood-House-Instructions.pdf` | Assembly sequence, screw sections, hinge axes, glue joints, tools and workshop hints |
+| `output/pdf/Lanternwood-House-Cutting-Templates.pdf` | Calibration page, packed sheet layouts, overlapping A4 tiles, white 3 mm template headers and solid wood templates |
+| `output/pdf/Lanternwood-House-3mm-Hand-Templates.pdf` | House 3 mm parts only. Each large part uses two A4 pages with a 10 mm overlap. |
+| `output/pdf/Lanternwood-House-Supplier.pdf` | Polish specification, inventory, reference maps, and clean A3 production pages grouped by thickness and operation. Separate from the A4 complete book. |
+| `output/Lanternwood-House-Supplier-Cut.dxf` | Everything the supplier cuts in one DXF R12 file (mm, 1:1): closed outlines, openings and through holes, one layer and colour per thickness, no frames or text. Blind pockets and holes are not in it. |
+| `output/pdf/Lanternwood-House-Dimensioned-Parts.pdf` | House part inventory with page numbers; every profile dimensioned, several scaled references per page; hole diameter, depth and local coordinates; hinge checking templates |
+| `output/pdf/Lanternwood-House-Decor.pdf` | Paint palette, stone plinth panels, and fish-scale roof shingle strips cut one course at a time so they wrap the 12-facet roof |
+| `output/pdf/Lanternwood-House-Clay-Family.pdf` | Instructions for the clay family |
+| `output/cad/LanternwoodHouse.FCStd` | Editable native FreeCAD document: colored assembly, construction profiles, screw solids and glue/axis guides |
+| `output/cad/LanternwoodHouse.step` | Closed house as solids, without furniture |
+| `output/cad/LanternwoodHouse-open.step` | Walls opened to the 100° stop posts and roof lifted; the veranda stays in place |
+| `output/cad/LanternwoodHouse-exploded.step` | Separated structural assemblies |
 | `output/cad/parts/` | Individual solid STEP files |
 | `output/dxf/` | Millimetre DXF profiles, A3 sheet maps, and separate CNC operation files for all plywood thicknesses (`PLY*-cnc-*.dxf`, `.svg`). |
-| `output/previews/` | CAD-derived closed (front and veranda side), open, furnished and assembly illustrations, each with a projection sidecar (`.json`); `clay-*.png` are the clay Moomin renders (front, side, back, three-quarter) |
+| `output/previews/` | CAD-derived closed (front and veranda side), open, furnished and assembly illustrations, each with a projection sidecar (`.json`); `clay-*.png` are the clay Rowan family renders (front, side, back, three-quarter) |
 | `output/reports/parts.csv`, `hardware.csv`, `stock.csv` | Spreadsheet shopping and cutting lists |
 | `output/reports/template-index.json` | Template page ranges and tile row/column counts, per PDF |
 | `output/reports/release-validation.json` | Automated checks for the delivered files |
 | `output/reports/thickness-tolerance.json` | The house rebuilt with the thinnest and thickest measured plywood (`make tolerance`) |
-| `output/Moomin-House-Build-Kit.zip` | Portable package of the complete project |
+| `output/Lanternwood-House-Build-Kit.zip` | Portable package of the complete project |
 
 ## Main dimensions
 
@@ -111,7 +111,7 @@ Interior pages have white backgrounds for economical printing. CAD diagrams have
 
 All plywood stock has the A3 dimensions 297 × 420 mm and only two thicknesses, 3 and 6 mm, on separate sheets. The tower walls, corner ribs, room dividers, doors, railings, drawer bottom, veranda deck, skirts, headers, roof crossframe and seam strips are 3 mm; the floors, base, plinth, pillars and the supports under the base are 6 mm. Fixed walls retain the supplied end edges. Moving walls have 1 mm end allowances. P01 pillars have 5 mm end margins. Other parts use 10 mm margins.
 
-1. Send `Moomin-House-Supplier.pdf` and `Moomin-House-Supplier-Cut.dxf` (everything to cut, in one file) to the company. Both come with every release, or from `make build`; `make cutfile` rewrites the DXF from the last build's nesting. A shop that machines blind pockets also needs the operation CSV, DXF and SVG files.
+1. Send `Lanternwood-House-Supplier.pdf` and `Lanternwood-House-Supplier-Cut.dxf` (everything to cut, in one file) to the company. Both come with every release, or from `make build`; `make cutfile` rewrites the DXF from the last build's nesting. A shop that machines blind pockets also needs the operation CSV, DXF and SVG files.
 2. Use the operation schedule to identify each production page.
 3. Confirm cutter sizes, hold-down, corner relief, compensation, and tolerances with the company.
 4. Confirm registration before machining the underside of a sheet.
@@ -119,7 +119,7 @@ All plywood stock has the A3 dimensions 297 × 420 mm and only two thicknesses, 
 
 Production pages contain unfilled vector paths without labels or backgrounds. Each page represents one machining operation. Operation names identify the face, diameter, and depth. The company applies cutter compensation once. These files contain nominal geometry, not machine-specific toolpaths.
 
-For DIY work, use `Moomin-House-Cutting-Templates.pdf`. Large individual parts use two A4 pages with 10 mm overlap. Some pages use landscape orientation. Print at 100% without automatic scaling. The separate 3 mm template PDF contains only thin parts. Use the dimensioned drawings for drilling faces and depths.
+For DIY work, use `Lanternwood-House-Cutting-Templates.pdf`. Large individual parts use two A4 pages with 10 mm overlap. Some pages use landscape orientation. Print at 100% without automatic scaling. The separate 3 mm template PDF (`Lanternwood-House-3mm-Hand-Templates.pdf`) contains only thin parts. Use the dimensioned drawings for drilling faces and depths.
 
 The complete book contains an A4 supplier summary. The A3 production pages remain in the separate supplier PDF. Supplier text is Polish by default. `--lang en` selects English without changing the machining geometry.
 
@@ -230,11 +230,11 @@ The 3D viewer and preview images show example furniture:
 
 Furniture models share IDs when their dimensions match. Several close dimensions use standard sizes after adjustments of 1–3 mm. The furniture appears only in the 3D view. CAD plans, parts lists, supplier sheets and printouts cover the house and clay family. Clearance checks still include the furniture models.
 
-## Thermo-clay Moomins
+## Thermo-clay Rowan family
 
-The family is modelled in 3D as clay, not plywood. `source/clay.py` builds each figure from rounded lumps (body, chest, head, snout, legs, feet, arms, hands, tail, ears and eyes, plus Pappa's top hat, Mamma's handbag and her striped apron), pressed together with smoothed joins the way real clay is. The flat underside lets each figure stand without a stand.
+The family is modelled in 3D as clay, not plywood. `source/clay.py` builds each figure from rounded lumps (human anatomy, hair, clothing details, and Elias's attached lantern), pressed together with smoothed joins the way real clay is. The flat underside lets each figure stand without a stand.
 
-Page 3 of the instructions shows all three from the front, side, back and three-quarter at 1:2, with:
+The figure pages of the instructions show all four from the front, side, back and three-quarter at 1:2, with:
 
 - each figure's floor and position in the 3D plan;
 - its height, length and width;
@@ -245,11 +245,12 @@ The appendix page "Model the family in thermo-clay" walks through modelling and 
 
 | Figure | Floor | Size H × L × W | Volume | Clay to buy |
 | --- | --- | --- | --- | --- |
-| Moominpappa | Floor 1, living room | 65 × 54 × 35 | 27.0 cm³ | about 50 g (white 43, black 7) |
-| Moominmamma | Ground floor, kitchen | 54 × 53 × 36 | 23.4 cm³ | about 44 g (white 41, red 3, black 1) |
-| Moomintroll | Floor 2, bedrooms | 46 × 45 × 30 | 13.8 cm³ | about 26 g (white) |
+| Elias Rowan | Ground floor, workshop | 72 × 28 × 33 | 27.4 cm³ | about 51 g (navy 39, skin 8, black 2, gray 1, yellow 1) |
+| Mira Rowan | Floor 1, living room | 68 × 24 × 31 | 21.0 cm³ | about 39 g (ochre 15, sage 12, gray 6, skin 4, brown 1) |
+| Ada Rowan | Floor 2, bedroom | 60 × 22 × 27 | 14.1 cm³ | about 26 g (blue 11, rust 7, brown 4, skin 4) |
+| Theo Rowan | Floor 3, attic | 58 × 21 × 26 | 13.2 cm³ | about 25 g (teal 10, mustard 7, skin 4, black 4) |
 
-The whole family needs about 120 g: two 56 g blocks of white, one of black and one of red. The volume comes from the closed 3D mesh. Grams assume 1.7 g/cm³ (a typical polymer clay) plus 10 % for handling. A foil core with 6 mm of clay all round brings the total down to about 104 g.
+The whole family needs about 141 g (or about 130 g with foil cores in the adult and child torsos). The volume comes from the closed 3D mesh. Grams assume 1.7 g/cm³ (a typical polymer clay) plus 10 % for handling.
 
 The heights come from `figures.heights`. They are sized so each figure passes upright through every doorway with `figures.door_clearance` to spare: 4 mm in width and 6 mm in height. The narrowest doorways are the 38 × 93.3 room-divider doorways; every figure's narrow side is at most 34 mm. Every build checks this. Weigh a block of your own brand and change `figures.clay` in `source/config.json` if it differs. That setting also holds the block size, the handling allowance and the foil-core wall.
 
@@ -257,7 +258,7 @@ The heights come from `figures.heights`. They are sized so each figure passes up
 
 ## Native CAD and design changes
 
-Open `output/cad/MoominHouse.FCStd` in FreeCAD 1.1 or later.
+Open `output/cad/LanternwoodHouse.FCStd` in FreeCAD 1.1 or later.
 - The native CAD project contains the house and clay figures. Furniture solids only support renders and clearance checks.
 - `ProfileLibrary` contains hidden local sketches, plywood extrusions and drilling cuts.
 - Sketch geometry is fully constrained using Block constraints. Remove the relevant constraint before editing its geometry.
@@ -282,7 +283,7 @@ Every build writes `output/reports/cad-validation.json` and `release-validation.
 - **Windows:** the veranda keeps 10 mm clear in front of every window.
 - **Drawer and figures:**
   - the drawer slides its full 220 mm clear;
-  - exactly one clay Moomin stands on each floor, clear of furniture, walls and dividers, and the walls swing past them;
+  - exactly one clay figure stands on each floor, clear of furniture, walls and dividers, and the walls swing past them;
   - the clay meshes are closed and match the volume estimate, and the CAD solids match their lumps;
   - every figure passes upright through every doorway with the configured clearance.
 - **Roof lift:** clear at selected heights with the catches released.

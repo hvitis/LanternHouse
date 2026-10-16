@@ -59,7 +59,7 @@ def create_package(root=None, require_tolerance=False):
     output = root / "output"
     checked = validate_reports(output, require_tolerance)
     update_stock_tables(root / "docs/BUILD-GUIDE.md", output / "nesting.json")
-    dest = output / "Moomin-House-Build-Kit.zip"
+    dest = output / "Lanternwood-House-Build-Kit.zip"
     manifest_path = output / "reports/build-manifest.json"
     files = []
     for folder in ("source", "docs", "tests", "prints", ".github", "output"):
@@ -116,12 +116,12 @@ def create_package(root=None, require_tolerance=False):
         with zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED, compresslevel=7) as archive:
             for path in files:
                 info = zipfile.ZipInfo(
-                    "Moomin-House/" + str(path.relative_to(root)), (2000, 1, 1, 0, 0, 0)
+                    "Lanternwood-House/" + str(path.relative_to(root)), (2000, 1, 1, 0, 0, 0)
                 )
                 info.compress_type = zipfile.ZIP_DEFLATED
                 info.external_attr = 0o644 << 16
                 archive.writestr(info, path.read_bytes())
-            archive.writestr("Moomin-House/output/reports/build-manifest.json", payload)
+            archive.writestr("Lanternwood-House/output/reports/build-manifest.json", payload)
         temporary.replace(dest)
         manifest_path.write_text(payload)
     finally:
@@ -138,8 +138,8 @@ def validate_release_kit(output):
     if manifest.get("tolerance_checked") is not True:
         raise RuntimeError("Release blocked: repackage after the thickness check")
     recorded = {item["path"]: item["sha256"] for item in manifest["files"]}
-    with zipfile.ZipFile(output / "Moomin-House-Build-Kit.zip") as archive:
-        embedded = archive.read("Moomin-House/output/reports/build-manifest.json")
+    with zipfile.ZipFile(output / "Lanternwood-House-Build-Kit.zip") as archive:
+        embedded = archive.read("Lanternwood-House/output/reports/build-manifest.json")
         if embedded != manifest_path.read_bytes():
             raise RuntimeError(
                 "Release blocked: the kit manifest differs from the current manifest"
@@ -148,7 +148,7 @@ def validate_release_kit(output):
             relative = "output/reports/" + name
             expected = recorded.get(relative)
             current = hashlib.sha256((output / "reports" / name).read_bytes()).hexdigest()
-            packaged = hashlib.sha256(archive.read("Moomin-House/" + relative)).hexdigest()
+            packaged = hashlib.sha256(archive.read("Lanternwood-House/" + relative)).hexdigest()
             if not expected or expected != current or expected != packaged:
                 raise RuntimeError(f"Release blocked: stale or missing packaged {name}")
 

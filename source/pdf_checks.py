@@ -3,6 +3,7 @@ import json,math
 from collections import Counter
 from pathlib import Path
 from pypdf import PdfReader
+import naming
 from model import BOUGHT
 
 # ReportLab rounds the largest A3 coordinates to 0.001 PDF point.
@@ -48,29 +49,29 @@ def checks(root):
     root=Path(root);out=root/'output';result=[]
     def check(name,ok,detail=''):result.append((name,bool(ok),detail))
     metadata=json.loads((out/'reports/pdf-report.json').read_text());supplier=json.loads((out/'reports/supplier-index.json').read_text());contents=json.loads((out/'reports/contents-index.json').read_text())
-    book=PdfReader(out/'pdf/Moomin-House-Complete.pdf');vendor=PdfReader(out/'pdf'/supplier['pdf'])
-    expected=set(metadata['pdfs'])|{'Moomin-House-Complete.pdf'};actual={p.name for p in (out/'pdf').glob('*.pdf')}
+    book=PdfReader(out/'pdf'/naming.PDF_COMPLETE);vendor=PdfReader(out/'pdf'/supplier['pdf'])
+    expected=set(metadata['pdfs'])|{naming.PDF_COMPLETE};actual={p.name for p in (out/'pdf').glob('*.pdf')}
     check('Expected PDF files, including supplier and hand templates',actual==expected,str(sorted(actual)))
     size_ok=True;clean_ok=True;geometry_ok=True
     for name in actual:
         reader=PdfReader(out/'pdf'/name)
         for n,p in enumerate(reader.pages):
             width,height=float(p.mediabox.width)*25.4/72,float(p.mediabox.height)*25.4/72
-            if p.get('/MoominPageRole')=='production':
-                s=next((s for s in supplier['sheets'] if s['id']==p.get('/MoominSheetID')),None)
+            if p.get(naming.PDF_KEY_PAGE_ROLE)=='production':
+                s=next((s for s in supplier['sheets'] if s['id']==p.get(naming.PDF_KEY_SHEET_ID)),None)
                 size_ok=size_ok and s is not None and all(abs(a-b)<.001 for a,b in zip((width,height),s['size_mm']))
                 clean_ok=clean_ok and not p.extract_text().strip() and not p.get('/Annots') and not p.images
                 ops=p.get_contents().operations
                 clean_ok=clean_ok and not any(op in (b'Tj',b'TJ',b"'",b'"',b'Do',b'f',b'f*',b'B',b'B*',b'W',b'W*') for _,op in ops)
                 if name==supplier['pdf']:
-                    native=pdf_paths(p);dxf=dxf_paths(out/'dxf'/f'{s["id"]}-cnc-{p.get("/MoominOperation")}.dxf')
+                    native=pdf_paths(p);dxf=dxf_paths(out/'dxf'/f'{s["id"]}-cnc-{p.get(naming.PDF_KEY_OPERATION)}.dxf')
                     geometry_ok=geometry_ok and len(native)==len(dxf) and all(a[0]==b[0] and len(a[1])==len(b[1]) and all(abs(x-y)<PDF_COORDINATE_EPS_MM for x,y in zip(a[1],b[1])) for a,b in zip(native,dxf))
             else:size_ok=size_ok and all(abs(a-b)<.001 for a,b in zip(sorted((width,height)),(210,297)))
     check('A4 workshop/reference pages and exact native-size production pages',size_ok)
     check('Production pages have only unannotated vector cutting paths',clean_ok)
     check('Supplier production geometry matches operation DXFs within 0.0002 mm (PDF encoding)',geometry_ok)
     check('Complete workshop book is entirely A4',all(all(abs(a-b)<.001 for a,b in zip(sorted((float(page.mediabox.width)*25.4/72,float(page.mediabox.height)*25.4/72)),(210,297))) for page in book.pages))
-    check('A3 machining pages remain in the separate supplier PDF',not any(page.get('/MoominPageRole')=='production' for page in book.pages) and any(page.get('/MoominPageRole')=='production' for page in vendor.pages))
+    check('A3 machining pages remain in the separate supplier PDF',not any(page.get(naming.PDF_KEY_PAGE_ROLE)=='production' for page in book.pages) and any(page.get(naming.PDF_KEY_PAGE_ROLE)=='production' for page in vendor.pages))
     link_count=sum(len(book.pages[p].get('/Annots',[])) for p in range(1,1+contents['contents_pages']))
     check('Printed contents links cover every indexed entry',link_count==len(contents['entries']) and all(1<=e['complete_page']<=len(book.pages) for e in contents['entries']))
     destinations=[]

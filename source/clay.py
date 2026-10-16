@@ -1,9 +1,9 @@
-"""Moomin family and friends as thermo-clay (oven-hardening polymer clay) figures.
+"""The Rowan family (four figures) as thermo-clay (oven-hardening polymer clay) figures.
 
 Each figure is a smooth union of rounded lumps (signed distance functions), the way clay pieces are
 pressed together. A surface-nets mesh of the zero level gives the 3D shape for the viewer, the CAD
 solid and the book renders; counting grid points inside gives the clay volume per colour.
-Local frame: feet flat on z=0, snout toward +x, y to the figure's left. Pure numpy, millimetres.
+Local frame: feet flat on z=0, face toward +x, y to the figure's left. Pure numpy, millimetres.
 """
 from __future__ import annotations
 import base64, json, math
@@ -13,12 +13,17 @@ import numpy as np
 
 ROOT=Path(__file__).resolve().parents[1]
 CFG=json.loads((ROOT/'source/config.json').read_text())
-NAMES={'pappa':'Moominpappa','mamma':'Moominmamma','troll':'Moomintroll','snufkin':'Snufkin','snorkmaiden':'Snork Maiden','littlemy':'Little My'}
-WHITE,BLACK,APRON,GREEN,ORANGE,GOLD,BROWN,RED=range(8)
-COLOURS={'white':'#F1EDE4','black':'#2B2B2E','red':'#C8443B','green':'#5F7F4C','orange':'#D9772E','gold':'#E2B640','brown':'#6E4C35'}
-PALETTE={WHITE:0,BLACK:1,APRON:0,GREEN:3,ORANGE:4,GOLD:5,BROWN:6,RED:2}   # material -> COLOURS index (apron: white, striped red)
+NAMES={'elias':'Elias Rowan','mira':'Mira Rowan','ada':'Ada Rowan','theo':'Theo Rowan'}
+SKIN,NAVY,GRAY,YELLOW,SAGE,OCHRE,RUST,BLUE,TEAL,MUSTARD,BROWN,BLACK,WHITE=range(13)
+COLOURS={
+    'skin':'#ECD3BD','navy':'#25374C','gray':'#8F9493','yellow':'#EFC042',
+    'sage':'#7C9B84','ochre':'#D2AD63','rust':'#BD5147','blue':'#4A94BC',
+    'teal':'#3B8486','mustard':'#CCA030','brown':'#5E3D28','black':'#28282B',
+    'white':'#F4F2EB',
+}
+PALETTE={m:i for i,m in enumerate(range(len(COLOURS)))}
 MATERIAL_NAME={m:list(COLOURS)[i] for m,i in PALETTE.items()}
-STRIPE=2.2   # apron stripe width, design units
+TORSO_MATERIALS={'elias':(NAVY,),'mira':(SAGE,OCHRE),'ada':(RUST,BLUE),'theo':(MUSTARD,TEAL)}
 
 def _rot(rx=0,ry=0,rz=0):
     a,b,c=(math.radians(v) for v in (rx,ry,rz))
@@ -68,88 +73,145 @@ def smin(a,b,k):
     if k<=0:return np.minimum(a,b)
     h=np.clip(.5+.5*(b-a)/k,0,1);return b*(1-h)+a*h-k*h*(1-h)
 
-# ---------- the family ----------
-def _troll(ears=True):
-    """Ops: (sdf, material, blend, lump name). Moomintroll's body; the parents reuse it at a larger scale."""
-    ops=[(ellipsoid((0,0,15.5),(13.5,13,13)),WHITE,0,'body egg'),
-         (ellipsoid((.5,0,25.5),(11.5,11,10.5)),WHITE,4,'chest'),
-         (ellipsoid((.5,0,36.5),(10.8,10.4,10.6)),WHITE,4,'head ball'),
-         (ellipsoid((11.5,0,35),(10.5,8.4,7.4),(0,6,0)),WHITE,3,'snout')]
+# ---------- the Rowan family ----------
+def _elias():
+    """Elias Rowan: older father with flat cap, gray beard, navy work coat, boots, and attached lantern."""
+    ops=[
+        (ellipsoid((0,0,20.0),(10.0,9.5,11.5)),NAVY,0,'coat hips'),
+        (ellipsoid((0.5,0,31.0),(9.0,8.5,9.5)),NAVY,3.0,'coat chest'),
+        (sphere((0.8,0,44.5),7.8),SKIN,2.5,'head'),
+        (ellipsoid((7.8,0,43.8),(1.8,1.4,1.4)),SKIN,0.8,'nose'),
+    ]
     for s in (1,-1):
-        ops+=[(capsule((0,6*s,10.5),(1,6.3*s,3.4),4.4),WHITE,2,'legs'),
-              (ellipsoid((3,6.3*s,2.4),(6.2,4,2.6)),WHITE,1.5,'feet'),
-              (capsule((2.5,10.6*s,27),(7,13.4*s,18.6),2.5),WHITE,1.6,'arms'),
-              (sphere((7.4,13.7*s,17.6),3.0),WHITE,1,'hands')]
-    ops+=[(capsule((-12,0,10),(-23.5,0,2.6),2.0,1.6),WHITE,1.4,'tail'),       # resting on the floor
-          (ellipsoid((-25.5,0,3.2),(3.4,2.7,3.0)),WHITE,.8,'tuft')]
-    if ears:
-        for s in (1,-1):ops.append((ellipsoid((-2.5,4.3*s,47.4),(2.4,1.9,4.6),(12*s,-10,0)),WHITE,1.2,'ears'))
-    for s in (1,-1):ops.append((ellipsoid((12.6,3.7*s,40.6),(1.3,1.45,2.5),(0,-28,0)),BLACK,0,'eyes'))
+        ops+=[
+            (capsule((0,4.6*s,12.0),(0.5,4.8*s,5.0),3.5),NAVY,1.5,'legs'),
+            (ellipsoid((2.4,4.8*s,2.8),(5.2,3.4,2.6)),BLACK,1.2,'boots'),
+            (ellipsoid((0.2,7.4*s,44.5),(1.5,1.1,2.0)),SKIN,0.8,'ears'),
+            (ellipsoid((7.4,2.5*s,45.8),(0.9,1.1,1.4),(0,-15,0)),BLACK,0,'eyes'),
+            (ellipsoid((7.3,2.6*s,47.4),(0.8,1.6,0.7),(0,-10,8*s)),GRAY,0.4,'eyebrows'),
+        ]
+    ops+=[
+        (ellipsoid((5.8,0,39.8),(4.4,5.2,3.8)),GRAY,1.6,'beard'),
+        (ellipsoid((7.6,0,42.2),(1.8,3.0,1.1)),GRAY,0.8,'mustache'),
+    ]
+    for s in (1,-1):
+        ops.append((ellipsoid((3.0,5.8*s,42.0),(3.0,2.0,3.2)),GRAY,1.4,'sideburns'))
+    ops+=[
+        (cylinder((0.6,0,50.2),8.5,1.2,0.5),NAVY,0.8,'cap band'),
+        (cylinder((0.6,0,52.4),8.0,1.4,0.5),NAVY,0.8,'cap crown'),
+    ]
+    ops+=[
+        (capsule((0.5,9.0,32.5),(1.8,10.2,22.0),2.5),NAVY,1.4,'left arm'),
+        (capsule((1.8,10.2,22.0),(4.5,9.5,14.0),2.3),NAVY,1.2,'left forearm'),
+        (sphere((5.0,9.2,13.0),2.5),SKIN,0.9,'left hand'),
+    ]
+    ops+=[
+        (capsule((0.5,-9.0,32.5),(3.0,-9.2,22.0),2.5),NAVY,1.4,'right arm'),
+        (capsule((3.0,-9.2,22.0),(6.8,-7.8,16.5),2.3),NAVY,1.2,'right forearm'),
+        (sphere((7.2,-7.5,15.5),2.5),SKIN,0.9,'right hand'),
+    ]
+    ops+=[
+        (cylinder((7.2,-7.5,14.2),3.5,1.2,0.4),BLACK,0.6,'lantern top'),
+        (cylinder((7.2,-7.5,11.2),3.0,2.2,0.4),YELLOW,0.3,'lantern glass'),
+        (cylinder((7.2,-7.5,8.2),3.5,1.2,0.4),BLACK,0.6,'lantern base'),
+        (capsule((4.8,-6.0,10.5),(7.2,-7.5,10.5),1.4),BLACK,0.6,'lantern brace'),
+    ]
     return ops
 
-def _apron(P,body):
-    """1 mm thick striped apron pressed onto Mamma's front, from hip to chest."""
-    region=np.maximum.reduce([3-P[...,0],6.5-P[...,2],P[...,2]-26.5])
-    return np.maximum(body-1.0,region)
-
-def _snork():
-    """Snork Maiden: a Moomin body without ears, a golden fringe and a gold anklet."""
-    ops=_troll(ears=False)
-    ops+=[(ellipsoid((6.5,0,45.2),(5.2,8.2,3.4),(0,-24,0)),GOLD,1.4,'fringe'),
-          (cylinder((.6,6.1,6.2),4.9,.9,.4),GOLD,.3,'anklet')]
+def _mira():
+    """Mira Rowan: mother with gray bob haircut, sage cardigan, ochre trousers, sturdy shoes."""
+    ops=[
+        (ellipsoid((0,0,19.0),(8.8,8.2,10.0)),OCHRE,0,'hips'),
+        (ellipsoid((0.4,0,29.5),(8.2,7.6,9.0)),SAGE,2.6,'cardigan chest'),
+        (sphere((0.6,0,41.0),7.2),SKIN,2.2,'head'),
+        (ellipsoid((7.2,0,40.5),(1.6,1.3,1.3)),SKIN,0.8,'nose'),
+    ]
+    for s in (1,-1):
+        ops+=[
+            (capsule((0,4.3*s,12.0),(0.4,4.5*s,5.0),3.2),OCHRE,1.4,'legs'),
+            (ellipsoid((2.2,4.5*s,2.4),(4.8,3.2,2.4)),BROWN,1.0,'shoes'),
+            (ellipsoid((0.0,6.8*s,41.0),(1.4,1.1,1.8)),SKIN,0.8,'ears'),
+            (ellipsoid((6.7,2.3*s,42.2),(0.8,1.0,1.3),(0,-15,0)),BLACK,0,'eyes'),
+            (capsule((0.4,8.0*s,31.0),(2.8,9.0*s,20.0),2.3),SAGE,1.3,'arms'),
+            (capsule((2.8,9.0*s,20.0),(4.8,7.0*s,15.0),2.1),SAGE,1.1,'forearms'),
+            (sphere((5.2,6.5*s,14.2),2.3),SKIN,0.8,'hands'),
+            (ellipsoid((0.4,6.8*s,40.5),(3.2,2.0,4.6)),GRAY,1.0,'bob sides'),
+        ]
+    ops+=[
+        (ellipsoid((-1.4,0,42.0),(7.4,7.4,6.4)),GRAY,1.2,'bob back'),
+        (ellipsoid((0.2,0,46.2),(6.8,6.8,3.5)),GRAY,1.0,'bob crown'),
+    ]
     return ops
 
-def _snufkin():
-    """Snufkin: brown boots, green trousers and coat, a round face and his tall pointed hat with a wide brim."""
-    ops=[(ellipsoid((0,0,20),(9.5,9.5,12.5)),GREEN,0,'coat'),
-         (sphere((.8,0,34.5),8.4),WHITE,2.5,'head')]
-    for s_ in (1,-1):
-        ops+=[(capsule((0,4.4*s_,9),(0,4.6*s_,4.5),3.4),GREEN,1.5,'legs'),
-              (ellipsoid((2.6,4.6*s_,2.6),(5.6,3.7,2.6)),BROWN,1.2,'boots'),
-              (capsule((1,9*s_,27),(5.5,10.8*s_,17.5),2.6),GREEN,1.4,'arms'),
-              (sphere((5.9,11*s_,16.6),2.8),WHITE,1,'hands')]
-    ops+=[(cylinder((.5,0,41.6),12.6,.9,.6),GREEN,.8,'hat brim'),
-          (capsule((.5,0,43),(-2.2,0,59),8.2,2.8),GREEN,.6,'hat crown')]
-    for s_ in (1,-1):ops.append((ellipsoid((8.4,3*s_,36.4),(1.1,1.3,2.2),(0,-20,0)),BLACK,0,'eyes'))
+def _ada():
+    """Ada Rowan: child with short brown hair, rust sweater, blue overalls, rounded shoes."""
+    ops=[
+        (ellipsoid((0,0,17.0),(7.8,7.4,8.8)),BLUE,0,'overalls hips'),
+        (ellipsoid((0.3,0,26.5),(7.0,6.6,7.8)),RUST,2.5,'sweater chest'),
+        (box((4.6,0,22.5),(1.0,4.2,3.8),0.5),BLUE,0.7,'overalls bib'),
+        (sphere((0.5,0,36.5),6.6),SKIN,2.0,'head'),
+        (ellipsoid((6.6,0,36.0),(1.4,1.1,1.1)),SKIN,0.8,'nose'),
+    ]
+    for s in (1,-1):
+        ops+=[
+            (capsule((0,3.7*s,11.0),(0.3,3.9*s,4.2),2.9),BLUE,1.3,'legs'),
+            (ellipsoid((1.9,3.9*s,2.1),(4.4,2.9,2.1)),BROWN,1.0,'shoes'),
+            (ellipsoid((0.0,6.2*s,36.5),(1.3,1.0,1.6)),SKIN,0.8,'ears'),
+            (ellipsoid((6.1,2.1*s,37.6),(0.8,0.9,1.2),(0,-15,0)),BLACK,0,'eyes'),
+            (capsule((0.3,7.0*s,27.5),(2.4,7.8*s,18.0),2.0),RUST,1.2,'arms'),
+            (capsule((2.4,7.8*s,18.0),(4.0,6.2*s,13.8),1.8),RUST,1.0,'forearms'),
+            (sphere((4.4,5.8*s,13.2),2.0),SKIN,0.8,'hands'),
+            (ellipsoid((0.4,5.9*s,38.5),(2.6,1.6,3.0)),BROWN,0.8,'hair sides'),
+        ]
+    ops+=[
+        (ellipsoid((-0.5,0,39.0),(6.8,6.8,5.0)),BROWN,1.2,'hair crown'),
+    ]
     return ops
 
-def _littlemy():
-    """Little My: a chunky red dress, short sturdy legs and her famous orange hair bun."""
-    ops=[(ellipsoid((0,0,14.5),(11.5,11.5,12)),RED,0,'dress'),
-         (sphere((.6,0,31),8.2),WHITE,2.2,'head'),
-         (ellipsoid((-1,0,35.6),(8.6,8.6,5.8)),ORANGE,1.2,'hair cap'),
-         (ellipsoid((-.6,0,44.4),(6.2,6.2,6.6)),ORANGE,1.6,'hair bun')]
-    for s_ in (1,-1):
-        ops+=[(capsule((0,4*s_,8),(.4,4.2*s_,3.4),3.3),WHITE,1.6,'legs'),
-              (ellipsoid((2.4,4.2*s_,2.3),(5,3.4,2.3)),BLACK,1.2,'shoes'),
-              (capsule((.8,8.6*s_,24),(4.6,11*s_,17.8),2.4),WHITE,1.4,'arms')]
-    for s_ in (1,-1):ops.append((ellipsoid((8.2,2.8*s_,32.6),(1,1.2,2),(0,-18,0)),BLACK,0,'eyes'))
+def _theo():
+    """Theo Rowan: child with dark curls, mustard sweater, teal trousers, rounded shoes."""
+    ops=[
+        (ellipsoid((0,0,16.0),(7.4,7.0,8.2)),TEAL,0,'trousers hips'),
+        (ellipsoid((0.3,0,24.8),(6.8,6.3,7.5)),MUSTARD,2.4,'sweater chest'),
+        (sphere((0.5,0,34.0),6.3),SKIN,2.0,'head'),
+        (ellipsoid((6.3,0,33.6),(1.3,1.1,1.1)),SKIN,0.8,'nose'),
+    ]
+    for s in (1,-1):
+        ops+=[
+            (capsule((0,3.5*s,10.5),(0.3,3.7*s,4.0),2.7),TEAL,1.3,'legs'),
+            (ellipsoid((1.7,3.7*s,1.9),(4.0,2.7,1.9)),BLACK,1.0,'shoes'),
+            (ellipsoid((0.0,5.8*s,34.0),(1.2,0.9,1.5)),SKIN,0.8,'ears'),
+            (ellipsoid((5.8,1.9*s,35.0),(0.7,0.9,1.1),(0,-15,0)),BLACK,0,'eyes'),
+            (capsule((0.3,6.6*s,25.5),(2.1,7.3*s,16.8),1.9),MUSTARD,1.2,'arms'),
+            (capsule((2.1,7.3*s,16.8),(3.6,5.8*s,13.0),1.7),MUSTARD,1.0,'forearms'),
+            (sphere((4.0,5.4*s,12.4),1.9),SKIN,0.8,'hands'),
+            (sphere((-0.8,4.2*s,38.5),2.4),BLACK,0.8,'curls'),
+            (sphere((1.8,3.8*s,38.0),2.2),BLACK,0.8,'curls'),
+            (sphere((-2.6,1.8*s,37.5),2.3),BLACK,0.8,'curls'),
+        ]
+    ops+=[
+        (ellipsoid((-0.4,0,37.0),(6.4,6.4,4.5)),BLACK,1.2,'hair crown'),
+    ]
     return ops
 
 DESIGNS={
-  # name: (target height mm from config figures.heights, extra ops, torso apron?)
-  'troll':(CFG['figures']['heights']['troll'],lambda:_troll(),False),
-  'mamma':(CFG['figures']['heights']['mamma'],lambda:_troll()+[(box((9.4,-15.4,10.2),(5.4,2.1,3.6),1.2),BLACK,.4,'handbag'),(handle((9.4,-15.4,13.4),2.6,.6),BLACK,.3,'handle')],True),
-  'pappa':(CFG['figures']['heights']['pappa'],lambda:_troll(ears=False)+[(cylinder((.5,0,45.8),11.6,.8,.5),BLACK,.6,'hat brim'),(cylinder((.5,0,53.6),7.6,7.8,.9),BLACK,.3,'hat crown')],False),
-  'snorkmaiden':(CFG['figures']['heights']['snorkmaiden'],_snork,False),
-  'snufkin':(CFG['figures']['heights']['snufkin'],_snufkin,False),
-  'littlemy':(CFG['figures']['heights']['littlemy'],_littlemy,False),
+  'elias':(CFG['figures']['heights']['elias'],_elias),
+  'mira':(CFG['figures']['heights']['mira'],_mira),
+  'ada':(CFG['figures']['heights']['ada'],_ada),
+  'theo':(CFG['figures']['heights']['theo'],_theo),
 }
 
 def _design_field(name,P):
-    _,make,apron=DESIGNS[name];ops=make()
-    d=ops[0][0](P);mat=np.full(P.shape[:-1],ops[0][1],np.int8);torso=None
-    for k,(f,m,blend,_) in enumerate(ops[1:],1):
+    _,make=DESIGNS[name];ops=make()
+    d=ops[0][0](P);mat=np.full(P.shape[:-1],ops[0][1],np.int8)
+    for f,m,blend,_ in ops[1:]:
         di=f(P);mat[di<d]=m;d=smin(d,di,blend)
-        if k==1:torso=d.copy()
-    if apron:
-        da=_apron(P,torso);mat[da<d]=APRON;d=np.minimum(d,da)
     return np.maximum(d,-P[...,2]),mat   # flat underside so it stands
 
 @lru_cache(None)
 def scale(name):
     """Design-to-mm factor so the figure's top lands at its target height."""
-    g=np.mgrid[-30:30:.4,-20:20:.4,0:70:.4].transpose(1,2,3,0)
+    g=np.mgrid[-35:35:.4,-30:30:.4,0:85:.4].transpose(1,2,3,0)
     d,_=_design_field(name,g);top=g[d<0][:,2].max()
     i=np.argwhere(d<0);j=i[np.argmax(g[d<0][:,2])];x,y=g[tuple(j)][:2];lo,hi=top,top+.5
     for _ in range(40):
@@ -169,7 +231,7 @@ def gradient(name,P,eps=.02):
 @lru_cache(None)
 def _grid(name,step):
     """Signed distances on a grid that covers the figure with one empty cell all round."""
-    s=scale(name);lo=np.array([-30,-20,-.5])*s;hi=np.array([30,20,70])*s
+    s=scale(name);lo=np.array([-35,-30,-.5])*s;hi=np.array([35,30,85])*s
     coarse=np.mgrid[lo[0]:hi[0]:1.5,lo[1]:hi[1]:1.5,lo[2]:hi[2]:1.5].transpose(1,2,3,0)
     pts=coarse[field(name,coarse)[0]<1.5]
     lo=np.floor((pts.min(0)-3)/step)*step;lo[2]=-2*step;hi=pts.max(0)+3
@@ -197,8 +259,7 @@ def _active(inside):
     return code,(code>0)&(code<255)
 
 def _nets(G,d,step):
-    """Surface nets: one vertex per crossed cell, one quad per crossed grid edge. Regular, light meshes
-    for display; an ambiguous saddle face can pinch an edge, so volumes and CAD use _tetra."""
+    """Surface nets: one vertex per crossed cell, one quad per crossed grid edge."""
     inside=d<0;n=np.array(d.shape);code,active=_active(inside)
     cells=np.argwhere(active);vid=np.full(n-1,-1,np.int64);vid[active]=np.arange(len(cells))
     acc=np.zeros((len(cells),3));cnt=np.zeros(len(cells))
@@ -247,10 +308,8 @@ def mesh(name,step=1.0,watertight=False):
     _,mat=field(name,V);return V,F,Nrm,colour_index(V,mat,name),mat
 
 def colour_index(V,mat,name):
-    """Palette index per point (COLOURS order); the apron is white with red stripes."""
-    out=np.vectorize(PALETTE.get,otypes=[np.uint8])(mat) if mat.size else np.zeros(0,np.uint8)
-    stripe=(np.floor(V[:,1]/(STRIPE*scale(name)))%2==0)
-    return np.where((mat==APRON)&stripe,2,out).astype(np.uint8)
+    """Palette index per point (COLOURS order)."""
+    return np.vectorize(PALETTE.get,otypes=[np.uint8])(mat) if mat.size else np.zeros(0,np.uint8)
 
 def mesh_volume(V,F):
     a,b,c=V[F[:,0]],V[F[:,1]],V[F[:,2]];return float(np.einsum('ij,ij->i',a,np.cross(b,c)).sum()/6)
@@ -267,12 +326,12 @@ def stats(name):
     cfg=CFG['figures']['clay'];total=mesh_volume(V,F)
     counts=np.bincount(colour_index(G[inside],mat[inside],name),minlength=len(COLOURS)).astype(float)
     by={k:total*counts[j]/counts.sum() for j,k in enumerate(COLOURS)}
-    # Foil core: white body deeper than the clay wall; a ball of the same volume is easy to scrunch.
-    core=float(((d<-cfg['foil_wall'])&(mat==WHITE)).sum()*.5**3)
+    # Foil core: torso body deeper than the clay wall; saves clay in thick torsos.
+    core=float(((d<-cfg['foil_wall'])&np.isin(mat,TORSO_MATERIALS[name])).sum()*.5**3)
     lo,hi=V.min(0),V.max(0)
     return {'key':name,'name':NAMES[name],'scale':float(scale(name)),'height':float(hi[2]),'length':float(hi[0]-lo[0]),'width':float(hi[1]-lo[1]),
             'volume_mm3':total,'by_colour_mm3':by,'grams':grams(total),'grams_by_colour':{k:grams(v) for k,v in by.items()},
-            'core_mm3':core,'core_ball_mm':2*(3*core/(4*math.pi))**(1/3),'grams_with_core':grams(total-core),
+            'core_mm3':core,'core_ball_mm':2*(3*core/(4*math.pi))**(1/3) if core>0 else 0.0,'grams_with_core':grams(total-core),
             'closed':closed(F),'triangles':len(F)}
 
 def lumps(name):
@@ -294,7 +353,7 @@ def lumps_spec(name):
 
 @lru_cache(None)
 def hard_volume(name,step=.5):
-    """Volume (mm3) of the plain union of the lumps, without the smoothed joins or the apron:
+    """Volume (mm3) of the plain union of the lumps, without the smoothed joins:
     the shape of the exact CAD solid, so the two can be compared."""
     s=scale(name);G=_grid(name,step)[0]/s;d=np.full(G.shape[:-1],np.inf)
     for f,_,_,_ in DESIGNS[name][1]():d=np.minimum(d,f(G))
@@ -332,4 +391,4 @@ def packed(name,step=1.0):
 if __name__=='__main__':
     import time
     for name in DESIGNS:
-        t=time.time();s=stats(name);print(f'{s["name"]}: {s["height"]:.1f} tall, {s["volume_mm3"]/1000:.1f} cm3, {s["grams"]:.0f} g',{k:round(v) for k,v in s['grams_by_colour'].items()},f'core saves {s["grams"]-s["grams_with_core"]:.0f} g ({time.time()-t:.1f} s)')
+        t=time.time();s=stats(name);print(f'{s["name"]}: {s["height"]:.1f} tall, {s["volume_mm3"]/1000:.1f} cm3, {s["grams"]:.0f} g',{k:round(v) for k,v in s['grams_by_colour'].items() if v>=0.5},f'core saves {s["grams"]-s["grams_with_core"]:.0f} g ({time.time()-t:.1f} s)')

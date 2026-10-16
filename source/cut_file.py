@@ -4,7 +4,7 @@
 
 Cutting paths only: no sheet frames, labels or engraving. Every A3 sheet keeps its validated nesting and sits in its
 own 297 x 420 mm slot. The slots run in rows by thickness (3 mm, then 6 mm), left to right in sheet order, the order of
-the reference maps in Moomin-House-Supplier.pdf. Each thickness has its own layer and colour (CUT_3MM ...), so laser
+the reference maps in Lanternwood-House-Supplier.pdf. Each thickness has its own layer and colour (CUT_3MM ...), so laser
 software can give each its own power. Outlines are closed, the fixed walls' factory blank ends included, so the file
 still works when the shop re-nests onto larger boards; on a 420 mm A3 blank those two lines lie on the factory edge.
 Blind pockets and holes, underside features and holes below the minimum drill are not in the file; the report in
@@ -13,11 +13,11 @@ output/reports/supplier-cut-file.json lists them.
 import json
 from collections import Counter
 from pathlib import Path
-import cnc, supplier
+import cnc, naming, supplier
 from dxf_r12 import DXF, COLOURS, thickness_layer as layer
 
 ROOT=Path(__file__).resolve().parents[1]
-OUTPUT=ROOT/'output/Moomin-House-Supplier-Cut.dxf'
+OUTPUT=ROOT/'output'/naming.SUPPLIER_CUT_DXF
 REPORT=ROOT/'output/reports/supplier-cut-file.json'
 COLUMNS=6;GAP=20;THICKNESS_GAP=60   # sheets per row; mm between sheets, and between thickness blocks
 

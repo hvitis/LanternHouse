@@ -164,7 +164,7 @@ def main():
     ap.add_argument('--out',help='ścieżka PDF (domyślnie output/pdf/Optymalne-wymiary-i-cennik-<dostawca>.pdf)')
     ap.add_argument('--workers',type=int,help='liczba procesów (domyślnie do 8)')
     args=ap.parse_args()
-    print('Optymalne wymiary i cennik: zakup sklejki na Domek Muminków')
+    print('Optymalne wymiary i cennik: zakup sklejki na Lanternwood House')
     p,path=choose(args)
     if not args.yes:
         print('\n'+describe(p))

@@ -73,7 +73,7 @@ def run_pipeline(workspace, freecad_python, lang="pl", tolerance=False, runner=s
     print("Checking source syntax before CAD build", flush=True)
     for path in sorted((workspace / "source").rglob("*.py")):
         compile(path.read_bytes(), str(path), "exec")
-    env = dict(os.environ, MOOMIN_HEADLESS="1", QT_QPA_PLATFORM="offscreen")
+    env = dict(os.environ, LANTERNWOOD_HEADLESS="1", QT_QPA_PLATFORM="offscreen")
 
     def run(script, cad=False, args=()):
         print(f"Building: {script}", flush=True)
@@ -115,7 +115,7 @@ def publish(root, workspace, baseline):
     output, built, previous = root / "output", workspace / "output", workspace / "previous-output"
     if output.is_symlink():
         raise RuntimeError("Refusing to replace a symlinked output directory")
-    if not (built / "Moomin-House-Build-Kit.zip").is_file():
+    if not (built / "Lanternwood-House-Build-Kit.zip").is_file():
         raise RuntimeError("Build has no packaged kit; the previous output is preserved")
     generated = [
         name

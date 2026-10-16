@@ -4,6 +4,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from pypdf import PdfReader,PdfWriter
 from pypdf.annotations import Link
+import naming
 from supplier import fonts,REGULAR,BOLD
 
 def combine(sections,destination):
@@ -29,7 +30,7 @@ def combine(sections,destination):
             while c.stringWidth(title,font,size)>width-x-90 and size>7:size-=.25
             c.setFont(font,size);c.drawString(x,y,title);c.drawRightString(width-40,y,str(e['complete_page']))
             links.append({'toc_page':page+2,'rect':(x,y-4,width-40,y+11),'target':e['complete_page']})
-        c.setFont(REGULAR,8);c.drawString(40,24,'MOOMIN HOUSE / CONTENTS');c.drawRightString(width-40,24,str(page+2));c.showPage()
+        c.setFont(REGULAR,8);c.drawString(40,24,f'{naming.NAME.upper()} / CONTENTS');c.drawRightString(width-40,24,str(page+2));c.showPage()
     c.save();buf.seek(0);writer=PdfWriter()
     writer.append(readers[0],pages=(0,1),import_outline=False)
     writer.append(PdfReader(buf),import_outline=False)
@@ -40,6 +41,6 @@ def combine(sections,destination):
         obj=writer.add_outline_item(e['title'],e['complete_page']-1,parent=parent if e['level'] else None)
         if not e['level']:parent=obj
     for link in links:writer.add_annotation(link['toc_page']-1,Link(rect=link['rect'],target_page_index=link['target']-1))
-    writer.add_metadata({'/Title':'Moomin House | Complete plywood CAD building book','/Author':'Moomin House CAD workshop'})
+    writer.add_metadata({'/Title':f'{naming.NAME} | Complete plywood CAD building book','/Author':f'{naming.NAME} CAD workshop'})
     with open(destination,'wb') as f:writer.write(f)
     return {'complete_pages':len(writer.pages),'contents_pages':toc_pages,'entries':entries,'sections':[{'title':s['title'],'pdf':str(s['path'].name),'first_page':starts[n]+1,'last_page':starts[n]+len(readers[n].pages)+(toc_pages if n==0 else 0)} for n,s in enumerate(sections)]}

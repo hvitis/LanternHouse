@@ -1,5 +1,5 @@
 {
-  "name": "moominshouse-viewer-checks",
+  "name": "lanternwood-house-viewer-checks",
   "private": true,
   "scripts": {
     "test:viewer": "node tests/check-viewer-syntax.mjs && node tests/viewer-smoke.mjs",

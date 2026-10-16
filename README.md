@@ -1,4 +1,4 @@
-# Moomin House
+# Lanternwood House
 
 **English** · [Polski](README.pl.md)
 
@@ -8,14 +8,14 @@
   <img src="docs/images/cover.jpg" width="380" alt="Book cover: the round blue tower with a red cone roof and a small veranda, standing in a summer meadow">
 </p>
 
-The house is a round blue tower with a red spire roof, three floors and an attic. All plywood parts fit A3 stock (297 × 420 mm). CNC machining and calibrated A4 templates support company cutting and DIY work. The front walls swing open on real hinges, the roof with its two dormers lifts off, a permanent veranda with a rope ladder stands on the side, a back door leads to the woodpile, and a drawer is hidden in the stone plinth. Six thermo-clay figures live in the house: the Moomin family, Snufkin, the Snork Maiden and Little My.
+The house is a round blue tower with a red spire roof, three floors and an attic. All plywood parts fit A3 stock (297 × 420 mm). CNC machining and calibrated A4 templates support company cutting and DIY work. The front walls swing open on real hinges, the roof with its two dormers lifts off, a permanent veranda with a rope ladder stands on the side, a back door leads to the woodpile, and a drawer is hidden in the stone plinth. Four thermo-clay figures live in the house: the Rowan family (Elias, Mira, Ada and Theo).
 
 <p align="center">
-  <b><a href="https://hvitis.github.io/MoominsHouse/">Open the 3D model in your browser</a></b> &nbsp;·&nbsp;
-  <b><a href="https://github.com/hvitis/moominshouse/releases/latest">Download the building book (PDF)</a></b>
+  <b><a href="https://hvitis.github.io/lanternwood-house/">Open the 3D model in your browser</a></b> &nbsp;·&nbsp;
+  <b><a href="https://github.com/hvitis/lanternwood-house/releases/latest">Download the building book (PDF)</a></b>
 </p>
 
-> This is an unofficial, non-commercial fan project. It is not affiliated with or endorsed by Moomin Characters Oy or by the makers of any commercial Moomin house kit. See [Trademarks](#trademarks-and-licence).
+> Lanternwood House is an original open-source design for a hand-crafted wooden dollhouse and polymer clay figures. See [Licence](#licence).
 
 <table>
   <tr>
@@ -26,8 +26,8 @@ The house is a round blue tower with a red spire roof, three floors and an attic
 </table>
 
 <p align="center">
-  <img src="docs/images/clay-family.webp" width="520" alt="Clay figures of Moominpappa with a top hat, Moominmamma with a striped apron and handbag, Moomintroll, the Snork Maiden, Snufkin and Little My"><br>
-  <sub>The thermo-clay family and friends, modelled as lumps of clay with volumes and grams per colour</sub>
+  <img src="docs/images/clay-family.webp" width="520" alt="Clay figures of the Rowan family: Elias, Mira, Ada and Theo"><br>
+  <sub>The Rowan family in thermo-clay, modelled as lumps of clay with volumes and grams per colour</sub>
 </p>
 
 <!-- specifications:start -->
@@ -58,16 +58,16 @@ The house is a round blue tower with a red spire roof, three floors and an attic
 - **Play features.** Two front wall shells open to 100°, where a magnet sealed inside a small garden post holds each one open; catches under the attic floor hold them shut. Three entrance doors open outward and each floor has two rooms joined by a door on cotton-tape hinges. The roof lifts off the tower. A captive drawer slides 200 mm out of the plinth. Optional LED lighting has its wire holes and a screw-closed battery hatch.
 - **One config drives everything.** Height, base, plinth, drawer, doors, veranda position and size, hinge hole patterns, plywood stock and colours all live in `source/config.json`.
 - **Checked automatically.** Every build checks for solid overlaps, samples the wall swing every 5° up to the 100° stop and sweeps all six doors. It also checks drawer travel to its stop, roof lift, window clearance, that every clay figure passes upright through every doorway and is too big to swallow, that every magnet is sealed in wood, that every piece belongs to one assembly step, cut-sheet spacing, part and hardware counts, and the PDF print scale. Separate checks rebuild the house with the thinnest and thickest measured plywood, follow the tolerance chain of each joint, and compute the tip-over force with the walls open. Any failed check stops the build.
-- **Clay figures.** Moominpappa, Moominmamma, Moomintroll, Snufkin, the Snork Maiden and Little My are signed-distance "lumps" pressed together like real clay. The build computes each figure's volume, the grams of clay per colour, and the saving from a foil core.
+- **Clay figures.** Elias, Mira, Ada and Theo Rowan are signed-distance "lumps" pressed together like real clay. The build computes each figure's volume, the grams of clay per colour, and the saving from a foil core.
 - **Many output formats.** A native FreeCAD document, STEP solids (closed, open, exploded, one per build part), DXF profiles, sheet layouts as SVG, CNC operation files as SVG and DXF, PDFs and CSV shopping lists.
 
 ## Try it: the 3D viewer (no FreeCAD needed)
 
-The quickest way is the [online viewer](https://hvitis.github.io/MoominsHouse/). It is rebuilt from `main` on every push. To run it locally, or to see your own config changes, you need Python 3.12+ and git.
+The quickest way is the [online viewer](https://hvitis.github.io/lanternwood-house/). It is rebuilt from `main` on every push. To run it locally, or to see your own config changes, you need Python 3.12+ and git.
 
 ```sh
-git clone https://github.com/hvitis/moominshouse.git
-cd moominshouse
+git clone https://github.com/hvitis/lanternwood-house.git
+cd lanternwood-house
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python source/serve.py --open
@@ -93,7 +93,7 @@ After you edit `source/config.json`, run `serve.py --rebuild` to see the change.
 
 ## 3D-printable furniture
 
-The [prints page](https://hvitis.github.io/MoominsHouse/#printables) shows furniture you can 3D print for the house. You can turn each piece in 3D, see its print checks (it fits the printer, needs no supports, has thick enough walls and is too big to swallow) and download STL, 3MF or STEP files. Each piece is a short Python file in `source/prints/`. On the Mac, `make studio` opens a live preview that rebuilds the part each time its file is saved or a measurement slider moves. `make prints` publishes the files for the site. It is the **3D printables** tab of the online viewer, and CI publishes it with the viewer on every push to `main`. See [3D-printable furniture](docs/PRINTING.md).
+The [prints page](https://hvitis.github.io/lanternwood-house/#printables) shows furniture you can 3D print for the house. You can turn each piece in 3D, see its print checks (it fits the printer, needs no supports, has thick enough walls and is too big to swallow) and download STL, 3MF or STEP files. Each piece is a short Python file in `source/prints/`. On the Mac, `make studio` opens a live preview that rebuilds the part each time its file is saved or a measurement slider moves. `make prints` publishes the files for the site. It is the **3D printables** tab of the online viewer, and CI publishes it with the viewer on every push to `main`. See [3D-printable furniture](docs/PRINTING.md).
 
 ## Generate the build files
 
@@ -101,7 +101,7 @@ Run `make joints` to prepare the [physical joint samples](docs/JOINT-VALIDATION.
 
 The PDFs, CAD files and cut sheets are **not in this repository**. Together they are about 100 MB, and they are rebuilt from source.
 
-**If you only want to build the house,** download the PDFs and the build kit from the [latest release](https://github.com/hvitis/moominshouse/releases/latest). Generate the files yourself only if you change the design.
+**If you only want to build the house,** download the PDFs and the build kit from the [latest release](https://github.com/hvitis/lanternwood-house/releases/latest). Generate the files yourself only if you change the design.
 
 **1. Install FreeCAD 1.1 or later.** The CAD stages run in FreeCAD's bundled Python, which supplies the OpenCASCADE kernel, numpy and shapely.
 
@@ -133,18 +133,18 @@ The rebuild takes about two minutes and the thickness check about one. The rebui
 | Path | Contents |
 | --- | --- |
 | `output/pdf/` | Nine PDFs with A4 workshop pages and native A3 supplier sheets: the complete book, instructions, cutting templates, dimensioned parts, decor (palette, stone panels, roof shingle strips) and the clay family, 3 mm hand templates and a supplier appendix |
-| `output/cad/` | `MoominHouse.FCStd` (native, editable), STEP assemblies (closed, open, exploded) and `parts/*.step` |
+| `output/cad/` | `LanternwoodHouse.FCStd` (native, editable), STEP assemblies (closed, open, exploded) and `parts/*.step` |
 | `output/dxf/` | One DXF per profile, full-size sheet layouts (`*-layout.svg`), and CNC operation files for every thickness (`*-cnc-*.svg`, `*-cnc-*.dxf`) |
 | `output/previews/` | CAD-derived renders and clay renders |
 | `output/reports/` | `release-validation.json` (every check), `cad-validation.json`, `thickness-tolerance.json`, `parts.csv`, `hardware.csv`, `stock.csv` |
-| `output/Moomin-House-Supplier-Cut.dxf` | Everything the supplier cuts in one DXF R12 file: cutting lines only, one layer per thickness |
-| `output/Moomin-House-Build-Kit.zip` | All of the above plus the source, in one package |
+| `output/Lanternwood-House-Supplier-Cut.dxf` | Everything the supplier cuts in one DXF R12 file: cutting lines only, one layer per thickness |
+| `output/Lanternwood-House-Build-Kit.zip` | All of the above plus the source, in one package |
 
 Then read the [build guide](docs/BUILD-GUIDE.md) before you print anything. The 1:1 templates must be printed at 100 % and measured.
 
-For CNC machining, read [docs/SUPPLIER-READINESS.md](docs/SUPPLIER-READINESS.md) first, then send `Moomin-House-Supplier.pdf` (it now opens with the specification and a checklist to confirm) and either `Moomin-House-Supplier-Cut.dxf` (every cutting line in one file, as most shops ask) or the matching operation CSV, DXF R12 and SVG files. Native A3 production pages cover the only two plywood thicknesses, 3 and 6 mm. Each page contains one operation without labels or a background. Separate reference pages identify the parts, machining faces, and depths. The complete book remains entirely A4 and includes an A4 supplier summary. Large individual parts use two A4 template pages with overlap. `Moomin-House-3mm-Hand-Templates.pdf` remains available for thin parts only. Add `--lang en` to `source/rebuild.py` for English supplier text.
+For CNC machining, read [docs/SUPPLIER-READINESS.md](docs/SUPPLIER-READINESS.md) first, then send `Lanternwood-House-Supplier.pdf` (it now opens with the specification and a checklist to confirm) and either `Lanternwood-House-Supplier-Cut.dxf` (every cutting line in one file, as most shops ask) or the matching operation CSV, DXF R12 and SVG files. Native A3 production pages cover the only two plywood thicknesses, 3 and 6 mm. Each page contains one operation without labels or a background. Separate reference pages identify the parts, machining faces, and depths. The complete book remains entirely A4 and includes an A4 supplier summary. Large individual parts use two A4 template pages with overlap. `Lanternwood-House-3mm-Hand-Templates.pdf` remains available for thin parts only. Add `--lang en` to `source/rebuild.py` for English supplier text.
 
-`make build` writes the supplier cut file, `output/Moomin-House-Supplier-Cut.dxf`, and every `v*` release attaches it. `make cutfile` rewrites it in about a second from the last build's nesting. After a design or config change, run `make build` instead, so the DXF and the supplier PDF's sheet maps come from the same nesting.
+`make build` writes the supplier cut file, `output/Lanternwood-House-Supplier-Cut.dxf`, and every `v*` release attaches it. `make cutfile` rewrites it in about a second from the last build's nesting. After a design or config change, run `make build` instead, so the DXF and the supplier PDF's sheet maps come from the same nesting.
 
 To choose which plywood to buy, run `make stock`. It asks for a supplier (or reuses one saved in `ops/suppliers/`), the sheet sizes, prices and packs it sells, the minimum distance between parts, the edge margin and the supplier's saw kerf. It then nests every plywood part of the house (no furniture, figures, garden, woodpile, hardware or screws) on many mixes of those sizes, including formats the supplier saws from a large board, and writes `output/pdf/Optymalne-wymiary-i-cennik-<supplier>.pdf`: the cheapest sizes and quantities per grade, the variants they beat, the price per m² and the sheet layouts. `ops/suppliers/sklejka-krakow.json` is a worked example.
 
@@ -219,16 +219,14 @@ This is a design for a hand-built wooden toy, not a certified toy. The CAD check
 - Tested on macOS (Apple silicon) with Python 3.12 and FreeCAD 1.1.4. Linux and Windows should work with FreeCAD's bundled Python, but have not been tried yet.
 - The design is checked in CAD but has not yet been built in plywood. Expect to adjust tolerances after a first dry fit.
 
-## Trademarks and licence
+## Licence
 
 Copyright © 2026 hvitis. The code, the design and everything the build generates from them are licensed under [Creative Commons Attribution-NonCommercial-ShareAlike 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) ([`LICENSE`](LICENSE)). You may share and adapt the house for non-commercial purposes, if you give credit and share your changes under the same licence.
 
 The vendored three.js files in `source/viewer/vendor/` keep their own MIT licence (`THREE-LICENSE.txt`).
 The DejaVu fonts keep their own licence in `source/fonts/LICENSE_DEJAVU`.
 
-Moomin, the Moomin characters and the Moomin house are trademarks and copyrighted works of Moomin Characters Oy. This licence does not and cannot grant any rights in them. This repository is a personal, non-commercial fan project. It does not include, and must not be used to distribute, official artwork or product photos. Do not sell kits, books or figures made from it.
-
 <p align="center">
-  <img src="docs/images/social-preview.png" width="800" alt="Moomin House: a plywood dollhouse generated entirely from code">
+  <img src="docs/images/social-preview.png" width="800" alt="Lanternwood House: a plywood dollhouse generated entirely from code">
 </p>
 

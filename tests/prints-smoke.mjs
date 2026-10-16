@@ -1,5 +1,5 @@
 // The published 3D prints, served from the static export under the repository prefix GitHub Pages uses
-// (https://hvitis.github.io/MoominsHouse/): /#printables opens them directly, the "3D printables" tab opens them
+// (https://hvitis.github.io/lanternwood-house/): /#printables opens them directly, the "3D printables" tab opens them
 // from the house, every design loads, its downloads are the published files, and nothing errors on desktop or mobile.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -10,7 +10,7 @@ import {chromium} from 'playwright';
 
 const root = fileURLToPath(new URL('../_site/', import.meta.url));
 const screenshots = fileURLToPath(new URL('../output/prints-smoke/', import.meta.url));
-const prefix = '/MoominsHouse/';
+const prefix = '/lanternwood-house/';
 const manifest = JSON.parse(await readFile(resolve(root, 'prints/manifest.json'), 'utf8'));
 const designs = Object.values(manifest.parts);
 assert.ok(designs.length > 0, 'No published designs in _site/prints/');

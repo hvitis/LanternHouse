@@ -1,12 +1,12 @@
-# Moominhouse Ornament & Architectural Improvements
+# Lanternwood House Ornament & Architectural Improvements
 
-This document catalogs potential decorative and architectural ornament additions to the wooden Moominhouse model, derived from a detailed comparison with the official **DeAgostini / Fanhome *Moominhouse*** subscription build (*週刊 ムーミンハウスをつくる*) and original reference artwork.
+This document catalogs potential decorative and architectural ornament additions to the wooden Lanternwood House model, celebrating literary craftsmanship and original architectural reference artwork.
 
 ---
 
-## 0. The Literary Moominhouse: Library, Scriptorium & Archive System (CNC-Fabricated)
+## 0. The Literary Archive: Library, Scriptorium & Archive System (CNC-Fabricated)
 
-This design framework reorients the Moominhouse around **libraries, books, manuscript creation, and archival cartography**—celebrating Moominpappa’s lifelong memoir-writing and scholarly domesticity.
+This design framework reorients Lanternwood House around **libraries, books, manuscript creation, and archival cartography**—celebrating Elias's lifelong writing, cartography, and scholarly domesticity.
 
 All proposed elements are strictly engineered for **flat-sheet 2.5D CNC machining and laser cutting** (using 3 mm, 4 mm, and 6 mm birch plywood). To ensure robust real-world production and playability, the design avoids fragile turned spindles, ultra-thin rungs (such as wire/string ladders), and non-machinable 3D spheres (such as solid globes). Instead, all pieces employ **interlocking mortise-and-tenon joints, slot-and-tab grids, half-lap comb joints, stepped solid profiles, and face-laminated reliefs**.
 
@@ -25,7 +25,7 @@ All proposed elements are strictly engineered for **flat-sheet 2.5D CNC machinin
                                /___||___||___\ · Interlocking triangular telescope observation pylon
                               /===============\ Z = 420.0 mm (Attic Floor Level)
                              |       | |       |
-                             | [===] | | ==-== | FLOOR 2: PAPPA'S MEMOIR STUDY & SCRIPTORIUM (Z = 280 - 420 mm)
+                             | [===] | | ==-== | FLOOR 2: ELIAS'S MEMOIR STUDY & SCRIPTORIUM (Z = 280 - 420 mm)
                              | |___| | | |===| | · Slanted bureau secretary desk with 3mm pigeonholes
                              |       | |       | · Portable desk-top writing slope with ink recess
                              |_______|_|_______| · Reader's daybed with integrated book-trough end boards
@@ -90,13 +90,13 @@ To ensure all elements cut cleanly on a desktop or light-industrial CNC mill (us
 
 #### A. Plinth Archive Drawer ($Z = 0\text{ to }61.6\text{ mm}$, Travel $= 205.3\text{ mm}$)
 
-The hidden sliding plinth drawer (`DR1`) is transformed into a museum-grade archival flat-file repository for oversized maps, architectural elevations, and rare Moominvalley folios.
+The hidden sliding plinth drawer (`DR1`) is transformed into a museum-grade archival flat-file repository for oversized maps, architectural elevations, and rare folios.
 
 | CNC Component | Material | Joinery & Construction | Function & Real-World Play Value |
 | :--- | :--- | :--- | :--- |
 | **Archival Flat-File Grid (`AF-01`–`AF-06`)** | 3 mm birch ply | Interlocking egg-crate half-lap comb slots (6 mm pitch). | Divides the drawer into 6 shallow compartments tailored for flat miniature parchment maps and accordion-folded Leporello books. |
 | **Roll-Top Scroll Tubes Caddy (`AF-07`)** | 4 mm sides, 3 mm base | Scalloped cradle rack with 5 semi-circular saddles. | Holds rolled miniature maritime charts tied with linen thread; drops directly into the front drawer bay. |
-| **Secret False-Bottom Document Cache (`AF-08`)** | 3 mm ply plate | Flush drop-in plate with a 6 mm circular CNC finger-pull hole. | Conceals a 6 mm secret cavity at the rear of the drawer for Moominpappa’s confidential royal correspondence and private diary. |
+| **Secret False-Bottom Document Cache (`AF-08`)** | 3 mm ply plate | Flush drop-in plate with a 6 mm circular CNC finger-pull hole. | Conceals a 6 mm secret cavity at the rear of the drawer for Elias's confidential correspondence and private journal. |
 
 ---
 
@@ -107,7 +107,7 @@ Replaces the standard culinary kitchen with an artisanal bookcraft workshop wher
 | CNC Component | Material | Joinery & Construction | Function & Real-World Play Value |
 | :--- | :--- | :--- | :--- |
 | **Heavy Screw Book Press (`BP-01`–`BP-05`)** | 6 mm base/top, 4 mm posts | Heavy slotted uprights; twin laminated 6 mm press platens; top cross-arm capped with an interlocking 4-point turn wheel. | Authentic tabletop bookbinder’s press used to flatten sewn signatures. Solid, chunky, and instantly recognizable. |
-| **16-Drawer Card Catalog Cabinet (`CC-01`–`CC-07`)** | 4 mm carcase, 3 mm face | Box carcase with a 3 mm front plate routed with a 4×4 grid of faux drawer pockets and center mounting holes for brass pin-pulls. | The grand card index of the Moominhouse library. Sits against the rear wall facet `W02`. |
+| **16-Drawer Card Catalog Cabinet (`CC-01`–`CC-07`)** | 4 mm carcase, 3 mm face | Box carcase with a 3 mm front plate routed with a 4×4 grid of faux drawer pockets and center mounting holes for brass pin-pulls. | The grand card index of the Lanternwood House library. Sits against the rear wall facet `W02`. |
 | **Trestle Refectory Reading Table (`RT-01`–`RT-04`)** | 4 mm top (100×48 mm), 6 mm legs | Chamfered top resting on two slotted A-frame trestle legs, braced by a central stretcher with wedged tenon keys. | Broad communal reading table accommodating open folios, tea mugs, and stacked volumes. Replaces `K3`. |
 | **Reading Bench with Book Trough (`RB-01`–`RB-04`)** | 4 mm seat & legs, 3 mm trough | Interlocking leg panels supporting a seat bench, with a sloped V-trough shelf slotted beneath for quick book storage. | Sits along the partition wall `PT1` opposite the refectory table. |
 | **Wall-Mounted Paper Drying Rack (`PR-01`–`PR-03`)** | 3 mm birch ply | Slotted comb side brackets holding 4 horizontal paper-hanging slats. | Mounted above the bindery bench for drying marbled endpapers and fresh manuscript pages. |
@@ -128,13 +128,13 @@ The primary high-ceilinged library room, lined with modular perimeter shelving a
 
 ---
 
-#### D. Floor 2: Moominpappa’s Memoir Study & Scriptorium ($Z = 280\text{ to }420\text{ mm}$)
+#### D. Floor 2: Elias's Memoir Study & Scriptorium ($Z = 280\text{ to }420\text{ mm}$)
 
 The dedicated creative workshop of the family memoirist, designed with scholarly comfort and functional writing surfaces.
 
 | CNC Component | Material | Joinery & Construction | Function & Real-World Play Value |
 | :--- | :--- | :--- | :--- |
-| **Slanted Bureau Secretary Desk (`SC-01`–`SC-08`)** | 4 mm carcase, 3 mm interior | Drop-front angled writing slant with an interior egg-crate matrix of 6 miniature pigeonholes and 2 drawer pockets. | Moominpappa’s primary writing desk. Positioned facing the prominent 2nd-floor center window. |
+| **Slanted Bureau Secretary Desk (`SC-01`–`SC-08`)** | 4 mm carcase, 3 mm interior | Drop-front angled writing slant with an interior egg-crate matrix of 6 miniature pigeonholes and 2 drawer pockets. | Elias's primary writing desk. Positioned facing the prominent 2nd-floor center window. |
 | **Portable Desk-Top Writing Slope (`WS-01`–`WS-04`)** | 3 mm ply assembly | Sloped lap desk with finger-jointed corners, a shallow internal paper cavity, and an engraved circular inkwell recess. | Can sit on the secretary desk, dining table, or veranda rocking chair. |
 | **Tiered Chapter Sorting Tower (`ST-01`–`ST-05`)** | 3 mm birch ply | Stepped vertical sorter with 4 ascending slots for sorting manuscript chapters and incoming letters. | Sits on the side credenza; keeps paper sheets organized without risk of bending. |
 | **Scriptorium Daybed (`DB-01`–`DB-05`)** | 4 mm frame, 6 mm end-boards | Slatted daybed frame with high scrolled head- and foot-boards, featuring a built-in book trough along the back wall rail. | Replaces domestic bed `U1`; provides a philosopher’s reading couch for late-night inspiration. |

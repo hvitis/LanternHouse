@@ -18,10 +18,17 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_RIGHT
 
+import naming
+
 ROOT = Path(__file__).resolve().parents[1]
 
 def register_fonts():
     fonts_dir = ROOT / 'source/fonts'
+    if naming.FONT_REGULAR not in pdfmetrics.getRegisteredFontNames():
+        pdfmetrics.registerFont(TTFont(naming.FONT_REGULAR, str(fonts_dir / 'DejaVuSans.ttf')))
+    if naming.FONT_BOLD not in pdfmetrics.getRegisteredFontNames():
+        pdfmetrics.registerFont(TTFont(naming.FONT_BOLD, str(fonts_dir / 'DejaVuSans-Bold.ttf')))
+    # Also register DejaVuSans aliases for backward compatibility if needed
     if 'DejaVuSans' not in pdfmetrics.getRegisteredFontNames():
         pdfmetrics.registerFont(TTFont('DejaVuSans', str(fonts_dir / 'DejaVuSans.ttf')))
     if 'DejaVuSans-Bold' not in pdfmetrics.getRegisteredFontNames():
@@ -143,7 +150,7 @@ def make_page_decorations(lang='pl'):
         canvas.drawString(margin, 18, footer_note)
 
         # Footer right
-        right_text = f"MoominsHouse · {page_num} / {total_pages}"
+        right_text = f"{naming.NAME} · {page_num} / {total_pages}"
         rw = canvas.stringWidth(right_text, 'DejaVuSans', 7.2)
         canvas.drawString(page_w - margin - rw, 18, right_text)
 

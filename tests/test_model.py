@@ -167,6 +167,21 @@ def test_room_dividers_clear_the_installed_rear_braces(cfg,data):
 def test_clay_figures_stand_on_their_configured_storeys(cfg,data):
     assert [(f['key'],f['level']) for f in data['derived']['figures']]==[(k,n) for n,keys in enumerate(cfg['figures']['levels']) for k in keys]
 
+def test_rowan_family_composition(cfg,data):
+    figures=data['derived']['figures']
+    assert len(figures)==4
+    keys=[f['key'] for f in figures]
+    assert keys==['elias','mira','ada','theo']
+    assert [f['level'] for f in figures]==[0,1,2,3]
+    import clay, numpy as np
+    for key in keys:
+        V,F,Nrm,C,_=clay.mesh(key,step=1.0,watertight=True)
+        assert len(V)>0 and len(F)>0
+        assert clay.closed(F)
+        assert clay.mesh_volume(V,F)>0
+        assert np.all(np.isfinite(Nrm))
+        assert np.all(np.isfinite(V))
+
 def test_no_clay_figure_fits_the_small_parts_cylinder(cfg,data):
     import clay
     assert not [f['key'] for f in data['derived']['figures'] if clay.small_part(f['key'])]

@@ -27,14 +27,14 @@ def test_release_package_contains_the_reports_and_manifest(project):
     dest = package.create_package(project, require_tolerance=True)
     package.validate_release_kit(project / "output")
     with zipfile.ZipFile(dest) as archive:
-        assert archive.read("Moomin-House/output/reports/thickness-tolerance.json")
-        assert archive.read("Moomin-House/output/reports/release-validation.json")
-        assert archive.read("Moomin-House/output/reports/build-manifest.json")
+        assert archive.read("Lanternwood-House/output/reports/thickness-tolerance.json")
+        assert archive.read("Lanternwood-House/output/reports/release-validation.json")
+        assert archive.read("Lanternwood-House/output/reports/build-manifest.json")
 
 
 @pytest.mark.parametrize("condition", ["missing", "failed"])
 def test_failed_or_missing_tolerance_cannot_replace_previous_kit(project, condition):
-    kit = project / "output/Moomin-House-Build-Kit.zip"
+    kit = project / "output/Lanternwood-House-Build-Kit.zip"
     kit.write_bytes(b"previous kit")
     if condition == "failed":
         tolerance(project, False)

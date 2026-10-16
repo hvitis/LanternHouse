@@ -11,7 +11,7 @@ from reportlab.lib.utils import simpleSplit, ImageReader
 from pypdf import PdfReader, PdfWriter
 from model import fabrication_parts, BOUGHT
 from specifications import book_rows
-import assembly
+import assembly, naming
 
 ROOT=Path(__file__).resolve().parents[1]
 DATA=json.loads((ROOT/'output/parts.json').read_text());P=DATA['parts'];CFG=DATA['config']
@@ -55,7 +55,7 @@ def shell(group):return [f['part'] for f in FACETS if f['group']==group]
 
 class Book:
     def __init__(self,name,section):
-        self.path=OUT/name;self.c=canvas.Canvas(str(self.path),pagesize=A4,pageCompression=1);self.c.setTitle('Moomin House | '+section);self.c.setAuthor('Moomin House CAD workshop');self.section=section;self.n=0
+        self.path=OUT/name;self.c=canvas.Canvas(str(self.path),pagesize=A4,pageCompression=1);self.c.setTitle(f'{naming.NAME} | '+section);self.c.setAuthor(f'{naming.NAME} CAD workshop');self.section=section;self.n=0
         PAGE_TITLES[name]=[]
     def page(self,title,kicker='',background=False):
         c=self.c
@@ -65,7 +65,7 @@ class Book:
         c.setFont('Helvetica',9);c.setFillColor(TEAL);c.drawString(M,H-87,kicker.upper())
         c.setStrokeColor(colors.HexColor('#D6DED4'));c.setLineWidth(.5);c.line(M,H-103,W-M,H-103)
     def end(self):
-        self.n+=1;c=self.c;c.setFillColor(INK);c.setFont('Helvetica',7.5);c.drawString(M,24,'MOOMIN HOUSE  /  '+self.section.upper());c.drawRightString(W-M,24,str(self.n));c.showPage()
+        self.n+=1;c=self.c;c.setFillColor(INK);c.setFont('Helvetica',7.5);c.drawString(M,24,f'{naming.NAME.upper()}  /  {self.section.upper()}');c.drawRightString(W-M,24,str(self.n));c.showPage()
     def save(self):self.c.save();return self.path
 
 def para(c,text,x,y,width=W-2*M,size=10,leading=15,color=INK):
@@ -237,7 +237,7 @@ def overall_page(b):
     mini_table(c,rows,M,y-36,[90,425],['Item','Dimension'],8,15.5)
     b.end()
 
-FIG_ORDER=('pappa','mamma','troll','snorkmaiden','snufkin','littlemy')
+FIG_ORDER=('elias','mira','ada','theo')
 def clay_colours():
     """Clay colours any figure uses, in palette order."""
     cl=DATA['clay'];return [k for k in next(iter(cl.values()))['grams_by_colour'] if any(f['grams_by_colour'][k]>=.05 for f in cl.values())]
@@ -268,20 +268,20 @@ def lump_text(key):
 
 def clay_steps():
     return ('Weigh out the clay from pages 3-4 of the instructions and knead each colour soft. Roll the lumps listed there and press them together, biggest first: body or coat, '
-            'head, then legs and feet, arms and hands, tails. Smooth every join with a fingertip until it looks like one piece; keep arms and ears pressed against the body, nothing thin '
-            'sticking out. Scrunch a foil ball first and wrap the body clay round it.\nPress in the black eyes. Pappa gets his top hat, Mamma her handbag and striped apron, the Snork Maiden '
-            'her golden fringe and anklet, Snufkin his wide-brimmed pointed hat and Little My her hair bun. Flatten the underside on a ceramic tile, bake it fully on the tile as the packet '
+            'head, then legs and feet, arms and hands. Smooth every join with a fingertip until it looks like one piece; keep arms and accessories pressed against the body, nothing thin '
+            'sticking out. Scrunch a foil ball first and wrap the body clay round it.\nPress in the black eyes. Elias wears his cap and holds a small lantern, Mira wears her coat with a hair bun '
+            'and shoulder satchel, Ada wears her jacket and scarf with hair braids, and Theo wears his sweater and beanie holding a small toy boat. Flatten the underside on a ceramic tile, bake it fully on the tile as the packet '
             'says, and seal it with a clear varnish declared to EN 71-3. Use a phthalate-free clay whose maker states EN 71 conformity. Drop each baked figure five times from 85 cm onto a '
             'hard floor; discard any that chips. Every figure is too big for the small-parts test cylinder.')
 
 def figures_page(b):
-    """The thermo-clay figures from four sides at 1:2, three per page; the clay table and lump lists follow."""
+    """The thermo-clay figures from four sides at 1:2, two per page; the clay table and lump lists follow."""
     figs={f['key']:f for f in DER['figures']};keys=[key for key in FIG_ORDER if key in figs]
-    for first in range(0,len(keys),3):figure_views(b,keys[first:first+3],first+3>=len(keys))
+    for first in range(0,len(keys),2):figure_views(b,keys[first:first+2],first+2>=len(keys))
 
 def figure_views(b,keys,last):
     c=b.c;cl=DATA['clay'];cc=CFG['figures']['clay'];figs={f['key']:f for f in DER['figures']};k=.5   # drawn at 1:2
-    b.page('Moomin family and friends in thermo-clay' if keys[0]==FIG_ORDER[0] else 'Clay figures / continued','Example views at 1:2 (half size) / clay estimated from the 3D volume')
+    b.page('The Rowan family in thermo-clay' if keys[0]==FIG_ORDER[0] else 'Clay figures / continued','Example views at 1:2 (half size) / clay estimated from the 3D volume')
     views=[('front','Front'),('side','Side'),('back','Back'),('three-quarter','Three-quarter')]
     meta={(key,v):json.loads((ROOT/'output/previews'/f'clay-{key}-{v}.json').read_text()) for key in keys for v,_ in views}
     cols=[max(meta[key,v]['width_mm'] for key in keys)*k*mm for v,_ in views];info=M+sum(cols)+14;y=722
@@ -333,7 +333,7 @@ def printables_page(b):
     items=[
         ('stove','PR-01','Kakelugn tiled stove','Ground floor kitchen','Traditional cylindrical kakelugn with arched firebox door, waist shelf, and flared crown cornice.'),
         ('chandelier','PR-02','Hanging chandelier','Floor 1 living room (ceiling)','4 candle holders with tapered candles, central fluted stem, and diamond suspension eyelet.'),
-        ('bathtub','PR-03','Clawfoot bathtub','Floor 2 bathroom','Clawfoot plinth with four cone feet, smooth flared tub shell, and plug hole. Sized for Moomintroll.'),
+        ('bathtub','PR-03','Clawfoot bathtub','Floor 2 bathroom','Clawfoot plinth with four cone feet, smooth flared tub shell, and plug hole. Sized for the Rowan family.'),
         ('table','PR-04','Round pedestal table','Ground floor dining room','Single flared 45-degree conical pedestal column, wide stable foot, and rounded top edge.'),
         ('chair','PR-05','Dining chairs (x2)','Ground floor dining room','Arched backrest and 45-degree tunnel seat arches for 100 % support-free printing.'),
     ]
@@ -423,7 +423,7 @@ def dry_fit_rows():
 
 def manual():
     import steps as steplib
-    b=Book('Moomin-House-Instructions.pdf','Instructions');c=b.c
+    b=Book(naming.PDF_INSTRUCTIONS,'Instructions');c=b.c
     c.drawImage(str(ROOT/'output/previews/cover.png'),0,0,width=W,height=H)
     c.setFillColor(INK);c.rect(0,0,W,65,fill=1,stroke=0);c.setFillColor(colors.white);c.setFont('Helvetica-Bold',11);c.drawCentredString(W/2,39,f'{CFG["height"]:g} mm tall  /  Three floors + attic  /  Round D{CFG["base_diameter"]:g} base');c.setFont('Helvetica',9);c.drawCentredString(W/2,21,'Real CAD  -  Jigsaw templates  -  Illustrated assembly');b.n=1;c.showPage()
     overall_page(b);figures_page(b);printables_page(b)
@@ -508,7 +508,7 @@ def manual():
     para(c,'For sheets you cut yourself:\n1. Drill finished holes and pilots using a depth stop for blind holes. Confirm the entry face: TOP or UNDERSIDE.\n2. Drill S holes and cut enclosed openings while the surrounding sheet is intact.\n3. Break the sheet into manageable groups through the blank lanes.\n4. Cut large exterior contours first, then small parts. Retain temporary bridges or extra surrounding stock until each part can be clamped safely.\n5. File to size, round exposed edges, remove template paper and label the back of each part.',M,714,size=11,leading=17)
     para(c,f'The laser layout reserves {CFG["nest_spacing"]:g} mm between independent contours and {CFG["stock_margin"]:g} mm at sheet sides. All sheets use grade {CFG["supplier"].get("grade","2/2")} birch plywood. Router or jigsaw cutting requires wider lanes and a new layout. Long parts retain the end allowances shown on their reference maps.',M,378,size=10)
     para(c,'Save window rectangles, roof-ring centers and large corner offcuts. They can become clamping pads, painting samples, future miniature decorations or spare parts. Clamp tiny blanks to a larger sacrificial carrier; never hold a small loose piece beside a moving blade.',M,273,size=10)
-    para(c,'Both plywood thicknesses have A3 laser layouts. Use the individual A4 cutting templates for DIY work; large parts take two pages. For laser cutting, send Moomin-House-Supplier.pdf and Moomin-House-Supplier-Cut.dxf. Drill blind features separately. Read docs/SUPPLIER-READINESS.md first. No engraving is requested.',M,154,size=10)
+    para(c,f'Both plywood thicknesses have A3 laser layouts. Use the individual A4 cutting templates for DIY work; large parts take two pages. For laser cutting, send {naming.PDF_SUPPLIER} and {naming.SUPPLIER_CUT_DXF}. Drill blind features separately. Read docs/SUPPLIER-READINESS.md first. No engraving is requested.',M,154,size=10)
     b.end()
     b.page('No laser? Bought strip wood for the 3 mm trim','Cut to length with a knife and a mitre box')
     y=para(c,'Every thin 3 mm part that is a plain strip can be cut from bought basswood or birch strip instead of the 3 mm sheets. Lengths below are finished sizes; the totals include 15 % for waste. The window surround can be made the same way as a mitred frame with its cross, glued straight onto the wall\'s own solid cross.',M,712,size=10,leading=14)
@@ -595,9 +595,9 @@ def manual():
     para(c,'Before glue-up, work through the dry-fit and safety checks page. This is a CAD-verified fabrication design, not a physically load-tested or certified toy. For ages 3-5, supervise play, keep hands clear of hinge gaps, and recheck magnets, small parts and the anti-tip strap regularly.',M,y-22,size=10,leading=15)
     b.end()
     b.page('Files and reference sources','Rebuild from the included source files')
-    para(c,'Moomin-House-Complete.pdf: this A4 instruction book, contents, dimensioned references, individual cutting templates, decor, clay figures and A4 supplier summary. Native A3 machining pages are in the separate supplier PDF.\nMoomin-House-Cutting-Templates.pdf: all house templates. Print at 100%. Use Moomin-House-3mm-Hand-Templates.pdf for the thin parts only.\nMoomin-House-Dimensioned-Parts.pdf: measurements and drilling schedule.\nMoomin-House-Decor.pdf: paint palette, stone plinth panels and roof shingle strips.\nMoomin-House-Clay-Family.pdf: modelling the clay figures.\nMoomin-House-Supplier.pdf: Polish by default; specification, reference maps and clean full-size cutting pages.\nMoominHouse.FCStd: native editable FreeCAD project. MoominHouse.step is the house. Furniture and garden appear only in the 3D viewer and renders. DXF and sheet SVG files provide 1:1 profiles.',M,713,size=11,leading=17)
+    para(c,f'{naming.PDF_COMPLETE}: this A4 instruction book, contents, dimensioned references, individual cutting templates, decor, clay figures and A4 supplier summary. Native A3 machining pages are in the separate supplier PDF.\n{naming.PDF_CUTTING_TEMPLATES}: all house templates. Print at 100%. Use {naming.PDF_3MM_HAND_TEMPLATES} for the thin parts only.\n{naming.PDF_DIMENSIONED_PARTS}: measurements and drilling schedule.\n{naming.PDF_DECOR}: paint palette, stone plinth panels and roof shingle strips.\n{naming.PDF_CLAY_FAMILY}: modelling the clay figures.\n{naming.PDF_SUPPLIER}: Polish by default; specification, reference maps and clean full-size cutting pages.\n{naming.CAD_DOCUMENT}: native editable FreeCAD project. {naming.CAD_STEM}.step is the house. Furniture and garden appear only in the 3D viewer and renders. DXF and sheet SVG files provide 1:1 profiles.',M,713,size=11,leading=17)
     para(c,'To change stock or hinges, edit source/config.json and regenerate all outputs together. Read README.md before changing CAD sketches: editable geometry changes do not automatically update already-exported PDF files.',M,423,size=10)
-    sources=[('Official Moominhouse reference','https://shop.moomin.com/products/moominhouse-ninny-toy-40cm'),('FreeCAD official releases','https://github.com/FreeCAD/FreeCAD/releases'),('Bossard cap-nut specification examples','https://www.bossard.com/global-en/eshop/hex-nuts/hex-domed-cap-nuts-acorn-nuts/p/513/'),('Bosch jigsaw operating guidance','https://www.bosch-professional.com/binary/manualsmedia/o606338v21_160992AD26_202509.pdf')]
+    sources=[('FreeCAD official releases','https://github.com/FreeCAD/FreeCAD/releases'),('Bossard cap-nut specification examples','https://www.bossard.com/global-en/eshop/hex-nuts/hex-domed-cap-nuts-acorn-nuts/p/513/'),('Bosch jigsaw operating guidance','https://www.bosch-professional.com/binary/manualsmedia/o606338v21_160992AD26_202509.pdf')]
     y=324
     for title,url in sources:
         label(c,title,M,y,9);c.linkURL(url,(M,y-4,W-M,y+12),relative=0);y=para(c,url,M,y-17,size=7.5,leading=11)-12
@@ -629,7 +629,7 @@ def profile_reference(c,p,x,y,w,h,max_scale=5):
     c.setFont('Helvetica',7);c.setFillColor(TEAL);c.drawString(ox-6,oy-9,'0,0')
 
 def references():
-    b=Book('Moomin-House-Dimensioned-Parts.pdf','Dimensioned parts');c=b.c
+    b=Book(naming.PDF_DIMENSIONED_PARTS,'Dimensioned parts');c=b.c
     part_pages(b,MAIN,'All house wood parts / including temporary jigs')
     assembly_maps(b)
     hinge_templates(b);return b.save()
@@ -767,13 +767,13 @@ def calibration(b):
 
 def templates():
     from hand_templates import pages
-    b=Book('Moomin-House-Cutting-Templates.pdf','Individual cutting templates')
+    b=Book(naming.PDF_CUTTING_TEMPLATES,'Individual cutting templates')
     index=pages(b,MAIN,draw_sheet,scale_bar,calibration)
     return b.save(),[dict(i,pdf=b.path.name) for i in index]
 
 def hand_templates(selected):
     from hand_templates import pages
-    b=Book('Moomin-House-3mm-Hand-Templates.pdf','3 mm hand-cutting templates')
+    b=Book(naming.PDF_3MM_HAND_TEMPLATES,'3 mm hand-cutting templates')
     thin={pid:p for pid,p in MAIN.items() if p['thickness']==3 and p['category'] not in BOUGHT}
     index=pages(b,thin,draw_sheet,scale_bar,calibration)
     return b.save(),[dict(i,pdf=b.path.name) for i in index]
@@ -981,10 +981,10 @@ def shingle_pages(b):
         scale_bar(c,98*mm,8*mm);b.n+=1;c.showPage()
 
 def decor():
-    b=Book('Moomin-House-Decor.pdf','Colored decor');c=b.c
+    b=Book(naming.PDF_DECOR,'Colored decor');c=b.c
     b.page('Paint and texture palette','Paint references / print the stone and shingle pages at 100%')
     y=692
-    for name,key,where in [('Moomin blue','blue','Exterior wall panels'),('Roof red','red','Roof and chimney cap'),('Warm cream','cream','Window trim, veranda columns and railings'),('Garden green','green','Base and landscape'),('Honey ochre','ochre','Doors'),('Warm wood','wood','Floors and veranda deck')]:
+    for name,key,where in [('Lanternwood blue','blue','Exterior wall panels'),('Roof red','red','Roof and chimney cap'),('Warm cream','cream','Window trim, veranda columns and railings'),('Garden green','green','Base and landscape'),('Honey ochre','ochre','Doors'),('Warm wood','wood','Floors and veranda deck')]:
         c.setFillColor(colors.HexColor(CFG['colors'][key]));c.roundRect(M,y-35,70,35,5,fill=1,stroke=0);label(c,name,M+90,y-10,11);para(c,CFG['colors'][key]+' / '+where,M+90,y-28,size=9);y-=61
     para(c,'These HEX values are visual references, not a guarantee of a paint match. Paint the walls, floors and trim. The printed stone plinth panels and roof shingle strips that follow are optional finishing details: test the glue and a compatible clear finish on a scrap first.',M,132,size=10)
     b.end()
@@ -1002,7 +1002,7 @@ def decor():
 
 def appendix():
     """Clay family instructions; furniture has no printout or fabrication plans."""
-    b=Book('Moomin-House-Clay-Family.pdf','Clay family');c=b.c
+    b=Book(naming.PDF_CLAY_FAMILY,'Clay family');c=b.c
     b.page('Model the family in thermo-clay','Thermo-clay figures');imagebox(c,'clay-family',M,269,W-2*M,442)
     y=para(c,clay_steps(),M,235,size=11,leading=16)
     para(c,'Clay amounts and lump sizes are in the instructions. Where they stand: '+', '.join(f'{f["name"]} {f["where"]}' for f in DER['figures'])+'. They stand loose and need no glue.',M,y-8,size=9.5,leading=14,color=TEAL);b.end()
@@ -1016,7 +1016,7 @@ def main(lang='pl'):
     selected=supplier.sheets_for(DATA,NEST,supplier.settings(cfg))
     hand_path,hand_index=hand_templates(selected)
     supplier_path,supplier_report=supplier.build(DATA,NEST,cfg,lang)
-    summary_path=supplier.summary(supplier_report,OUT/'Moomin-House-Supplier-Summary.pdf')
+    summary_path=supplier.summary(supplier_report,OUT/naming.PDF_SUPPLIER_SUMMARY)
     paths=[manual(),references(),template_path,decor(),appendix_path,summary_path]
     (ROOT/'output/reports/template-index.json').write_text(json.dumps(main_index,indent=2))
     titles=['Instructions and hardware','Dimensioned parts','Full-size cutting templates','Color and decor','Appendix: clay family',supplier_report['title']]
@@ -1024,7 +1024,7 @@ def main(lang='pl'):
     sections[0]['entries']=PAGE_TITLES[paths[0].name]
     sections[2]['entries']=[{'title':i['sheet'],'page':i['overview_page'] or i['first_tile_page']} for i in main_index]
     sections[-1]['entries']=[]
-    contents=combine(sections,OUT/'Moomin-House-Complete.pdf')
+    contents=combine(sections,OUT/naming.PDF_COMPLETE)
     report={'pdfs':{p.name:len(PdfReader(p).pages) for p in paths+[hand_path,supplier_path]},'complete_pages':contents['complete_pages'],'paper':'A4 complete workshop book; separate supplier PDF has native A3 machining pages','template_scale':'1 mm = 72/25.4 PDF points','print_background':'White interior pages, transparent CAD diagram backgrounds, unfilled tables; original cover and textures preserved','starter_holes':sum(len(p['starters'])*p['quantity'] for p in MAIN.values()),'fasteners':dict(Counter(f['type'] for f in DATA['fasteners'])),'windows_per_floor':DATA['derived']['windows_per_floor'],'veranda':f'Permanent {VER["width"]:g} x {VER["depth"]:g} veranda on fixed facet {VER["facet"]}: hipped red roof with caps, shaped white columns, front and side railings, side steps','furniture':'3D view only; no CAD plans, templates or stock','cnc_sheets':[s['id'] for s in NEST['sheets'] if s.get('cnc')],'supplier_language':lang}
     for name,data in [('supplier-index.json',supplier_report),('hand-template-index.json',hand_index),('contents-index.json',contents)]:
         (ROOT/'output/reports'/name).write_text(json.dumps(data,ensure_ascii=False,indent=2))

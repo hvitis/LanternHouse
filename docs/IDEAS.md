@@ -66,7 +66,7 @@ Add `source/presets/*.json` and a `--config` option, so a builder can pick a sta
 
 ### Translations
 
-All book text lives inline in `book.py`, in English. Moving it into per-language string files would allow Polish, Finnish, Swedish and other editions. The Moomins are a Finnish-Swedish story, after all.
+All book text lives inline in `book.py`, in English. Moving it into per-language string files would allow Polish, German, Swedish and other editions.
 
 ## A better build and a better toy
 
@@ -88,13 +88,7 @@ An approximately 450 mm desk model, entirely in 3 mm laser plywood, works as a g
 
 ## Publishing and naming
 
-"Moomin", the Moomin characters and the house's look are protected by Moomin Characters Oy. Non-commercial fan builds are common. Takedown requests usually start with the name in a prominent place, the character likenesses, or anything that is sold. Options, from least to most change:
-
-1. Keep it clearly non-commercial and unofficial (the README says so).
-2. Give the repository a descriptive name, such as "round blue tower dollhouse", and describe it as "inspired by".
-3. Make the clay figures an optional module, so the house itself contains no character likeness.
-
-Whatever you choose, do not sell kits or printed books under the name without a licence.
+Lanternwood House was established as the project's original identity, featuring original human figures (the Rowan family: Elias, Mira, Ada and Theo) and an open-source CC BY-NC-SA 4.0 licence, removing dependency on third-party character trademarks.
 
 ## Code health for contributors
 

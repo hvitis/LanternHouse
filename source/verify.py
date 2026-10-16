@@ -3,6 +3,7 @@ import csv,json,math,struct,zipfile,xml.etree.ElementTree as ET
 from collections import Counter
 from pathlib import Path
 from pypdf import PdfReader
+import naming
 from model import fabrication_parts, BOUGHT
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -102,7 +103,7 @@ def main():
     check('All individual STEP / millimetre DXF files',dxfs)
     # The single supplier cut file: closed polylines and circles only, one layer per thickness, and exactly the
     # outlines, openings and through holes of every nested copy (counted here from the parts, not from cnc.py).
-    cut=ROOT/'output/Moomin-House-Supplier-Cut.dxf';entities=[]
+    cut=ROOT/'output'/naming.SUPPLIER_CUT_DXF;entities=[]
     if cut.exists():
         text=cut.read_text();pairs=list(zip(*[iter(text.splitlines())]*2))
         body=pairs[pairs.index(('2','ENTITIES'))+1:]
@@ -122,21 +123,21 @@ def main():
           cut.exists() and '\nAC1009\n' in text and '\n$INSUNITS\n70\n4\n' in text and kinds<={'POLYLINE','CIRCLE'} and found==wanted and all(e.get('70')=='1' for e in entities if e['type']=='POLYLINE'),
           str({'missing':not cut.exists(),'entity types':sorted(kinds),'differences':{f'{k[0]} {k[1]}':(found[k],wanted[k]) for k in set(found)|set(wanted) if found[k]!=wanted[k]}}))
     view_files=[str(path.relative_to(ROOT/'output')) for pid in rendered for path in (ROOT/'output/cad/parts'/f'{pid}.step',ROOT/'output/dxf'/f'{pid}.dxf') if path.exists()]
-    check('View-only furniture has no CAD exports',not view_files and not (ROOT/'output/cad/MoominHouse-furnished.step').exists(),str(view_files))
+    check('View-only furniture has no CAD exports',not view_files and not (ROOT/'output/cad'/f'{naming.CAD_STEM}-furnished.step').exists(),str(view_files))
     from pdf_checks import checks as pdf_checks
     for name,passed,detail in pdf_checks(ROOT):check(name,passed,detail)
     pdfs={p.name:len(PdfReader(p).pages) for p in (ROOT/'output/pdf').glob('*.pdf')}
-    template=PdfReader(ROOT/'output/pdf/Moomin-House-Cutting-Templates.pdf');stream=template.pages[0].get_contents().get_data().decode('latin1')
+    template=PdfReader(ROOT/'output/pdf'/naming.PDF_CUTTING_TEMPLATES);stream=template.pages[0].get_contents().get_data().decode('latin1')
     check('100 mm calibration square stored at true scale','283.4646 283.4646 re' in stream)
     # Every 1:1 printable page (tiles, carriers, solid wood, hinge templates, decor) carries the 100 mm bar.
     missing=[]
     for name in ('Cutting-Templates','Decor','Clay-Family','Dimensioned-Parts','3mm-Hand-Templates'):
-        for n,page in enumerate(PdfReader(ROOT/f'output/pdf/Moomin-House-{name}.pdf').pages,1):
+        for n,page in enumerate(PdfReader(ROOT/f'output/pdf/{naming.PREFIX}-{name}.pdf').pages,1):
             text=page.extract_text()
             if any(k in text for k in ('ACTUAL SIZE 100%','100% ACTUAL SIZE','outline actual size','Actual size / compare','print 100%','actual-size'))and '100 mm reference' not in text:missing.append(f'{name} p{n}')
     check('100 mm reference bar on every 1:1 page',not missing,str(missing[:5]))
     index=json.loads((ROOT/'output/reports/template-index.json').read_text());check('Every required part has one or two A4 template pages',{i['part'] for i in index}==set(build_parts) and all(1<=i['last_tile_page']-i['first_tile_page']+1<=2 for i in index))
-    with zipfile.ZipFile(ROOT/'output/cad/MoominHouse.FCStd') as z:
+    with zipfile.ZipFile(ROOT/'output/cad'/naming.CAD_DOCUMENT) as z:
         gui=ET.fromstring(z.read('GuiDocument.xml'));views=gui.find('ViewProviderData');native=ET.fromstring(z.read('Document.xml'))
         colorok=len(views)==len(native.find('Objects').findall('Object'))
         native_names={o.attrib['name'] for o in native.find('Objects').findall('Object')}
@@ -145,7 +146,7 @@ def main():
         check('View-only furniture is absent from the native CAD project',not (display_names|profile_names) & native_names)
         for i in data['instances']:
             if i['part'] in rendered:continue
-            name=i['id'].replace('-','_');material=z.read('MoominMaterial_'+name);wanted=int((i.get('color') or p[i['part']]['color'])[1:]+'ff',16)
+            name=i['id'].replace('-','_');material=z.read('LanternwoodMaterial_'+name);wanted=int((i.get('color') or p[i['part']]['color'])[1:]+'ff',16)
             vp=next(v for v in views if v.attrib['name']==name);props=vp.find('Properties')
             legacy=next(prop for prop in props if prop.attrib['name']=='ShapeColor').find('PropertyColor')
             colorok=colorok and len(material)==40 and struct.unpack('<IIIIIffIII',material)[2]==wanted and int(legacy.attrib['value'])==wanted and vp.find('Extensions') is not None
