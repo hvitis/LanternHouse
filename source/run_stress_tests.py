@@ -379,12 +379,12 @@ def test_floor_pillar_slot_notch_factor() -> dict:
     }
 
 def test_wall_corner_gusset_racking(data: dict) -> dict:
-    """TEST 6: Corner ribs and brackets (J01-J04) under shell racking, from the model's glue joints.
+    """TEST 6: Corner ribs (J01/J03) under shell racking, from the model's glue joints.
 
     Shear: the racking couple of an opened shell shared by its braces, on each brace's shortest glued edge.
     Corner moment: a push on a free facet tries to open or close a corner; each brace resists it with the glue
     line on its weaker side, a section modulus t * L^2 / 6. The sum over the braces holding a corner is compared
-    with the revision-7 design: six 6 mm two-wall gussets, 20 mm legs."""
+    with the revision-7 design: six 6 mm two-wall gussets, 20 mm legs. One leftover fixed-shell corner stays open."""
     racking_force_N = 20.0
     shell_height_mm = 420.0
     racking_torque_Nmm = racking_force_N * shell_height_mm  # 8400 N*mm
@@ -405,13 +405,13 @@ def test_wall_corner_gusset_racking(data: dict) -> dict:
         for (wa, la, _), (wb, lb, _) in zip(sides, sides[1:]):
             corners.setdefault((wa, wb), []).append(t * min(la, lb) ** 2 / 6)
     reference = 6 * 6.0 * 20.0 ** 2 / 6
-    ratios = sorted(sum(v) / reference for v in corners.values())
+    ratios = sorted(sum(v) / reference for v in corners.values()) if corners else [0.0]
     allowable_glue = PLYWOOD_PROPERTIES['pva_glue_allowable_shear_MPa']
-    sf = round(allowable_glue / worst_shear, 2)
+    sf = round(allowable_glue / worst_shear, 2) if worst_shear else 99.0
     passed = sf >= 1.5 and ratios[0] >= 0.95
-    kinds = {pid: data['parts'][pid]['quantity'] for pid in ('J01', 'J02', 'J03', 'J04') if pid in data['parts']}
+    kinds = {pid: data['parts'][pid]['quantity'] for pid in ('J01', 'J03') if pid in data['parts']}
     return {
-        'component': 'J01-J04 corner ribs and brackets',
+        'component': 'J01/J03 three-wall corner ribs',
         'thickness_mm': data['parts']['J01']['thickness'],
         'braces': kinds,
         'load_case': 'Torsional racking of 100° opened shell (20 N horizontal impact at bottom corner)',
@@ -424,7 +424,7 @@ def test_wall_corner_gusset_racking(data: dict) -> dict:
         'pass': passed,
         'status': 'PASS' if passed else 'FAIL',
         'failure_mode': 'Edge glue line peeling at the end of a short rib leg, worst at the low braces raised over the ground-floor doors',
-        'upgrade': 'Ribs reach 30 mm onto the end facets (20 mm only where raised beside a window); the seam battens outside glue along the full height of every corner that does not move.'
+        'upgrade': 'Ribs reach ~75 % (~62 mm) onto the end facets (≈20 mm only where raised beside a window); low band plus high band under each floor; no J02/J04; seam battens outside glue along the full height of every corner that does not move.'
     }
 
 def test_garden_stop_post_end_grain() -> dict:
@@ -549,7 +549,7 @@ def main():
         ("Test 3: Wall Butt Hinges & SC1 Fasteners", lambda: test_wall_hinge_and_fasteners(parts_data)),
         ("Test 4: Floor Finger Joint & 6x12 mm Strips", test_floor_seam_and_cantilever),
         ("Test 5: Pillar Slot Notch Concentration", test_floor_pillar_slot_notch_factor),
-        ("Test 6: Corner Ribs J01-J04 Racking", lambda: test_wall_corner_gusset_racking(parts_data)),
+        ("Test 6: Corner Ribs J01/J03 Racking", lambda: test_wall_corner_gusset_racking(parts_data)),
         ("Test 7: Garden Stop Post GP1 on Dowels", test_garden_stop_post_end_grain),
         ("Test 8: Door Hinges SC2 Screws", lambda: test_miniature_door_hinge_sc2(parts)),
         ("Test 9: Plinth Drawer Friction at the Stop", lambda: test_plinth_drawer_cantilever_and_friction(parts, parts_data['config'])),

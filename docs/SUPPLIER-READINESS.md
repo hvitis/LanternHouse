@@ -18,7 +18,7 @@ Review of the A3 laser/CNC preparation (revision 9 / SUP-004, 2026-10-15: 3 mm l
 | Sheet thickness never mixed | pass | `supplier.sheets_for` |
 | No display-only furniture on any sheet | pass | release check |
 
-Stock (23 A3 sheets): 3 mm × 12, 6 mm × 11. Every sheet uses grade 2/2 birch. Average outline use is 62.6 %.
+Stock (**21 A3 sheets** as of the current nesting): 3 mm × 12, 6 mm × 9. Every sheet uses grade 2/2 birch. Average outer-profile use is about 72 % (3 mm) / 60 % (6 mm). Older notes that said 23 sheets (12+11) are stale.
 
 ## 2. Problems found and fixed in this revision
 
@@ -29,7 +29,7 @@ Stock (23 A3 sheets): 3 mm × 12, 6 mm × 11. Every sheet uses grade 2/2 birch. 
 5. **Two 6 mm sheets each held one roof-ring half (6 % used).** Nesting placed parts by outline area, so thin rings went last. Ordering by bounding box first saves two sheets (29 → 27).
 6. **Wrong or missing text:** pillar end margins said 5 mm (now whatever is left of 10 mm), 30+ new part names had no Polish translation, the obsolete window bars and handle were still named.
 7. **Four plywood thicknesses, two of them hard to buy.** 4 mm (doors, railings, drawer bottom, seam strips, base supports) and 8 mm (pillars, turn-buttons) each needed their own sheets. Now only 3 and 6 mm: the 4 mm parts are 3 mm, except the base supports and rim pads, which are 6 mm (the base lift is 6 mm, so the battery hatch keeps 3 mm off the table); the pillars are 6 mm in 6.6 mm openings; each roof turn-button is a 6 mm and a 3 mm ply glued into 9 mm, because one 6 mm ply fails stress test E08 (SF 1.26; 9 mm gives 2.49). The schema and `config_check.py` reject any other thickness.
-8. **Nesting wasted the hollows of rings and quarter circles.** Parts were placed by their bounding box, in one order. Now each part is placed by its true footprint, and `nest.py` keeps the best of 24 part orders run through the `make stock` packer with its merge and squeeze passes: 27 → 23 sheets.
+8. **Nesting wasted the hollows of rings and quarter circles.** Parts were placed by their bounding box, in one order. Now each part is placed by its true footprint, and `nest.py` keeps the best of 24 part orders run through the `make stock` packer with its merge and squeeze passes: 27 → 23, later 21 sheets (12 × 3 mm + 9 × 6 mm).
 
 9. **Laser layout and grade 2 birch (SUP-004).** Both thicknesses now use 3 mm lanes and grade 2/2 birch. Router cutting needs a separate layout. The PDF specification and the saved purchase profile use the same choices.
 

@@ -98,12 +98,15 @@ def build():
     # The stone plinth lifts the house: G is the ground-floor top, every storey is measured from it.
     # The round base B01 is bt thick; the plinth height runs from its top to the ground-floor top.
     PL=CFG['plinth'];G=bt+PL['height'];tops=[G+k*pitch for k in range(4)]
-    # Corner braces: low ones 26 above each floor, high ones 20 below the ceiling (clear of the floor supports).
+    # Corner braces: low band below the windows, and a high band just under each floor (under F01B on the ground
+    # floor). Only three-wall J01/J03 ribs — no J02/J04. Door-side low ribs still rise to door_h when clear of windows.
     gusset_dz=(q(26),pitch-base-q(20))
     door_corners={round((facet_angle(p)+side)/30)%12 for p in door_ids for side in (-15,15)}
-    # Corner braces, cut from the wall plywood and laid flat: RD deep from the wall faces, reaching GR along a
-    # neighbouring facet from each corner they hold (GS where a brace is raised over a door).
-    GT,GR,GS,RD=wall,q(32),q(22),q(17)
+    # Ribs laid flat from wall plywood: RD deep into the room, GR along each edge wall from the corner it holds
+    # (75 % of the facet, past the middle). GS is shorter where a brace is raised beside a window.
+    # facet_len is already in model millimetres; do not pass it through q again.
+    facet_len=2*(a-wall)*math.tan(math.pi/12)
+    GT,GR,GS,RD=wall,0.75*facet_len,min(q(22),0.45*facet_len),q(10)
     post_width=q(18);post_t=T['structure']
     posts=[(q(x),q(y)) for x,y in [(-145,10),(127,10),(-68,128),(50,128)]]
     feet=[(x,y-24) for x,y in posts]
@@ -208,7 +211,7 @@ def build():
         feats=([kinds[pid]+' door'] if pid in door_ids else [])+(['windows'] if windows else [])+(['hinge pilots'] if hinge_end else [])
         kind='Opening wall' if group!='Fixed' else 'Fixed wall'
         name=kind+(' with '+' and '.join(feats) if feats else ', plain')
-        note=(f'Opening walls are 2 mm lower for roof clearance and hang {SL:g} mm above F00; keep their seams clear. ' if group!='Fixed' else 'Fill the exterior seams of the fixed shell. ')+'Glue the J01 corner ribs (J02 brackets where no rib fits) inside. The wall map shows which facets it fills.'+(' Leave the cross between the four panes of each window solid.' if windows else '')
+        note=(f'Opening walls are 2 mm lower for roof clearance and hang {SL:g} mm above F00; keep their seams clear. ' if group!='Fixed' else 'Fill the exterior seams of the fixed shell. ')+'Glue the J01 corner ribs inside. The wall map shows which facets it fills.'+(' Leave the cross between the four panes of each window solid.' if windows else '')
         add(pid,name,wall,rect(width,H-(2 if group!='Fixed' else 0)),cuts,holes,'blue','Walls',note=note)
         PARTS[pid]['windows']=windows
         origin=(n[0]*(a-wall)-u[0]*width/2,n[1]*(a-wall)-u[1]*width/2,z0)
@@ -287,10 +290,8 @@ def build():
     add('P01','Continuous rear frame pillar',post_t,rect(post_width,3*pitch-base-12),color='wood',note=f'Four one-piece pillars on 12 mm foot blocks. Slide the two F01 levels over their rectangular openings, then seat F02 on the pillar tops. Cut from {post_t:g} mm plywood: the F01 openings are {post_t+CFG["fabrication"]["pillar_clearance"]:g} mm wide.')
     for x,y in posts:upright('P01',x,y,G+12,axis='xz')
     # Corner braces. A J01 rib spans three facets of one shell (the whole middle facet and GR onto each neighbour),
-    # so one piece holds two corners at 150 degrees and ties the shell's facets into one stiff section; a corner no
-    # rib can take gets a two-wall J02 bracket. Nothing crosses a hinge or the front seam. Ribs are chosen to hold
-    # the most corners, then to sit on facets without windows, because a rib raised over a door crosses its whole
-    # middle facet. A brace is a list of consecutive facets; the corner between facets f and f+1 is (f-2)%12.
+    # so one piece holds two corners at 150 degrees. Leftover single corners are left open (no J02/J04). Nothing
+    # crosses a hinge or the front seam. Ribs are spaced so their long legs do not share an edge wall.
     shells={}
     for f,w_ in enumerate(WALLS):shells.setdefault(w_['group'],[]).append(f)
     def corners_of(span):return [(f-2)%12 for f in span[:-1]]
@@ -298,44 +299,30 @@ def build():
     braces=[]
     for F in shells.values():
         start=next(f for f in F if (f-1)%12 not in F);F=sorted(F,key=lambda f:(f-start)%12)   # round the shell, even across facet 12 -> 1
+        # abs(m-n)>2: long 75 % legs must not stack on a shared neighbour wall.
         best=max((pick for r in range(len(F)-1) for pick in itertools.combinations(range(1,len(F)-1),r)
-                  if all(abs(m-n)>1 for m,n in itertools.combinations(pick,2))),
+                  if all(abs(m-n)>2 for m,n in itertools.combinations(pick,2))),
                  key=lambda pick:(2*len(pick),-sum(windowed(F[m]) for m in pick),-len(pick)))
-        held={c for m in best for c in (m-1,m)}
-        braces+=[(F[m-1],F[m],F[m+1]) for m in best]+[(F[c],F[c+1]) for c in range(len(F)-1) if c not in held]
+        braces+=[(F[m-1],F[m],F[m+1]) for m in best]
     def brace_height(span,level,dz):
         """Beside a ground-floor door the low brace moves up to the top of the door opening."""
         return door_h if level==0 and dz==gusset_dz[0] and set(corners_of(span))&door_corners else dz
     def placed_braces(level,dz):
-        """The braces at one height. A rib raised over a door would cross a window in its middle facet, so it
-        splits into two brackets there."""
+        """Three-wall ribs only. If a raised rib would cross a window on its middle facet, skip it (no J04 split)."""
         for span in braces:
             z=brace_height(span,level,dz)
-            if len(span)==3 and z!=dz and any(oy<z+GT+1 and oy+wh>z-1 for _,oy,_,wh in PARTS[WALLS[span[1]]['part']]['windows'] if oy<pitch):
-                yield from ((s,z) for s in (span[:2],span[1:]))
-            else:yield span,z
+            if z!=dz and any(oy<z+GT+1 and oy+wh>z-1 for _,oy,_,wh in PARTS[WALLS[span[1]]['part']]['windows'] if oy<pitch):
+                continue
+            yield span,z
     # One room divider per storey: front-to-back wall on the house axis with a cloth-tape hinged door.
+    # No rear notches: the old J02 at the divider corner is gone, so the divider is a plain panel with a doorway.
     PT=CFG['partition'];xp=PT['x']
     yb=(a-wall-wall/2*math.cos(math.radians(75)))/math.sin(math.radians(75))-.5;yf=-yb+PT['front_gap']
-    # The rear notches reach 0.5 mm past the braces' inner edge at the divider faces (both edges run RD inside the walls).
-    notch=yb-((a-wall-RD-wall/2*math.sin(math.pi/12))/math.cos(math.pi/12)-.5)
     Lp=yb-yf;clear=pitch-base-PT['top_gap'];d0=PT['door_y']-yf;d1=d0+PT['door_width'];dh=PT['door_height']   # top_gap: play under the ceiling for thick floors
-    rear=next(s for s in braces if 3 in corners_of(s))   # the brace holding the rear corner the dividers meet
-    outline=[[0,0],[d0,0],[d0,dh],[d1,dh],[d1,0],[Lp,0]]
-    for gz in gusset_dz:outline+=[[Lp,gz-.5],[Lp-notch,gz-.5],[Lp-notch,gz+GT+.5],[Lp,gz+GT+.5]]
-    outline+=[[Lp,clear],[0,clear]]
+    outline=[[0,0],[d0,0],[d0,dh],[d1,dh],[d1,0],[Lp,0],[Lp,clear],[0,clear]]
     front_edge_note = 'The front edge reaches the closing walls.' if PT['front_gap'] == 0 else f'The front edge stays {PT["front_gap"]:g} mm clear of the closing walls.'
-    add('PT1','Room divider wall',wall,outline,color='cream',category='Walls',note=f'Three dividers, one per storey, {Lp:.1f} long and {clear:g} tall, leaving {PT["top_gap"]:g} mm under the ceiling for floors at the thick end of their band. The rear notches slip over the corner ribs; glue them to the ribs. {front_edge_note} The {PT["door_width"]:g} x {dh:g} doorway sits {d0:g} mm from the front end, next to the opening walls; a PD1 leaf hangs in it on cotton tape.')
-    raised_rear=brace_height(rear,0,gusset_dz[0])!=gusset_dz[0]
-    if raised_rear:
-        ground_outline=[[0,0],[d0,0],[d0,dh],[d1,dh],[d1,0],[Lp,0]]
-        for dz in gusset_dz:
-            gz=brace_height(rear,0,dz)
-            ground_outline+=[[Lp,gz-.5],[Lp-notch,gz-.5],[Lp-notch,gz+GT+.5],[Lp,gz+GT+.5]]
-        ground_outline+=[[Lp,clear],[0,clear]]
-        PARTS['PT1']['note']=PARTS['PT1']['note'].replace('Three dividers, one per storey,','Two upper-storey dividers,')
-        add('PT2','Room divider wall with raised rib clearance',wall,ground_outline,color='cream',category='Walls',note=PARTS['PT1']['note'].replace('Two upper-storey dividers,','One ground-floor divider,')+' The lower rear notch clears the rib raised above the veranda door.')
-    for k in range(3):put('PT2' if raised_rear and k==0 else 'PT1',(xp-wall/2,yf,tops[k]),(0,1,0),(0,0,1))
+    add('PT1','Room divider wall',wall,outline,color='cream',category='Walls',note=f'Three dividers, one per storey, {Lp:.1f} long and {clear:g} tall, leaving {PT["top_gap"]:g} mm under the ceiling for floors at the thick end of their band. Glue the rear edge to the fixed shell. {front_edge_note} The {PT["door_width"]:g} x {dh:g} doorway sits {d0:g} mm from the front end, next to the opening walls; a PD1 leaf hangs in it on cotton tape.')
+    for k in range(3):put('PT1',(xp-wall/2,yf,tops[k]),(0,1,0),(0,0,1))
     # Room doors: a 3 mm leaf in each doorway, flush with the divider's +X face, hung on a cotton-tape hinge at the
     # doorway's rear jamb. It swings 90 degrees into the +X room; no metal and no spring.
     lw,lh,lt=PT['door_width']-2,dh-2,T['detail'];hy=PT['door_y']+PT['door_width']
@@ -433,11 +420,9 @@ def build():
     # A brace raised over a door keeps the short GS legs: at door height they pass beside the windows.
     placed=[(k,span,z,GS if z!=dz else GR) for k in range(3) for dz in gusset_dz for span,z in placed_braces(k,dz)]
     kinds=Counter((len(span),reach) for _,span,_,reach in placed);mid=2*ai*math.tan(math.pi/12)-1
-    heights=f'Low braces start {gusset_dz[0]:.1f} mm above their floor, upper ones {pitch-base-gusset_dz[1]:.1f} mm below the ceiling. '
-    BRACES={(3,GR):('J01','Three-wall corner rib',f'Each spans three facets of one shell: its outer edge glues along the whole middle facet ({mid:.0f} mm) and {GR-.5:.1f} mm onto both neighbours, so one rib holds two corners at 150 degrees. Dry-fit it first: it sets both corner angles, so glue all three walls to it in one go. Its inner edge runs {RD:.1f} mm inside the walls, clear of the rear pillars. '+heights),
-            (2,GR):('J02','Two-wall corner bracket',f'For the corner no rib holds. Both long edges glue against the walls, {GR-.5:.1f} mm along each. '+heights),
-            (3,GS):('J03','Three-wall corner rib with short legs',f'The J01 rib for the low position beside a ground-floor door, {door_h:.1f} mm up, just above the door opening: its legs reach only {GS-.5:.1f} mm onto the neighbours, clear of the windows beside the door.'),
-            (2,GS):('J04','Two-wall corner bracket with short legs',f'The J02 bracket for the low position beside a ground-floor door, {door_h:.1f} mm up, just above the door opening: {GS-.5:.1f} mm along each wall, clear of the window beside it.')}
+    heights=f'Low braces start {gusset_dz[0]:.1f} mm above their floor (below the windows); upper ones sit {pitch-base-gusset_dz[1]:.1f} mm under the floor above (under F01B on the ground floor). '
+    BRACES={(3,GR):('J01','Three-wall corner rib',f'Each spans three facets of one shell: its outer edge glues along the whole middle facet ({mid:.0f} mm) and {GR-.5:.1f} mm (~75 %) onto both neighbours, so one rib holds two corners at 150 degrees. Dry-fit it first: it sets both corner angles, so glue all three walls to it in one go. Its inner edge runs only {RD:.1f} mm inside the walls, clear of the rear pillars. No two-wall brackets: one fixed-shell corner stays open. '+heights),
+            (3,GS):('J03','Three-wall corner rib with short legs',f'The J01 rib beside a ground-floor door, {door_h:.1f} mm up, just above the door opening: its legs reach only {GS-.5:.1f} mm onto the neighbours, clear of the windows beside the door.')}
     for (n,reach),(pid,name,note) in BRACES.items():
         if kinds[(n,reach)]:add(pid,name,GT,brace_outline(n,reach)[1],color='blue',category='Walls',note=f'{kinds[(n,reach)]} pieces of {GT:g} mm plywood laid flat. '+note)
     for k,span,z,reach in placed:
@@ -525,6 +510,7 @@ def build():
       'Rope ladder from the veranda roof up to the eave beside the veranda-side dormer, one plywood piece glued on the corner batten',
       'Windows keep a solid cross in the wall between four panes, with a one-piece surround (frame, sill and pediment hood) and clear PET glazing: no thin glued bars to snap',
       'Nine 3 x 8 mm battens cover the outside corner seams that do not move (board-and-batten look)',
+      f'Corner ribs reach ~75 % ({GR-.5:.0f} mm) onto each edge wall and only {RD:.0f} mm into the room; low band plus a high band under each floor (under F01B on the ground floor); no J02/J04; dividers have no rear rib notches',
       f'Back door on {doors["back"]} with a lean-to canopy, stone steps and a woodpile shelter; room door leaves on cotton-tape hinges',
       'The Rowan family (Elias, Mira, Ada and Theo) in thermo-clay; no figure fits the small-parts cylinder and each passes every doorway',
       f'Toy safety: every magnet enclosed in solid wood behind a {CFG["magnets"]["skin"]:g} mm skin; a D{CFG["finial"]["ball"]:g} ball finial instead of the spire; divider front gap {PT["front_gap"]:g} mm (outside the 5-12 mm pinch range); recessed finger pulls instead of glued handles; a captive drawer stop',
@@ -534,11 +520,11 @@ def build():
       'Optional LED lighting: a wire hole through every floor; faux cellar hatch on the plinth',
       'Display only: bookcases, garden scene, and 3D-printable interior furniture']
     new={'DM06','GZ1','GZ2','WF1','RL1','E04','E11','GD03','GD04','PD1','DS1','HC1','WP1','WP2','WP3','BL2','AB1'}|{k for k in PARTS if k.startswith('BT')}
-    changed={'R06','R01','DM01','DM02','DM04','DM05','FN01','E01','A02','A03','E07','MC1','GP1','DR1','F00','F01','F02','B01','PT1','PT2'}|{k for k in PARTS if k.startswith('W') and PARTS[k]['category']=='Walls'}
+    changed={'R06','R01','DM01','DM02','DM04','DM05','FN01','E01','A02','A03','E07','MC1','GP1','DR1','F00','F01','F02','B01','PT1','J01','J03'}|{k for k in PARTS if k.startswith('W') and PARTS[k]['category']=='Walls'}
     for pid,p in PARTS.items():
         if pid in new:p['revision']='new'
         elif pid in changed:p['revision']='changed'
-    derived={'views':views,'doorways':doorways,'figure_fit':fit,'dimensions':dims,'changes':changes,'figures':list(FIGURES),'drawer':{'direction':list(e_out),'side':side,'angle':DR['direction'],'travel':travel,'width':2*hw,'depth':drawer_depth,'height':dh_},'plinth_height':PL['height'],'ground_floor':G,'total_height':total,'wall_width':width,'floor_radius':floor_r,'roof_slant':slant,'roof_panel_width':rw,'floor_tops':tops,'clear_room_height':pitch-base,'hinge_axes':{'WallRight':[hinge_x,0],'WallLeft':[-hinge_x,0]},'roof_eave':roof_z,'windows_per_floor':windows,'veranda_size':[ver['width'],ver['depth']],'braces':[list(s) for s in braces],'veranda_facet':ver['facet'],'base_thickness':bt,'facets':[{'facet':k+1,'part':w['part'],'id':w['id'],'group':w['group']} for k,w in enumerate(WALLS)],'doors':doors,'reference_style':f'original/ photos: red hipped veranda on {ver["facet"]} ({facet_angle(ver["facet"])} degrees), white shaped columns and railings, gabled main entrance on {doors["main"]}'}
+    derived={'views':views,'doorways':doorways,'figure_fit':fit,'dimensions':dims,'changes':changes,'figures':list(FIGURES),'drawer':{'direction':list(e_out),'side':side,'angle':DR['direction'],'travel':travel,'width':2*hw,'depth':drawer_depth,'height':dh_},'plinth_height':PL['height'],'ground_floor':G,'total_height':total,'wall_width':width,'floor_radius':floor_r,'roof_slant':slant,'roof_panel_width':rw,'floor_tops':tops,'clear_room_height':pitch-base,'hinge_axes':{'WallRight':[hinge_x,0],'WallLeft':[-hinge_x,0]},'roof_eave':roof_z,'windows_per_floor':windows,'veranda_size':[ver['width'],ver['depth']],'braces':[list(s) for s in braces],'brace_heights':list(gusset_dz),'brace_reach':GR,'brace_reach_short':GS,'brace_depth':RD,'veranda_facet':ver['facet'],'base_thickness':bt,'facets':[{'facet':k+1,'part':w['part'],'id':w['id'],'group':w['group']} for k,w in enumerate(WALLS)],'doors':doors,'reference_style':f'original/ photos: red hipped veranda on {ver["facet"]} ({facet_angle(ver["facet"])} degrees), white shaped columns and railings, gabled main entrance on {doors["main"]}'}
     data={'config':CFG,'parts':PARTS,'instances':INSTANCES,'hardware':HARDWARE,'fasteners':FASTENERS,'joints':JOINTS,'derived':derived,'clay':figs}
     from fabrication import redesign_panels
     redesign_panels(data)
@@ -654,7 +640,7 @@ def place_figures(tops,inner):
     divider, each other and the room doors' swing."""
     import clay
     fc=CFG['figures'];codes=FIGURE_CODES
-    obstacles=[instance_box(i) for i in INSTANCES if i['group'] in ('Fixed','Furniture','RoofLocks','Drawer','RoomDoors') and (PARTS[i['part']]['category'] not in ('Walls','Exterior') or i['part'] in ('PT1','PT2')) and i['part'] not in ('F00','F01','F02')]
+    obstacles=[instance_box(i) for i in INSTANCES if i['group'] in ('Fixed','Furniture','RoofLocks','Drawer','RoomDoors') and (PARTS[i['part']]['category'] not in ('Walls','Exterior') or i['part']=='PT1') and i['part'] not in ('F00','F01','F02')]
     obstacles+=[sweep for sweep in DOOR_SWEEPS]
     cands=sorted(((x,y) for x in range(-130,131,4) for y in range(-130,121,4)),key=lambda c:(c[1],abs(c[0])))
     for level,key in ((level,key) for level,keys in enumerate(fc['levels']) for key in keys):

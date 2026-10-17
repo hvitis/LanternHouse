@@ -10,7 +10,7 @@ generated from source/model.py, which needs numpy and shapely, not FreeCAD. The 
 nesting when available, otherwise computes the layout. Only viewer assets, model data, DXF and label positions,
 and the published 3D prints in prints/ (for prints.html) are served, on the local machine unless --host says otherwise.
 """
-import argparse, errno, http.server, json, mimetypes, sys, time, webbrowser
+import argparse, errno, http.server, json, mimetypes, shutil, sys, time, webbrowser
 from pathlib import Path
 import naming
 
@@ -61,7 +61,15 @@ def main():
     p.add_argument('--host',default='127.0.0.1');p.add_argument('--port',type=int,default=8765);p.add_argument('--open',action='store_true')
     p.add_argument('--rebuild',action='store_true',help='regenerate output/parts.json from source/model.py before serving (run source/rebuild.py again before making PDFs)')
     args=p.parse_args()
-    if args.rebuild or not DATA['/data/parts.json'].exists():build_data(DATA['/data/parts.json'])
+    parts_path=DATA['/data/parts.json']
+    sources=[ROOT/'source/model.py',ROOT/'source/config.json',ROOT/'source/fabrication.py']
+    site_parts=ROOT/'_site/data/parts.json'
+    stale=not parts_path.exists() or any(s.exists() and s.stat().st_mtime>parts_path.stat().st_mtime for s in sources)
+    if args.rebuild or stale:
+        if not args.rebuild and site_parts.is_file() and all(site_parts.stat().st_mtime>=s.stat().st_mtime for s in sources if s.exists()):
+            parts_path.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(site_parts,parts_path)
+        else:
+            build_data(parts_path)
     import assembly
     assembly_path=DATA['/data/assembly.json'];assembly_path.parent.mkdir(parents=True,exist_ok=True)
     assembly_path.write_text(json.dumps(assembly.manifest(json.loads(DATA['/data/parts.json'].read_text()))),encoding='utf-8')

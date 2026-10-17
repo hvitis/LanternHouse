@@ -95,7 +95,7 @@ Interior pages have white backgrounds for economical printing. CAD diagrams have
 - Use the template index to print a single sheet at a time.
 
 **Cutting**
-- Identical pieces share one build ID on the templates and in the viewer. All 22 three-wall corner ribs use `J01`. The inventory gives the total quantity for each ID. Parts with different holes, openings or thicknesses have different IDs.
+- Identical pieces share one build ID on the templates and in the viewer. All matching three-wall corner ribs use `J01` (ten in the current kit). The inventory gives the total quantity for each ID. Parts with different holes, openings or thicknesses have different IDs.
 - Label each piece with its build ID. Sort the pieces by ID before assembly.
 - The laser layout keeps at least 3 mm between profiles and 10 mm side margins. Long parts use the end allowances on their reference maps.
 - Every plywood sheet is grade 2/2 birch, in 3 or 6 mm.
@@ -199,11 +199,11 @@ The build is not glued yet. The web companion reserves a HINTS area for future n
 3. **Fixed rear shell.** Glue up the six rear facets and glue them to F00. Identical walls share one ID, so the rear reads W04, W05, W06, W07, W06, W09; the wall map in the book shows each facet.
 4. **Floors and pillars.** Join the 6 mm floor sections over their seam strips (3 × 4 mm under the ground floor, 3 × 12 mm under the others). Use the positioning maps. Make the [physical joint samples](JOINT-VALIDATION.md) first. Install four continuous P01 pillars on the foot blocks. Slide both F01 levels over the rectangular openings. Seat F02 on the pillar tops. Fit small metal angle brackets under both F01 levels and F02; they are added after production and are not part of the kit.
 5. **Opening shells.** Build the two front wall shells.
-   - Square-edge wall corners use flat 3 mm corner ribs inside. A J01 rib lies across a whole facet and reaches about 30 mm onto both neighbours, so one rib holds two corners; dry-fit it, then glue all three walls to it at once so it sets both 150° angles. The one fixed-shell corner no rib can take gets a J02 bracket. Beside the three doors the ground-floor low braces sit just above the door openings and use the short-legged J03 and J04, which clear the windows beside the doors. Fill the small exterior seams where the walls are fixed; keep them clear where they move.
+   - Square-edge wall corners use flat 3 mm corner ribs inside. A J01 rib lies across a whole facet and reaches about 75 % (~62 mm) onto both neighbours, only about 10 mm into the room, so one rib holds two corners. Two bands per storey: low below the windows, and high just under the floor above (under F01B on the ground floor). Dry-fit each rib, then glue all three walls to it at once so it sets both 150° angles. One leftover fixed-shell corner stays open (no two-wall bracket). Beside the doors the ground-floor low braces may sit just above the openings with short-legged J03 when clear of windows. Fill the small exterior seams where the walls are fixed; keep them clear where they move.
    - Glue backing blocks before drilling for hinges.
    - Follow the blue fastener borders and dashed drilling axes, and the orange glue-face outlines in the assembly diagrams.
    - Magnetic catches and stops: seal the magnets in the MC1 blocks and GP1 posts, glue one MC1 inside each shell near the front seam just under F02, epoxy the four steel discs, then stand the two GP1 posts on their two dowels each: glue and screw from below, felt dot on the face.
-6. **Room dividers.** Glue PT2 on the ground floor and PT1 on each upper storey along the house axis; each doorway sits at the front end. PT2 has a raised rear notch to clear the rib above the veranda door. Glue the notches to the ribs.
+6. **Room dividers.** Glue one plain PT1 divider on each storey along the house axis; each doorway sits at the front end. Glue the rear edge to the fixed shell (no rear rib notches).
 7. **Doors and entrance steps.** Fit the three doors (main door W12, veranda door W07, back door W09) on 2.0 × 10 mm screws into hardwood strips. All open outward, have a recessed finger slot and keep a 2 mm gap above their thresholds. Glue the stone steps below the main and back doors.
    - Window trim: glue one WF1 surround over each window, its cross on the wall's solid cross, and a GZ1 PET pane inside. Then the nine seam battens and the rope ladder.
 8. **Roof.** Assemble the cone over its supplied angle gauges.

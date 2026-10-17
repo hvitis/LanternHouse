@@ -20,7 +20,7 @@ W,H=A4;M=40;INK=colors.HexColor('#284849');TEAL=colors.HexColor('#197F98');RUST=
 OUT=ROOT/'output/pdf';OUT.mkdir(exist_ok=True)
 DER=DATA['derived'];DOORS=CFG['doors'];VER=CFG['veranda'];VER_FACET=int(VER['facet'][1:])-1
 TOPS=DER['floor_tops'];G0=TOPS[0];PITCH=CFG['floor_pitch'];EAVE=DER['roof_eave'];CLEAR=DER['clear_room_height']
-GUSSETS=(26*CFG['wall_height']/450,PITCH-CFG['thickness']['floor']-20*CFG['wall_height']/450);HINGES=[G0+c for c in CFG['wall_hinge']['centers']];DRAWER=CFG['plinth']['drawer']
+GUSSETS=tuple(DER['brace_heights']);HINGES=[G0+c for c in CFG['wall_hinge']['centers']];DRAWER=CFG['plinth']['drawer']
 MAG,CATCH,STOP=CFG['magnets'],CFG['wall_catch'],CFG['wall_stop'];OPEN=DER['views']['open_angle'];SIDE=DER['drawer']['side']
 # Roof pivot: the bolt's washer stack (WS1 under the head plus the packing ones), the laminated turn-button and the pillar.
 BL1=next((f for f in DATA['fasteners'] if f['type']=='BL1'),None);SC1=next(f for f in DATA['fasteners'] if f['type']=='SC1');WS1=(1+len(BL1['stack_mm'])-8) if BL1 else 0;LOCK=(P.get('E08',{}).get('thickness',0)+P.get('E09',{}).get('thickness',0));PT=P['P01']['thickness']
@@ -469,7 +469,7 @@ def manual():
         para(c,'Locked: tab points outward and overlaps the roof ring. Unlocked: rotate each tab 90 degrees toward the center, then lift the roof vertically. The tapered tip keeps the turned tab inside the ring.',M,200,size=10)
         b.end()
     b.page('Joints used in this house','Orange marks identify glue joints in the diagrams')
-    joint_rows=[['J1','Supported edge-to-face butt joint','Floor rests on its supports and posts. Glue both support faces; do not depend on a thin plywood edge alone.'],['J2','150-degree faceted corner + ribs','Adjacent square-edged panels meet with a small seam. A flat J01 rib glues along three inner wall faces and holds two corners at once (a J02 bracket takes a single corner); outside, a batten covers the seam.'],['J3','Reinforced screwed hinge joint','Glue hardwood backing first, let it cure, then drill pilots through the hinge leaf and wall into the backing.']]
+    joint_rows=[['J1','Supported edge-to-face butt joint','Floor rests on its supports and posts. Glue both support faces; do not depend on a thin plywood edge alone.'],['J2','150-degree faceted corner + ribs','Adjacent square-edged panels meet with a small seam. A flat J01 rib glues along three inner wall faces and holds two corners at once; outside, a batten covers the seam. One leftover fixed-shell corner stays open.'],['J3','Reinforced screwed hinge joint','Glue hardwood backing first, let it cure, then drill pilots through the hinge leaf and wall into the backing.']]
     if BL1:joint_rows.append(['J4','Captive machine-screw pivot','BL1 passes through F02, washers, spacer and E08; NT1 covers its threaded end.'])
     joint_rows.append([f'J{len(joint_rows)+1}','Glued trim and veranda joint','Dry-fit trim, headers and rails on a flat board. Apply thin PVA over the whole face, clamp gently and wipe squeeze-out.'])
     y=table(c,joint_rows,M,714,[35,175,305],['Code','Joint','How it works'],9)
@@ -542,7 +542,9 @@ def manual():
         if P[FACETS[i]['part']].get('windows'):c.setFillColor(colors.HexColor('#FFF3DB'));c.circle(cx+n[0]*a*s,cy+n[1]*a*s,5,fill=1,stroke=0)
     label(c,'Fixed rear shell',cx-45,cy+60,10);label(c,'Opening left',cx-105,cy-45,10);label(c,'Opening right',cx+35,cy-45,10)
     para(c,f'{DOORS["veranda"]} is the veranda door, {DOORS["main"]} the main entrance and {DOORS["back"]} the back door; all three are ground-floor notches. Ground-floor windows: {window_walls(0)}. Upper windows: {window_walls(1)}. The veranda deck is glued to B01 and against {facet_ref((VER_FACET-1)%12)}, {facet_ref(VER_FACET)} and {facet_ref((VER_FACET+1)%12)}. Small grey numbers are the facet numbers; identical walls share one ID.',M,239,size=10)
-    para(c,f'J01 ribs and J02 brackets: normally {GUSSETS[0]:.1f} and {GUSSETS[1]:.1f} mm above each floor top. Each {P["J01"]["thickness"]:g} mm rib lies across a whole facet and reaches about 20 mm onto both neighbours; they lie across {ribs_on()}. The J02 bracket holds the one fixed-shell corner left over. Beside the three doors the ground-floor low braces sit at Z{G0+96*CFG["wall_height"]/450:g}, just above the door openings; there are none at the front seam and the hinge corners. Opening-shell braces sit {CFG["shell_lift"]:g} mm higher, like their walls.',M,146,size=10)
+    reach=DER['brace_reach'];depth=DER['brace_depth']
+    band=', '.join(f'{z:.1f}' for z in GUSSETS)
+    para(c,f'J01 ribs only (no two-wall brackets): two bands per storey at {band} mm above each floor top — low below the windows, and high just under the floor above (under F01B on the ground floor). Each {P["J01"]["thickness"]:g} mm rib lies across a whole facet and reaches about {reach-.5:.0f} mm (~75 %) onto both neighbours, only {depth:.0f} mm into the room; they lie across {ribs_on()}. One fixed-shell corner stays open. Beside the doors the ground-floor low braces sit at Z{G0+96*CFG["wall_height"]/450:g}, just above the door openings, with short legs that clear the windows when a raised rib would not cross a window middle; there are none at the front seam and the hinge corners. Opening-shell braces sit {CFG["shell_lift"]:g} mm higher, like their walls. Dividers are plain PT1 panels with no rear rib notches.',M,146,size=10)
     b.end()
     b.page('Frame placement coordinates','Plan view / house center is X0, Y0 / front is -Y')
     cx=W/2;cy=505;s=.78

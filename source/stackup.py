@@ -32,13 +32,11 @@ def analyse(data):
     clear=pitch-fl;div=clear-PT['top_gap']
     # Floors: F00 on the plinth, F01 on metal supports fixed at set heights above F00, F02 on the pillar tops. A room's
     # height is its ceiling underside minus its floor top, so the floor below it eats into the room.
-    out.append(chain('Ground-floor divider under F01','F00 top; F01 underside set by its metal supports',clear-div,[],(.2,None),'PT2 stands on F00 and must slide in under F01.',cfg))
+    out.append(chain('Ground-floor divider under F01','F00 top; F01 underside set by its metal supports',clear-div,[],(.2,None),'PT1 stands on F00 and must slide in under F01.',cfg))
     for k in (1,2):
         out.append(chain(f'Divider on storey {k+1}','support or pillar top under the ceiling',clear-div,[(-1,fl,'F01 floor it stands on')],(.2,None),'The floor plate rests on its supports: a thick plate raises the floor top and lowers the room.',cfg))
-    # Pillar slots in F01 (cut 0.6 mm wider than the nominal pillar) and divider notches over the corner ribs.
+    # Pillar slots in F01 (cut 0.6 mm wider than the nominal pillar).
     out.append(chain('P01 pillar in its F01 slot','slot width (cut)',fab['pillar_clearance'],[(-1,T['structure'],'P01 pillar')],(.1,None),'The floors slide down the pillars.',cfg))
-    rib=data['parts']['J01']['thickness']
-    out.append(chain('Rib in its divider notch',f'notch height {rib+1:g} mm (cut)',1.0,[(-1,rib,'J01 corner rib')],(.2,None),'The divider\'s rear notches slip over the corner ribs.',cfg))
     # Moving parts.
     out.append(chain('Opening wall past the floor edges','wall inner face',cfg['moving_clearance'],[(-1,T['wall'],'wall, if built to its outer face')],(1.0,None),'Floor plates keep moving_clearance from the inside of the closed walls.',cfg))
     out.append(chain('Opening shell under the roof ring','F00 top',2.0-cfg['shell_lift'],[],(.5,None),'Opening walls are 2 mm shorter than the fixed walls and hang shell_lift above F00; retained 420 mm sheet ends add their own tolerance.',cfg))

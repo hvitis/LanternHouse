@@ -29,15 +29,13 @@ def main():
     tower_windows=sum(data['derived']['windows_per_floor'][:3]);hinges=3*2*2
     # Windows: one surround and one PET pane each; the cross between the panes is the wall itself.
     treads=data['config']['stairs']['risers']-1
-    # Corner braces: nine corners per height (no hinge or front-seam corner), six heights; a rib holds two corners
-    # and the fixed shell's fifth corner takes a bracket.
-    ribs,brackets=6*4,6*1
-    expected={'R01':12-dormers,'R06':dormers,'DM01':dormers,'DM06':dormers,'GZ2':dormers,'A02':hinges,'A06':hinges,'A03':6,'E01':2,'E04':1,'E10':2,'E11':1,'D03':12,'WF1':tower_windows,'GZ1':tower_windows,'C01':8,'E03':1,'PL1':10,'DR4':2,'DR2':2,'DG1':2,'PT1':2 if 'PT2' in p else 3,'PD1':3,'VS2':2,'VJ1':2,'VS3':2,'ES1':4,'ET1':3*treads,'MC1':2,'GP1':2,'DS1':1,'RL1':1,'BP1':cfg['stability']['pads'],'BL2':cfg['stability']['ballast'][0],'AB1':1}
-    if 'PT2' in p:expected['PT2']=1
-    braces=(sum(p.get(k,{}).get('quantity',0) for k in ('J01','J03')),sum(p.get(k,{}).get('quantity',0) for k in ('J02','J04')))
+    # Corner braces: three-wall J01/J03 only (no J02/J04). One fixed-shell corner stays open. Dividers are plain PT1.
+    expected={'R01':12-dormers,'R06':dormers,'DM01':dormers,'DM06':dormers,'GZ2':dormers,'A02':hinges,'A06':hinges,'A03':6,'E01':2,'E04':1,'E10':2,'E11':1,'D03':12,'WF1':tower_windows,'GZ1':tower_windows,'C01':8,'E03':1,'PL1':10,'DR4':2,'DR2':2,'DG1':2,'PT1':3,'PD1':3,'VS2':2,'VJ1':2,'VS3':2,'ES1':4,'ET1':3*treads,'MC1':2,'GP1':2,'DS1':1,'RL1':1,'BP1':cfg['stability']['pads'],'BL2':cfg['stability']['ballast'][0],'AB1':1}
+    ribs=sum(p.get(k,{}).get('quantity',0) for k in ('J01','J03'))
     walls=sum(v['quantity'] for k,v in p.items() if k.startswith('W') and v['category']=='Walls')
     battens=sum(v['quantity'] for k,v in p.items() if k.startswith('BT'))
-    check('Design-rule part quantities (12 wall facets, 9 seam battens, 24 ribs and 6 brackets)',walls==12 and battens==9 and braces==(ribs,brackets) and all(k in p and p[k]['quantity']==v for k,v in expected.items()) and not {'D01','D02','D04','D05','DM07','E02','VT1','TC01'}&set(p),str({k:(p.get(k,{}).get('quantity'),v) for k,v in expected.items() if p.get(k,{}).get('quantity')!=v}|{'walls':walls,'battens':battens,'ribs, brackets':braces}))
+    plan=data['derived']['braces']
+    check(f'Design-rule part quantities (12 wall facets, 9 seam battens, {ribs} three-wall ribs, no J02/J04)',walls==12 and battens==9 and ribs>=1 and all(len(s)==3 for s in plan) and not {'J02','J04','PT2'}&set(p) and all(k in p and p[k]['quantity']==v for k,v in expected.items()) and not {'D01','D02','D04','D05','DM07','E02','VT1','TC01'}&set(p),str({k:(p.get(k,{}).get('quantity'),v) for k,v in expected.items() if p.get(k,{}).get('quantity')!=v}|{'walls':walls,'battens':battens,'ribs':ribs,'brace_plan':plan}))
     # Shared IDs cover required parts and the optional furniture, including rotated strips.
     from model import profile_key
     profiles=Counter(profile_key(v) for v in p.values())

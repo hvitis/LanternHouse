@@ -116,7 +116,7 @@ def main():
     render('wall-right',lambda m:m['group']=='WallRight',overlay=True,size=(1800,2300))
     render('wall-left',lambda m:m['group']=='WallLeft',overlay=True,size=(1800,2300))
     render('plinth-drawer',lambda m:m['group']=='Drawer' or panel(m) in ('B01','F00','PL1','DG1','DB1','A04','ES1') or (m['part']=='ET1' and m['group']=='Fixed'),mode='open',overlay=True)
-    render('rooms',lambda m:panel(m) in ('F00','F01','F02','PT1','PT2','P01','A04'),overlay=True)
+    render('rooms',lambda m:panel(m) in ('F00','F01','F02','PT1','P01','A04'),overlay=True)
     render('roof',lambda m:m['group']=='Roof',overlay=True)
     render('locks',lambda m:m['group']=='RoofLocks' or panel(m)=='F02',overlay=True)
     render('catches',lambda m:m['group'] in ('WallRight','WallLeft') or panel(m) in ('MC1','GP1','F02','F00','B01'),mode='open',overlay=True)

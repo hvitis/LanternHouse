@@ -221,17 +221,129 @@ Under the red spire roof, where sea navigation, astronomy, and rare document pre
 ## 6. Implementation Priority Matrix
 
 ```
-High Visual Impact / Low Complexity:
-  1. Window architraves, sills & broken-pediment hoods
-  2. Attic rope ladder & chimney spark cowl
-  3. Vertical exterior seam battens (board-and-batten look)
+Already in the cut kit (revision 7+):
+  ✓ Window surrounds WF1 (frame + sill + triangular hood) + PET glazing
+  ✓ Attic rope ladder RL1 (one 3 mm piece on the seam batten)
+  ✓ Vertical exterior seam battens BT1–BT4
+  ✓ Cellar hatch HC1, back-door canopy, woodpile WP1–WP3
+  ✓ Room door leaves PD1
+  ✓ Kakelugn / chandelier / bathtub as display-only prints (not plywood)
 
-Medium Complexity / High Play Value:
-  4. Veranda corner spandrels & stair handrail
-  5. Cellar bulkhead hatch door & kitchen woodshed
-  6. Attic Gothic roof truss
-
-Detailed Interior Finishes:
-  7. Swedish tiled stove (kakelugn)
-  8. Hanging chandeliers & interior door leaves
+Still high visual impact on 3 mm / 6 mm plywood only:
+  1. Chimney spark-cowl crown on E07
+  2. Scalloped eave lambrequin under D03
+  3. Veranda corner spandrels + stair handrail
+  4. Entrance gable cartouche in GD01 + porch posts under the canopy
+  5. Broken-pediment upgrade for the prominent 2nd-floor window
+  6. Door panel relief overlays + dormer bargeboard fretwork
+  7. Storey belt courses + carriage lantern silhouettes
 ```
+
+---
+
+## 7. Pre-print readiness review (2026-03-26)
+
+Review of the current DXF cut package against the classic blue round tower reference (red cone roof, stone plinth, side veranda, entrance canopy, dormers, rope ladder). Goal: keep only **3 mm and 6 mm birch plywood**, stay cuttable on laser/CNC, and make the finished house read clearly as that house.
+
+### 7.1 Consistency status (CAD / files)
+
+| Check | Result | Source |
+| :--- | :--- | :--- |
+| Model / config / part-ID / stock / supplier / DXF R12 tests | pass | `pytest` core suite |
+| Closed assembly collisions | none | `cad-validation.json` |
+| Wall swing 0–100°, six door sweeps, drawer 200 mm, roof lift | clear | same |
+| Thickness bands (3 ±0.3, 6 −0.5/+0.4) | pass, no lost clearances | `thickness-tolerance.json` |
+| Joint stack-up chains (9) | all pass | `stackup.json` |
+| Release validation (incl. supplier cut DXF) | all pass | `release-validation.json` |
+| Tip-over / magnets / small parts audit | pass with residuals | `risk-audit.json` |
+| Nesting bounds + 3 mm lanes | pass on every sheet | `nesting.json` |
+
+**Current cut stock (authoritative nesting, not older docs):**
+
+| Thickness | Sheets (A3 297×420) | Cut pieces | Outer util (avg) |
+| :---: | :---: | :---: | :---: |
+| 3 mm | 12 | 209 | ~72 % |
+| 6 mm | 9 | 54–56 | ~60 % |
+| **Total** | **21** | **~265** | |
+
+Supplier file: `output/Lanternwood-House-Supplier-Cut.dxf` — DXF R12, layers `CUT_3MM` / `CUT_6MM`, cutting paths only.
+
+### 7.2 Doc / model drift to fix before quoting
+
+These do not fail the automated gates, but they will confuse a shop or a future rebuild:
+
+1. **Sheet count in docs is stale.** `TODO.md` / `SUPPLIER-READINESS.md` still say 23 sheets (12×3 + 11×6). Nesting and the supplier cut file are **21** (12×3 + 9×6).
+2. **Veranda deck thickness.** `architecture.py` hard-codes `deck_t, skirt_t = 3, 3` for `E03` / `VS1` / `VS2`. `RISKS.md` still says the deck stays 6 mm. The E03 stress-test helper still labels the material as “6 mm” while the part is 3 mm. Decide: keep 3 mm + underside cleats, or restore `E03` to `thickness.structure` (6 mm) before cutting.
+3. **Divider front gap.** `partition.front_gap` is **0.0** (closed seam / finger exclusion). `RISKS.md` still describes a 16 mm gap. The pinch test only forbids 5–12 mm, so 0 passes — but the safety narrative and the model disagree. Align the text with the model (or restore the 16 mm gap if that is still intended).
+4. **Factory-edge walls (blocker B1)** and **true 6 mm availability (blocker B2)** remain open: confirm with the shop before ordering. See `docs/SUPPLIER-READINESS.md`.
+
+### 7.3 What already reads as the Moomin house
+
+From the closed / veranda / open renders against the reference:
+
+- Blue dodecagon tower on a green lawn disc and stone plinth with hidden drawer
+- Red conical roof with fish-scale shingle decor, two dormers, chimney, blunt ball finial
+- Side veranda: white twin-ply columns, railings, balusters, hipped red roof, stairs
+- Main entrance canopy + gable, back door with lean-to and woodpile, faux cellar hatch
+- Cream window surrounds with sill and triangular hood, four-pane crosses left in the wall
+- Nine blue seam battens, rope ladder from veranda roof to the dormer eave
+- Opening front shells, room dividers with door leaves, clay family figures
+
+That silhouette is already recognisable. The remaining gap is **ornament density**: the reference is rich in gingerbread, curved pediments, chimney cowl, scalloped eaves and door relief; the kit is still mostly clean planes with one-piece surrounds.
+
+### 7.4 Highest-value extra parts (3 mm / 6 mm only)
+
+All proposals stay flat-sheet: interlocking tabs, face lamination, or glue-on overlays. No 4 mm stock. Prefer nesting into existing 3 mm sheet hollows so sheet count stays at 21 or grows by at most one A3.
+
+| Priority | New parts | Thickness | How it improves fidelity | Notes |
+| :---: | :--- | :---: | :--- | :--- |
+| **P1** | `CH05` chimney spark-cowl / 5-petal crown, slots into `E07` | 3 | The reference chimney ends in a flower/palmette cowl; flat `E07` is the most obvious missing silhouette on the skyline | Keep outline ≥4 mm min feature; glue or slot on cap |
+| **P1** | `D04` scalloped lambrequin strips under each `D03` fascia (12) | 3 | Continuous fish-scale / scallop trim under the eave is a strong Moomin read | Same length family as `D03`; paint cream |
+| **P1** | `C13` veranda corner spandrels (8–12 openwork brackets) | 3 | Square column–header joints look unfinished next to the reference gingerbread | Glue under `C02`/`C03` at each column |
+| **P2** | `VR1`/`VR2` veranda stair handrail + newel (match `C09` language) | 3 | Open stair edge is a clear miss on the veranda hero angle | Keep section ≥4×3; glue to `VS3` |
+| **P2** | `GD05` pierced sunburst / cartouche inset for `GD01` | 3 | Entrance pediment is flat; reference has a medallion in the gable | Drop into a pocket cut in `GD01`, or face-glue |
+| **P2** | `EP1` entrance porch posts (pair) under the canopy | 3×2 laminate or 6 | Canopy currently cantilevers; reference has classical posts on the step stringers | Seat on `ES1` / tread stack |
+| **P2** | `WF2` broken-pediment hood (1–3 featured windows) | 3 layered | Simple triangular `WF1` hoods are weak vs the baroque centre window | Keep `WF1` for the rest; swap only the hero windows |
+| **P3** | `E01A` door panel relief overlays (herringbone / coffer) | 3 | Flat doors; reference has diagonal raised panels | Face-glue; finger slot stays clear |
+| **P3** | `DM07` dormer bargeboard fretwork on `DM04` | 3 | Plain dormer gables | Cream, glued to gable front |
+| **P3** | `BC1` storey belt courses at Z≈140 / 280 / 420 | 3×4 strips | Horizontal stringcourses break the tall blue shaft | Stop at hinge seams; do not bridge moving shells |
+| **P3** | `LN1` carriage-lantern silhouettes on `GP1` posts / porch | 3 | Reference hangs coach lanterns under eaves | Optional; already hinted in garden renders |
+| **P3** | Engraved / printed thermometer strip beside front door | — | Signature Jansson outdoor gauge | Decor PDF, no new plywood |
+
+**Structural add-ons worth nesting with the beauty parts:**
+
+| Part | Thickness | Why |
+| :--- | :---: | :--- |
+| `E03C` deck underside cleats (2–4) under the front lip of `E03` | 6 or 3×2 | Stress note for the 3 mm deck: reinforce if deck stays 3 mm |
+| Fit-test coupon sheet: finger joint + pillar slot + blind pocket + 3/6 thickness tags | 3 + 6 | Cut first; validate kerf and thickness before the full run |
+
+### 7.5 Corner ribs revised for print (2026-03-26, updated)
+
+Implemented in the model:
+
+| | Before (narrow ribs) | After (print kit) |
+| :--- | :--- | :--- |
+| Depth into the room (`RD`) | ~17 mm | ~10 mm |
+| Leg onto each edge wall (`GR`) | ~30 mm (~39 %) | ~62 mm (**~75 %**) |
+| Two-wall brackets | J02 / J04 fill leftover corners | **Removed** — one fixed-shell corner stays open |
+| PT1 rear notches | Cleared J02 at the divider corner | **Removed** — plain PT1 doorway panel |
+| Bands per storey | 1 (≥10 mm above floor) then briefly 1 again | **2** — low below windows + high under each floor (under F01B on the ground floor) |
+| Piece count | 30 → 16 with J02/J04 | **23** three-wall ribs (J01×22, J03×1) |
+
+Rib midpoints are spaced so 75 % legs do not share an edge wall. Door-raised short legs (`J03`) stay ~20 mm when a raised rib clears windows; a raised rib that would cross a window middle is skipped (no J04 split).
+
+### 7.6 What not to change for this print
+
+- **Ball finial `FN01`** — keep the blunt D35 ball (toy safety). A pointed spire matches the reference but reopens RISK-04.
+- **Cord rope ladder** — keep one-piece `RL1` plywood; cord rungs fail small-parts and roof-lift rules.
+- **Wall thickness 3 mm** — already mitigated with long `J01` ribs; reverting walls to 6 mm costs several sheets and tip-over mass changes.
+- **Display-only furniture / garden** — leave off the cut DXF; they are prints or clay.
+
+### 7.7 Suggested sequence before sending DXFs
+
+1. Measure the shop’s actual 3 mm and 6 mm birch; update `thickness` / bands if needed; rebuild.
+2. Resolve B1 (420 mm factory ends vs all-sides cut) with the shop.
+3. Decide `E03` 3 vs 6 mm and align `RISKS.md` + stress-test labels.
+4. Align `front_gap` documentation with `config.json`.
+5. Optionally add P1 ornament parts and re-nest (target: still ≤22 A3 sheets).
+6. Ask for a fit-test coupon cut first; then release the full `Supplier-Cut.dxf` + supplier PDF.

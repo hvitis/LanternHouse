@@ -15,9 +15,19 @@ def test_all_interchangeable_profiles_share_an_id(data):
 
 def test_shared_build_quantities_and_design_roles(data):
     parts=data['parts']
-    assert {pid:parts[pid]['quantity'] for pid in ('J01','J02','J03','J04','P01','DM06')}=={
-        'J01':22,'J02':5,'J03':2,'J04':1,'P01':4,'DM06':len(data['config']['dormer']['over']),
+    assert {pid:parts[pid]['quantity'] for pid in ('J01','J03','P01','DM06') if pid in parts}=={
+        'J01':22,'J03':1,'P01':4,'DM06':len(data['config']['dormer']['over']),
     }
+    assert not {'J02','J04','PT2'} & parts.keys()
+    # Wider ~75 % legs; low + high bands; no two-wall brackets; plain PT1 (no rear notches).
+    import math
+    wall=data['config']['thickness']['wall']
+    facet=2*(data['config']['tower_diameter']/2*math.cos(math.pi/12)-wall)*math.tan(math.pi/12)
+    assert data['derived']['brace_reach']==pytest.approx(0.75*facet)
+    assert data['derived']['brace_depth']<17
+    assert len(data['derived']['brace_heights'])==2
+    assert all(len(s)==3 for s in data['derived']['braces'])
+    assert len(parts['PT1']['outer'])==8
     assert not {'DM07','K1A','K2A','K4A','K4B','K4C','K5A','K5B','PC01','PC02','PC03','V6A'} & parts.keys()
 
 
