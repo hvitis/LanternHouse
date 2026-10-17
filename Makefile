@@ -54,7 +54,7 @@ site:  ## Export the static 3D viewer to _site/ (no FreeCAD)
 stock:  ## Interactive plywood purchase planner: supplier sizes and prices to the "Optymalne wymiary i cennik" PDF
 	$(PYTHON) ops/stock.py
 
-prints:  ## Generate the changed 3D-print designs (source/prints/) into prints/ for the site (Mac; requirements-print.txt)
+prints:  ## Generate the changed 3D-print designs (source/prints/) into prints/ for the site (Mac; requirements/requirements-print.txt)
 	$(PYTHON) source/print_build.py
 
 studio:  ## Live 3D-print studio in the browser: edit source/prints/*.py or move the sliders and the part follows

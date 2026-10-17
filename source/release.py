@@ -13,7 +13,6 @@ from pathlib import Path
 import naming
 
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'output'
-PDFS=['Complete','Instructions','Cutting-Templates','Dimensioned-Parts','Decor','Clay-Family','3mm-Hand-Templates','Supplier']
 KIT=OUT/naming.KIT_ZIP
 CUT=OUT/naming.SUPPLIER_CUT_DXF   # everything the supplier cuts, in one file
 
@@ -29,7 +28,8 @@ def repo_url():
 def sha256(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 
 def assets():
-    return [OUT/'pdf'/f'{naming.PREFIX}-{name}.pdf' for name in PDFS]+[CUT,KIT]
+    from package import release_assets
+    return release_assets(OUT)
 
 def problems():
     """Every reason the current output/ must not be released; empty when it is ready."""
@@ -50,8 +50,8 @@ def problems():
     if KIT.exists():
         with zipfile.ZipFile(KIT) as z:
             if any('/original/' in name for name in z.namelist()):found.append('the build kit contains the original/ reference photos: rebuild with the current package.py')
-    dirty=git('status','--porcelain','--','source','requirements.txt')
-    if dirty:found.append('source/ has uncommitted changes; commit them so the release tag matches the files:\n    '+dirty.replace('\n','\n    '))
+    dirty=git('status','--porcelain','--','source','requirements')
+    if dirty:found.append('source/ or requirements/ has uncommitted changes; commit them so the release tag matches the files:\n    '+dirty.replace('\n','\n    '))
     elif not git('branch','-r','--contains','HEAD'):found.append('the current commit is not on GitHub yet: push it first')
     if not shutil.which('gh'):found.append('the GitHub CLI (gh) is not installed: https://cli.github.com')
     return found
@@ -62,9 +62,10 @@ def notes(tag):
     pages=json.loads((OUT/'reports/pdf-report.json').read_text())
     cad=json.loads((OUT/'reports/cad-validation.json').read_text())
     nest=json.loads((OUT/'nesting.json').read_text())
-    sys.path.insert(0,str(ROOT/'source'));from package import stock_table
+    from package import stock_table
     pdf_pages={**pages['pdfs'],naming.PDF_COMPLETE:pages['complete_pages']}
-    contents={CUT.name:'every cutting path for the supplier in one DXF R12 file: mm, one layer per plywood thickness, no frames or text',
+    contents={f'{naming.PREFIX}-Supplier.csv':'supplier machining and stock list',
+              CUT.name:'every cutting path for the supplier in one DXF R12 file: mm, one layer per plywood thickness, no frames or text',
               KIT.name:'everything: PDFs, STEP, FCStd, DXF, laser files, renders, reports and source'}
     rows=[f'| `{p.name}` | {f"{pdf_pages[p.name]} pages" if p.name in pdf_pages else contents[p.name]} | {p.stat().st_size/1024/1024:.1f} MB |' for p in assets()]
     url=repo_url();guide=f'[the build guide]({url}/blob/{tag}/docs/BUILD-GUIDE.md)' if url else 'the build guide (docs/BUILD-GUIDE.md)'

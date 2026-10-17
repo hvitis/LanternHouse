@@ -69,7 +69,7 @@ Najłatwiej otworzyć [przeglądarkę online](https://hvitis.github.io/lanternwo
 git clone https://github.com/hvitis/lanternwood-house.git
 cd lanternwood-house
 python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m pip install -r requirements/requirements.txt
 .venv/bin/python source/serve.py --open
 ```
 
@@ -160,7 +160,7 @@ Stałe ściany mają 420 mm i zachowują fabryczne krawędzie końcowe arkusza. 
 4. Uruchom szybkie testy, które trwają około 10 sekund i nie wymagają FreeCAD:
 
    ```sh
-   .venv/bin/python -m pip install -r requirements-dev.txt
+   .venv/bin/python -m pip install -r requirements/requirements-dev.txt
    make check
    ```
 
@@ -186,9 +186,10 @@ source/                  źródła generujące domek
   serve.py, viewer/      interaktywna przeglądarka 3D (lokalny three.js r160)
   export_viewer.py       eksport przeglądarki jako strony statycznej (GitHub Pages)
   release.py             wysyła PDF i zestaw budowlany do wydania GitHub
+requirements/            zależności Pythona do kompilacji, testów i druku 3D
 tests/                   szybkie testy modelu i eksportu oraz kontrola przeglądarki
 .github/workflows/       eksport strony z pamięcią podręczną; pełna kompilacja przy wydaniu
-docs/                    przewodnik, opis procesu, publikacja, pomysły i ilustracje
+docs/                    przewodnik, opis procesu, publikacja, pomysły, backlog, analiza ryzyka i ilustracje
 original/                lokalne zdjęcia referencyjne (ignorowane przez Git)
 output/                  wygenerowane pliki (ignorowane przez Git)
 _site/                   wyeksportowana strona 3D (ignorowana przez Git)
@@ -196,8 +197,6 @@ Makefile                 make all / check / build / tolerance / clean / viewer /
 package.json             narzędzia do kontroli przeglądarki (opcjonalne lokalnie)
 README.md                dokumentacja po angielsku
 README.pl.md             dokumentacja po polsku
-TODO.md                  lista dalszych prac nad domkiem
-PLAN.md                  zapis zmian projektowych wersji 2–6
 LICENSE                  CC BY-NC-SA 4.0
 ```
 
@@ -208,13 +207,13 @@ LICENSE                  CC BY-NC-SA 4.0
 - [Meble do druku 3D](docs/PRINTING.md): projekty, podgląd na żywo, kontrole druku i publikacja.
 - [Publikacja na GitHub](docs/PUBLISHING.md): przygotowanie repozytorium, GitHub Pages i kontrola przeglądarki.
 - [Pomysły](docs/IDEAS.md): format Letter, kompilacja w kontenerze, wersja laserowa i gotowe konfiguracje.
-- [TODO](TODO.md): dalsze usprawnienia domku.
+- [TODO](docs/TODO.md): dalsze usprawnienia domku.
 
 Dokumenty w katalogu `docs/` są po angielsku. Obie wersje README opisują ten sam projekt i używają tych samych poleceń.
 
 ## Bezpieczeństwo
 
-To projekt drewnianej zabawki do samodzielnego wykonania, bez certyfikacji. Kontrole CAD sprawdzają prześwity, ale nie wytrzymałość kleju, stabilność ani bezpieczeństwo zabawki. [RISKS.md](RISKS.md) opisuje każde zagrożenie i to, co projekt z nim robi. Najpierw złóż części na sucho z rzeczywistej sklejki i zawiasów i przejdź stronę „Dry-fit and safety checks” w książce. Zaokrąglij wszystkie odsłonięte krawędzie. Przymocuj domek do ściany pokoju zestawem zabezpieczającym przed przewróceniem: raport risk-audit.json podaje szacowaną siłę przewrócenia aktualnego projektu. Cztery magnesy są zamknięte w twardym drewnie; sprawdzaj, czy żaden nigdy nie jest widoczny. Używaj wyłącznie podkładu, farby i lakieru z deklaracją zgodności z EN 71-3. Książka podaje przykładowe produkty.
+To projekt drewnianej zabawki do samodzielnego wykonania, bez certyfikacji. Kontrole CAD sprawdzają prześwity, ale nie wytrzymałość kleju, stabilność ani bezpieczeństwo zabawki. [RISKS.md](docs/RISKS.md) opisuje każde zagrożenie i to, co projekt z nim robi. Najpierw złóż części na sucho z rzeczywistej sklejki i zawiasów i przejdź stronę „Dry-fit and safety checks” w książce. Zaokrąglij wszystkie odsłonięte krawędzie. Przymocuj domek do ściany pokoju zestawem zabezpieczającym przed przewróceniem: raport risk-audit.json podaje szacowaną siłę przewrócenia aktualnego projektu. Cztery magnesy są zamknięte w twardym drewnie; sprawdzaj, czy żaden nigdy nie jest widoczny. Używaj wyłącznie podkładu, farby i lakieru z deklaracją zgodności z EN 71-3. Książka podaje przykładowe produkty.
 
 ## Stan projektu
 

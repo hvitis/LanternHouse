@@ -1,4 +1,4 @@
-"""Toy-safety audit of the built model: tip-over, small parts, magnets, pinch gaps and points (RISKS.md).
+"""Toy-safety audit of the built model: tip-over, small parts, magnets, pinch gaps and points (docs/RISKS.md).
 
     .venv/bin/python source/risk_audit.py     (reads output/parts.json, writes output/reports/risk-audit.json)
 

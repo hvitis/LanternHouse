@@ -7,7 +7,7 @@ Every part, placement, PDF page, cut sheet and render is generated from `source/
 | Runtime | Used for | What it provides |
 | --- | --- | --- |
 | **FreeCAD 1.1+ bundled Python** | `build_cad.py`, `audit_connections.py`, `thickness_check.py`, `run_stress_tests.py` | FreeCAD, Part, Sketcher, Mesh (the OpenCASCADE solid kernel), numpy, shapely |
-| **Your own Python 3.12+** (`.venv`) | `model.py`, `nest.py`, `stock.py`, `render.py`, `cover.py`, `decorate_cad.py`, `book.py`, `cut_file.py`, `verify.py`, `package.py`, `serve.py`, `config_check.py`, `export_viewer.py`, `release.py` | `requirements.txt`: reportlab, Pillow, numpy, pypdf, jsonschema, shapely (plus pytest from `requirements-dev.txt` for the tests) |
+| **Your own Python 3.12+** (`.venv`) | `model.py`, `nest.py`, `stock.py`, `render.py`, `cover.py`, `decorate_cad.py`, `book.py`, `cut_file.py`, `verify.py`, `package.py`, `serve.py`, `config_check.py`, `export_viewer.py`, `release.py` | `requirements/requirements.txt`: reportlab, Pillow, numpy, pypdf, jsonschema, shapely (plus pytest from `requirements/requirements-dev.txt` for the tests) |
 
 `make all` runs everything in order: `make check` (config check and tests), `make build` (`source/rebuild.py`) and `make tolerance` (`thickness_check.py`). `source/rebuild.py` drives both runtimes. It checks the config first (`config_check.py`) and copies the build inputs into `.build-work/`. It starts with fresh output there. A failed build preserves the previous `output/` and keeps its diagnostics. A successful build replaces `output/` and updates the generated documentation. Concurrent edits to the copied inputs stop publication. It then runs the FreeCAD stages headless (`LANTERNWOOD_HEADLESS=1`, `QT_QPA_PLATFORM=offscreen`), then the rest in the Python that launched it. Any failed check stops the build: `build_cad.py` exits with a list of the failures before nesting starts, and `verify.py` and `package.py` refuse to continue.
 
@@ -188,7 +188,7 @@ The clean production pages preserve the physical stock dimensions rather than A4
 `tests/` holds fast checks that need no FreeCAD. They take about 10 seconds, one model build shared by all of them:
 
 ```sh
-.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python -m pip install -r requirements/requirements-dev.txt
 make check
 ```
 

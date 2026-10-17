@@ -11,7 +11,7 @@ GitHub Pages serves the exported 3D viewer. It does not need Python or FreeCAD o
 
    ```sh
    python3 -m venv .venv
-   .venv/bin/python -m pip install -r requirements-dev.txt
+   .venv/bin/python -m pip install -r requirements/requirements-dev.txt
    ```
 
 3. Run the source checks:

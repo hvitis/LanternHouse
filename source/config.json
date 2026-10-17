@@ -18,7 +18,7 @@
   "laser": {"thickness": 3.0, "spacing": 3.0, "margin": 10.0, "a4_window": [10.0, 13.0, 200.0, 273.0]},
   "stock_margin": 10,
   "starter_diameter": 10.0,
-  "wall_hinge": {"height": 25.0, "open_width": 40.0, "leaf_thickness": 1.0, "barrel_radius": 2.0, "axis_offset": 4.0, "hole_x": 15.142971335, "hole_y": [5.0, 20.0], "centers": [37.333333333333336, 210.0, 382.6666666666667], "pilot_diameter": 2.5, "pilot_depth": 15.0, "packing_thickness": 0.9, "block_pilot": 1.8},
+  "wall_hinge": {"height": 25.0, "open_width": 40.0, "leaf_thickness": 1.0, "barrel_radius": 2.0, "axis_offset": 4.0, "hole_x": 15.142971335, "hole_y": [5.0, 20.0], "centers": [43.333333333333336, 210.0, 376.6666666666667], "pilot_diameter": 2.5, "pilot_depth": 15.0, "packing_thickness": 0.9, "block_pilot": 1.8},
   "door_hinge": {"height": 20.0, "open_width": 20.0, "leaf_thickness": 0.8, "barrel_radius": 1.5, "hole_x": 7.0, "hole_y": [4.0, 16.0], "centers": [14.933333333333334, 59.733333333333334], "pilot_diameter": 1.4, "pilot_depth": 9.0, "block_pilot": 1.4, "screw": [2.0, 10.0], "backing_width": 12.0},
   "magnets": {"magnet": [8.0, 3.0], "skin": 1.0, "bore": 8.2, "plug": 8.0, "disc": [10.0, 1.0], "disc_pocket": [10.2, 1.2]},
   "wall_catch": {"block": [24.0, 22.0, 12.0], "x": 12.0, "gap": 0.5},

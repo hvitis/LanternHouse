@@ -1,6 +1,6 @@
 """Fast checks that need no FreeCAD: the config schema and the pure-Python model.
 
-    .venv/bin/python -m pip install -r requirements-dev.txt
+    .venv/bin/python -m pip install -r requirements/requirements-dev.txt
     .venv/bin/python -m pytest
 
 The full solid-kernel checks (overlaps, wall swing, door sweep, PDFs) run in source/rebuild.py.

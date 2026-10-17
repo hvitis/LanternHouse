@@ -275,7 +275,7 @@ These do not fail the automated gates, but they will confuse a shop or a future 
 1. **Sheet count in docs is stale.** `TODO.md` / `SUPPLIER-READINESS.md` still say 23 sheets (12×3 + 11×6). Nesting and the supplier cut file are **21** (12×3 + 9×6).
 2. **Veranda deck thickness.** `architecture.py` hard-codes `deck_t, skirt_t = 3, 3` for `E03` / `VS1` / `VS2`. `RISKS.md` still says the deck stays 6 mm. The E03 stress-test helper still labels the material as “6 mm” while the part is 3 mm. Decide: keep 3 mm + underside cleats, or restore `E03` to `thickness.structure` (6 mm) before cutting.
 3. **Divider front gap.** `partition.front_gap` is **0.0** (closed seam / finger exclusion). `RISKS.md` still describes a 16 mm gap. The pinch test only forbids 5–12 mm, so 0 passes — but the safety narrative and the model disagree. Align the text with the model (or restore the 16 mm gap if that is still intended).
-4. **Factory-edge walls (blocker B1)** and **true 6 mm availability (blocker B2)** remain open: confirm with the shop before ordering. See `docs/SUPPLIER-READINESS.md`.
+4. **Factory-edge walls (blocker B1)** and **true 6 mm availability (blocker B2)** remain open: confirm with the shop before ordering. See `SUPPLIER-READINESS.md`.
 
 ### 7.3 What already reads as the Moomin house
 

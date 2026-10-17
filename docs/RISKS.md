@@ -131,4 +131,4 @@ Every mitigation below is in the model and checked on each build: `make check` (
 - **Verified:** all CAD collision, wall-swing, door and drawer checks, 54 release checks, the thickness band rebuild, stack-up chains and all ten stress tests pass (rebuild after the J02/J04 removal).
 - **Residual:** the window crosses are 4 × 3 mm until the WF1 surround is glued over them; the latch-side stile beside the W12 main door is 17.6 × 3 mm, held by the seam batten, the raised rib and the threshold; 3 mm panels warp more in storage, so keep them flat and glue the ribs soon after cutting. Tip-over: see RISK-02.
 
-See [docs/SUPPLIER-READINESS.md](docs/SUPPLIER-READINESS.md) for the manufacturing review.
+See [SUPPLIER-READINESS.md](SUPPLIER-READINESS.md) for the manufacturing review.

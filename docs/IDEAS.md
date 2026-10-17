@@ -1,6 +1,6 @@
 # Ideas
 
-[`TODO.md`](../TODO.md) is the backlog for the house itself: the rope ladder, window hoods, more figures. This page is about the project around it: how more people could see it, build it and change it. The ideas are grouped by theme, and the most useful ones per unit of effort come first.
+[`TODO.md`](TODO.md) is the backlog for the house itself: the rope ladder, window hoods, more figures. This page is about the project around it: how more people could see it, build it and change it. The ideas are grouped by theme, and the most useful ones per unit of effort come first.
 
 ## The five most useful next steps
 
@@ -30,7 +30,7 @@ Add a "Download GLB" button to the viewer with three.js `GLTFExporter`. On a pho
 
 ### Reproducible builds in a container
 
-The full build has only been run on macOS. A container or devcontainer with FreeCAD 1.1 (the AppImage, or conda-forge `freecad`) plus `requirements.txt` would let Linux and Windows users rebuild everything, and lets CI do the same.
+The full build has only been run on macOS. A container or devcontainer with FreeCAD 1.1 (the AppImage, or conda-forge `freecad`) plus `requirements/requirements.txt` would let Linux and Windows users rebuild everything, and lets CI do the same.
 
 ### Full builds in CI
 

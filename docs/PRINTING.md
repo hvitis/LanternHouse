@@ -4,14 +4,14 @@ The house's furniture and accessories can also be 3D printed. Each design is a s
 
 | Where | What runs | Needs |
 | --- | --- | --- |
-| **Mac** | `make studio`: a live preview in the browser while you (or Claude) change a design. `make prints`: generate and publish the files. | `.venv` with `requirements-print.txt` (build123d, a CAD library on the OpenCASCADE kernel) |
+| **Mac** | `make studio`: a live preview in the browser while you (or Claude) change a design. `make prints`: generate and publish the files. | `.venv` with `requirements/requirements-print.txt` (build123d, a CAD library on the OpenCASCADE kernel) |
 | **Web** | `prints.html` in the GitHub Pages site: view, check and download each published design | Nothing: it reads the committed files in `prints/` |
-| **CI** | Copies the published files into the static viewer site | Python with `requirements.txt` |
+| **CI** | Copies the published files into the static viewer site | Python with `requirements/requirements.txt` |
 
 ## Quick start
 
 ```sh
-.venv/bin/python -m pip install -r requirements-print.txt   # once
+.venv/bin/python -m pip install -r requirements/requirements-print.txt   # once
 make studio                                                  # opens http://127.0.0.1:8766/ (or the next free port)
 ```
 

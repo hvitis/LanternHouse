@@ -143,6 +143,39 @@ def test_pointed_drawer_keeps_the_captive_stop_travel(data):
     assert Polygon(parts['DR1']['outer']).contains(slot)
 
 
+def test_hinge_backing_and_catch_blocks_clear_corner_ribs(data):
+    """Check every block/rib pair at both ends of the measured plywood band."""
+    from shapely.geometry import MultiPoint, Polygon
+
+    def world(inst, points):
+        return [
+            [inst['origin'][k] + sum(p[j] * inst[axis][k]
+             for j, axis in enumerate(('u', 'v', 'w'))) for k in range(3)]
+            for p in points
+        ]
+
+    blocks = [i for i in data['instances'] if i['design_part'] in ('A02', 'MC1')]
+    ribs = [i for i in data['instances'] if i['design_part'] in ('J01', 'J03')]
+    checked = 0
+    for block in blocks:
+        p = data['parts'][block['part']]
+        vertices = world(block, [(x, y, z) for x, y in p['outer'] for z in (0, p['thickness'])])
+        footprint = MultiPoint([v[:2] for v in vertices]).convex_hull
+        block_bottom, block_top = min(v[2] for v in vertices), max(v[2] for v in vertices)
+        for rib in ribs:
+            profile = data['parts'][rib['part']]
+            outline = Polygon([v[:2] for v in world(rib, [(x, y, 0) for x, y in profile['outer']])])
+            if footprint.intersection(outline).area < 1e-6:
+                continue
+            checked += 1
+            for delta in (0, *data['config']['thickness_tolerance'][f'{profile["thickness"]:g}']):
+                bottom = rib['origin'][2] - delta / 2
+                top = bottom + profile['thickness'] + delta
+                gap = max(bottom - block_top, block_bottom - top)
+                assert gap >= 1, (block['id'], rib['id'], delta, gap)
+    assert checked > 0
+
+
 def test_room_dividers_do_not_intersect_corner_ribs(cfg,data):
     """Dividers are plain panels (no rear notches); no brace may occupy the divider solid."""
     from model import inside_polygon

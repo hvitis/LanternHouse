@@ -69,7 +69,7 @@ The quickest way is the [online viewer](https://hvitis.github.io/lanternwood-hou
 git clone https://github.com/hvitis/lanternwood-house.git
 cd lanternwood-house
 python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m pip install -r requirements/requirements.txt
 .venv/bin/python source/serve.py --open
 ```
 
@@ -159,7 +159,7 @@ Fixed walls are 420 mm tall and retain the blank end edges. Opening walls are 41
 3. Preview the change: `.venv/bin/python source/serve.py --rebuild --open`.
 4. Run the fast tests (about 10 s, no FreeCAD):
    ```sh
-   .venv/bin/python -m pip install -r requirements-dev.txt
+   .venv/bin/python -m pip install -r requirements/requirements-dev.txt
    make check
    ```
 5. Run `make all`, and read `output/reports/release-validation.json` (and `make stackup` for the joint tolerance chains and the safety audit). The checks tell you whether the walls still swing clear, the drawer still slides, the figures still fit the doors, and everything still fits the sheets. `thickness-tolerance.json` tells you whether real plywood within the measured band in `thickness_tolerance` would close any clearance.
@@ -186,9 +186,10 @@ source/                  everything that generates the house
   serve.py, viewer/      interactive 3D viewer (three.js r160 vendored)
   export_viewer.py       the viewer as a static site (GitHub Pages)
   release.py             uploads the PDFs and build kit to a GitHub release
+requirements/            Python dependencies for the build, tests and 3D prints
 tests/                   model and export tests, static viewer browser checks
 .github/workflows/       cached viewer export and Pages on main; full builds on release
-docs/                    build guide, pipeline, publishing, ideas, README images
+docs/                    build guide, pipeline, publishing, ideas, backlog, safety audit, README images
 original/                your own reference photos (git-ignored)
 output/                  generated, git-ignored
 _site/                   exported static viewer, git-ignored
@@ -196,8 +197,6 @@ Makefile                 make all / check / build / tolerance / clean / viewer /
 package.json             optional local browser checks (Node.js + Playwright)
 README.md                English documentation
 README.pl.md             Polish documentation
-TODO.md                  backlog for the house itself, in priority order
-PLAN.md                  design log of revisions 2–6
 LICENSE                  CC BY-NC-SA 4.0
 ```
 
@@ -208,11 +207,11 @@ LICENSE                  CC BY-NC-SA 4.0
 - [3D-printable furniture](docs/PRINTING.md): the designs, the live studio, the print checks and publishing.
 - [Ideas](docs/IDEAS.md): where the project could go next (Letter paper, a container build, a laser edition, presets).
 - [Publish on GitHub](docs/PUBLISHING.md): repository setup, GitHub Pages and browser checks.
-- [TODO](TODO.md): open improvements to the house itself.
+- [TODO](docs/TODO.md): open improvements to the house itself.
 
 ## Safety
 
-This is a design for a hand-built wooden toy, not a certified toy. The CAD checks prove clearances, but not glue strength, stability or toy safety; [RISKS.md](RISKS.md) records every hazard found and what the design does about it. Dry-fit it with your real plywood and hinges first and work through the "Dry-fit and safety checks" page of the book. Round every exposed edge. Strap the house to the room wall with the anti-tip kit: the generated risk audit records the estimated tipping force for the current design. The four magnets are sealed inside hardwood blocks; check that none ever shows. Use only primer, paint and varnish declared to EN 71-3; the book names example products.
+This is a design for a hand-built wooden toy, not a certified toy. The CAD checks prove clearances, but not glue strength, stability or toy safety; [RISKS.md](docs/RISKS.md) records every hazard found and what the design does about it. Dry-fit it with your real plywood and hinges first and work through the "Dry-fit and safety checks" page of the book. Round every exposed edge. Strap the house to the room wall with the anti-tip kit: the generated risk audit records the estimated tipping force for the current design. The four magnets are sealed inside hardwood blocks; check that none ever shows. Use only primer, paint and varnish declared to EN 71-3; the book names example products.
 
 ## Status
 

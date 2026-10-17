@@ -259,7 +259,7 @@ Do not treat that expected result as a local implementation failure before the o
 ### D. Replace documentation, imagery, and embedded metadata
 
 - [ ] Rewrite English and Polish descriptions around the original house project and the four-person family.
-- [ ] Update `README.md`, `README.pl.md`, `PLAN.md`, `IMPROVEMENTS.md`, `TODO.md`, `RISKS.md`, and `docs/*.md`.
+- [ ] Update `README.md`, `README.pl.md`, and `docs/*.md` (including `PLAN.md`, `IMPROVEMENTS.md`, `TODO.md`, `RISKS.md`).
 - [ ] Replace old named-character narratives with descriptions of the new inhabitants and rooms.
 - [ ] Remove obsolete franchise product links and kit comparisons from active product documentation.
 - [ ] Describe the existing architecture directly without claiming that this rename establishes design ownership.

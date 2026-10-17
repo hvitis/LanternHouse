@@ -5,8 +5,52 @@ import json
 import zipfile
 from pathlib import Path
 
+import naming
+
 ROOT = Path(__file__).resolve().parents[1]
 GUIDE = ROOT / "docs/BUILD-GUIDE.md"  # holds the generated stock tables
+
+
+def release_assets(output):
+    """The standalone downloads attached to every tagged release."""
+    return [
+        output / "pdf" / name
+        for name in (
+            naming.PDF_COMPLETE,
+            naming.PDF_INSTRUCTIONS,
+            naming.PDF_CUTTING_TEMPLATES,
+            naming.PDF_DIMENSIONED_PARTS,
+            naming.PDF_DECOR,
+            naming.PDF_CLAY_FAMILY,
+            naming.PDF_3MM_HAND_TEMPLATES,
+            naming.PDF_SUPPLIER,
+            naming.PDF_SUPPLIER_SUMMARY,
+            f"{naming.PREFIX}-Supplier.csv",
+        )
+    ] + [output / naming.SUPPLIER_CUT_DXF, output / naming.KIT_ZIP]
+
+
+def required_deliverables(output):
+    """Downloads and assembly files that must be present before packaging."""
+    return release_assets(output)[:-1] + [
+        output / "cad" / name
+        for name in (
+            naming.CAD_DOCUMENT,
+            f"{naming.CAD_STEM}.step",
+            f"{naming.CAD_STEM}-open.step",
+            f"{naming.CAD_STEM}-exploded.step",
+        )
+    ]
+
+
+def validate_deliverables(output):
+    missing = [
+        str(path.relative_to(output))
+        for path in required_deliverables(output)
+        if not path.is_file() or path.stat().st_size == 0
+    ]
+    if missing:
+        raise RuntimeError("Package blocked: missing or empty deliverables: " + ", ".join(missing))
 
 
 def stock_table(sheets):
@@ -58,11 +102,12 @@ def create_package(root=None, require_tolerance=False):
     root = ROOT if root is None else root
     output = root / "output"
     checked = validate_reports(output, require_tolerance)
+    validate_deliverables(output)
     update_stock_tables(root / "docs/BUILD-GUIDE.md", output / "nesting.json")
     dest = output / "Lanternwood-House-Build-Kit.zip"
     manifest_path = output / "reports/build-manifest.json"
     files = []
-    for folder in ("source", "docs", "tests", "prints", ".github", "output"):
+    for folder in ("source", "docs", "tests", "prints", ".github", "output", "requirements"):
         if not (root / folder).is_dir():
             continue
         for path in (root / folder).rglob("*"):
@@ -81,13 +126,8 @@ def create_package(root=None, require_tolerance=False):
         for name in (
             "README.md",
             "README.pl.md",
-            "TODO.md",
-            "RISKS.md",
             "LICENSE",
             "Makefile",
-            "requirements.txt",
-            "requirements-dev.txt",
-            "requirements-print.txt",
             "package.json",
             "package-lock.json",
             "pytest.ini",
@@ -131,26 +171,35 @@ def create_package(root=None, require_tolerance=False):
 
 
 def validate_release_kit(output):
-    """Require passing thickness evidence inside the exact downloadable archive."""
+    """Verify deliverables and passing evidence inside the exact downloadable archive."""
     validate_reports(output, require_tolerance=True)
+    validate_deliverables(output)
     manifest_path = output / "reports/build-manifest.json"
     manifest = json.loads(manifest_path.read_text())
     if manifest.get("tolerance_checked") is not True:
         raise RuntimeError("Release blocked: repackage after the thickness check")
     recorded = {item["path"]: item["sha256"] for item in manifest["files"]}
+    required = {
+        "output/" + str(path.relative_to(output)) for path in required_deliverables(output)
+    } | {"output/reports/release-validation.json", "output/reports/thickness-tolerance.json"}
+    if required - recorded.keys():
+        raise RuntimeError("Release blocked: missing packaged deliverables or reports")
     with zipfile.ZipFile(output / "Lanternwood-House-Build-Kit.zip") as archive:
         embedded = archive.read("Lanternwood-House/output/reports/build-manifest.json")
         if embedded != manifest_path.read_bytes():
             raise RuntimeError(
                 "Release blocked: the kit manifest differs from the current manifest"
             )
-        for name in ("release-validation.json", "thickness-tolerance.json"):
-            relative = "output/reports/" + name
-            expected = recorded.get(relative)
-            current = hashlib.sha256((output / "reports" / name).read_bytes()).hexdigest()
+        if archive.testzip() is not None:
+            raise RuntimeError("Release blocked: corrupt build kit")
+        for relative, expected in recorded.items():
             packaged = hashlib.sha256(archive.read("Lanternwood-House/" + relative)).hexdigest()
-            if not expected or expected != current or expected != packaged:
-                raise RuntimeError(f"Release blocked: stale or missing packaged {name}")
+            if expected != packaged:
+                raise RuntimeError(f"Release blocked: stale or missing packaged {relative}")
+            if relative.startswith("output/"):
+                current = hashlib.sha256((output.parent / relative).read_bytes()).hexdigest()
+                if expected != current:
+                    raise RuntimeError(f"Release blocked: stale or missing packaged {relative}")
 
 
 def main():

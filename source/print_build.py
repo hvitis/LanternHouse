@@ -4,7 +4,7 @@
     .venv/bin/python source/print_build.py chair        # publish one design
     .venv/bin/python source/print_build.py --force      # rebuild every design, changed or not
 
-This runs on the Mac: it needs build123d (requirements-print.txt), a CAD library on the OpenCASCADE kernel.
+This runs on the Mac: it needs build123d (requirements/requirements-print.txt), a CAD library on the OpenCASCADE kernel.
 prints/ is committed, so the web page (source/viewer/prints.html) and CI read the published files and need no
 CAD kernel. A design that fails a check is not published, and the command exits with an error.
 
