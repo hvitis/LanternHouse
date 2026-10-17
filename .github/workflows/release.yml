@@ -130,6 +130,10 @@ jobs:
           mapfile -t ASSETS < release-assets.txt
           if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
             echo "Release $RELEASE_TAG exists: replacing its assets."
+            EXISTING_ASSETS=$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
+            for asset in $EXISTING_ASSETS; do
+              gh release delete-asset "$RELEASE_TAG" "$asset" -y
+            done
             gh release upload "$RELEASE_TAG" "${ASSETS[@]}" --clobber
             gh release edit "$RELEASE_TAG" --notes-file release-notes.md
           else
